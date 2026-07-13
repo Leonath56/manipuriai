@@ -198,6 +198,51 @@ function AdminPage() {
         </Card>
         </div>
       </div>
+
+      <Dialog open={!!viewUserId} onOpenChange={(o) => { if (!o) { setViewUserId(null); setSelectedChatId(null); } }}>
+        <DialogContent className="max-w-5xl p-0 sm:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="border-b border-border/40 px-4 py-3">
+            <DialogTitle className="text-base">
+              {convoQ.data?.profile
+                ? `${convoQ.data.profile.full_name || convoQ.data.profile.username || convoQ.data.profile.email} — conversations`
+                : "Conversations"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] h-[70vh]">
+            <div className="border-r border-border/40 overflow-y-auto">
+              {convoQ.isLoading && <div className="p-4 text-sm text-muted-foreground">Loading…</div>}
+              {(convoQ.data?.chats ?? []).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChatId(c.id)}
+                  className={`w-full text-left px-3 py-2 text-sm border-b border-border/30 hover:bg-muted/50 ${selectedChatId === c.id ? "bg-muted" : ""}`}
+                >
+                  <div className="line-clamp-1 font-medium">{c.title || "Untitled chat"}</div>
+                  <div className="text-[10px] text-muted-foreground">{new Date(c.updated_at).toLocaleString()}</div>
+                </button>
+              ))}
+              {!convoQ.isLoading && (convoQ.data?.chats ?? []).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">No chats.</div>
+              )}
+            </div>
+            <div className="overflow-y-auto p-4 space-y-3">
+              {chatMessages.length === 0 && !convoQ.isLoading && (
+                <div className="text-sm text-muted-foreground">Select a chat to view messages.</div>
+              )}
+              {chatMessages.map((m) => (
+                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                    <div className="mb-1 text-[10px] opacity-70">
+                      {m.role === "user" ? "User" : "AI"} · {new Date(m.created_at).toLocaleString()}
+                    </div>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AuthedShell>
   );
 }
