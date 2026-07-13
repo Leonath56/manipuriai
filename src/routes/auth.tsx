@@ -33,6 +33,7 @@ function AuthPage() {
   const [confirm, setConfirm] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [age, setAge] = useState("");
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
