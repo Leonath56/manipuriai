@@ -97,13 +97,20 @@ function ChatView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && images.length === 0) || sending) return;
+    const sentImages = images;
+    const stored = text
+      ? sentImages.length
+        ? `${text}\n\n_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`
+        : text
+      : `_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`;
     setInput("");
+    setImages([]);
     qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
       ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString() },
+      { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
     ]);
-    await runSend(text);
+    await runSend(text, sentImages);
   };
 
   const stop = () => {
