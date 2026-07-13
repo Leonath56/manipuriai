@@ -29,6 +29,7 @@ function formatTime(iso?: string) {
 function ChatView() {
   const { chatId } = Route.useParams();
   const [input, setInput] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
