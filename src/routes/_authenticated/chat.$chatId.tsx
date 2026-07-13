@@ -8,8 +8,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle, Pencil } from "lucide-react";
+import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle, Pencil, Wand2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 
@@ -160,7 +161,7 @@ function ChatView() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
-              <MessageRow key={m.id} message={m} onEdit={editAndResend} disabled={sending} />
+              <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
             {sending && (
               <div className="my-6 flex items-start gap-3">
@@ -251,10 +252,14 @@ function UserContent({ content }: { content: string }) {
 
 function MessageRow({
   message,
+  chatId,
+  lang,
   onEdit,
   disabled,
 }: {
   message: Msg;
+  chatId: string;
+  lang: "auto" | "mni" | "mni-mtei" | "en";
   onEdit: (msg: Msg, newText: string) => Promise<void>;
   disabled: boolean;
 }) {
@@ -262,6 +267,10 @@ function MessageRow({
   const [ttsState, setTtsState] = useState<"idle" | "loading" | "playing">("idle");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
+  const [correctOpen, setCorrectOpen] = useState(false);
+  const [correction, setCorrection] = useState("");
+  const [correctionNote, setCorrectionNote] = useState("");
+  const [savingCorrection, setSavingCorrection] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tts = useServerFn(synthesizeSpeech);
   const isUser = message.role === "user";
@@ -313,6 +322,39 @@ function MessageRow({
     }
     setEditing(false);
     await onEdit(message, t);
+  };
+
+  const openCorrection = () => {
+    setCorrection(message.content);
+    setCorrectionNote("");
+    setCorrectOpen(true);
+  };
+  const submitCorrection = async () => {
+    const corrected = correction.trim();
+    if (!corrected) { toast.error("Please write the corrected version"); return; }
+    if (corrected === message.content.trim()) { toast.error("Correction is the same as the original"); return; }
+    setSavingCorrection(true);
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      const userId = sess.user?.id;
+      if (!userId) throw new Error("Not signed in");
+      const { error } = await supabase.from("manipuri_corrections").insert({
+        user_id: userId,
+        chat_id: chatId,
+        message_id: message.id.startsWith("opt-") || message.id.startsWith("a-") ? null : message.id,
+        original_text: message.content,
+        corrected_text: corrected,
+        note: correctionNote.trim() || null,
+        language: lang,
+      });
+      if (error) throw error;
+      toast.success("Thanks! Your correction helps train Manipuri AI 🙏");
+      setCorrectOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit correction");
+    } finally {
+      setSavingCorrection(false);
+    }
   };
 
   return (
@@ -375,28 +417,83 @@ function MessageRow({
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={speak}
-                  disabled={ttsState === "loading"}
-                  aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                  title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                >
-                  {ttsState === "loading" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : ttsState === "playing" ? (
-                    <Square className="h-3.5 w-3.5" />
-                  ) : (
-                    <Volume2 className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={speak}
+                    disabled={ttsState === "loading"}
+                    aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                    title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                  >
+                    {ttsState === "loading" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : ttsState === "playing" ? (
+                      <Square className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={openCorrection}
+                    aria-label="Suggest a Manipuri correction"
+                    title="Suggest a Manipuri correction — help train Manipuri AI"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
             </div>
           </div>
         )}
       </div>
+      <Dialog open={correctOpen} onOpenChange={setCorrectOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Suggest a Manipuri correction</DialogTitle>
+            <DialogDescription>
+              Help improve Manipuri AI. Fix grammar, spelling, tone, or the whole sentence — your correction gets sent to the developer for review.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium text-muted-foreground">Original reply</div>
+              <div className="max-h-32 overflow-y-auto rounded-md border border-border bg-muted/40 p-2 text-xs whitespace-pre-wrap">{message.content}</div>
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Your corrected version</div>
+              <Textarea
+                value={correction}
+                onChange={(e) => setCorrection(e.target.value)}
+                rows={5}
+                placeholder="Write how it should have been said in Manipuri…"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Note (optional)</div>
+              <Textarea
+                value={correctionNote}
+                onChange={(e) => setCorrectionNote(e.target.value)}
+                rows={2}
+                placeholder="e.g. 'pangbageda' should be 'mateng pangjouge'"
+                className="text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCorrectOpen(false)} disabled={savingCorrection}>Cancel</Button>
+            <Button onClick={submitCorrection} disabled={savingCorrection}>
+              {savingCorrection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Submit correction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
