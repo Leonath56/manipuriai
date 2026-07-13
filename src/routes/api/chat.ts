@@ -488,6 +488,9 @@ export const Route = createFileRoute("/api/chat")({
               // Fire-and-forget memory extraction (do not block stream close)
               (async () => {
                 try {
+                  // Skip memory extraction entirely for voice mode — speech is
+                  // casual/conversational and often about topics, not self-disclosure.
+                  if (body.source === "voice") return;
                   // Heuristic gate: only run extraction when the user clearly talks about themselves.
                   // Skip questions and third-person / topic queries so we don't hallucinate user facts.
                   const msg = body.message.trim();
