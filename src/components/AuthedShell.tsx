@@ -101,6 +101,11 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             {search ? "No matches." : "No chats yet. Start a new one!"}
           </div>
         )}
+        {filtered.length > 0 && (
+          <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Recent
+          </div>
+        )}
         <ul className="space-y-0.5">
           {filtered.map((c) => {
             const active = pathname === `/chat/${c.id}`;
