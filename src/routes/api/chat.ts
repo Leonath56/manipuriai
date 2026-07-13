@@ -238,12 +238,14 @@ export const Route = createFileRoute("/api/chat")({
           }
 
           const hasImages = (body.images?.length ?? 0) > 0;
-          // Text saved to DB for the user turn (image bytes are NOT persisted)
+          // Text saved to DB for the user turn — embed images as markdown so
+          // the UI can render thumbnails on reload/refetch.
+          const imgMarkdown = hasImages ? body.images!.map((u) => `![image](${u})`).join("\n") : "";
           const storedUserText = body.message
             ? hasImages
-              ? `${body.message}\n\n_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`
+              ? `${imgMarkdown}\n\n${body.message}`
               : body.message
-            : `_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`;
+            : imgMarkdown;
           // Effective text sent to the model (fallback prompt when user attached only images)
           const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
 
