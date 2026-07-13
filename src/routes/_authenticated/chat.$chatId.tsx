@@ -8,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles, Volume2, Square, Loader2 } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Volume2, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 
