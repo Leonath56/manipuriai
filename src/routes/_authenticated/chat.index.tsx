@@ -176,7 +176,7 @@ export function Composer({
             </Button>
           </div>
         </div>
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">Manipuri AI can make mistakes. Verify important info.</p>
+        <p className="mt-2 text-center text-[10px] whitespace-pre-wrap text-muted-foreground">{"Manipuri AI can make mistakes. Verify important info. DEVELOPED BY LEONATH\n"}</p>
       </form>
     </div>
   );
