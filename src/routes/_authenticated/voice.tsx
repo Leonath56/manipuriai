@@ -149,8 +149,8 @@ function VoiceMode() {
         const rms = Math.sqrt(sum / buf.length);
         setLevel(Math.min(1, rms * 4));
 
-        const SPEAK_THRESHOLD = 0.04;
-        const SILENCE_MS = 1400;
+        const SPEAK_THRESHOLD = 0.025;
+        const SILENCE_MS = 2800;
         const now = performance.now();
         if (rms > SPEAK_THRESHOLD) {
           spokeRef.current = true;
