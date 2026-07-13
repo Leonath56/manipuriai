@@ -29,17 +29,71 @@ export const Route = createFileRoute("/api/transcribe")({
             });
           }
 
-          const upstream = new FormData();
-          upstream.append("model", "openai/gpt-4o-mini-transcribe");
-          // Pick extension from mime
-          const mime = (file.type || "").split(";")[0];
+          const mime = (file.type || "").split(";")[0] || "audio/webm";
           const ext = mime === "audio/mp4" ? "mp4"
             : mime === "audio/mpeg" ? "mp3"
             : mime === "audio/wav" || mime === "audio/wave" ? "wav"
             : mime === "audio/ogg" ? "ogg"
             : "webm";
+
+          // For Manipuri, Whisper-family models perform poorly. Route through
+          // Gemini chat completions with audio input — it handles Meiteilon
+          // much better and can output romanized Latin or Meitei Mayek.
+          const isManipuri = language === "mni" || language === "mni-mtei";
+          if (isManipuri) {
+            const buf = new Uint8Array(await file.arrayBuffer());
+            // base64 encode
+            let bin = "";
+            for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+            const b64 = btoa(bin);
+            const audioFmt = ext === "mp3" ? "mp3"
+              : ext === "wav" ? "wav"
+              : ext === "mp4" ? "m4a"
+              : ext === "ogg" ? "ogg"
+              : "webm";
+
+            const script = language === "mni-mtei"
+              ? "Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ)"
+              : "romanized Latin letters (e.g. 'Nungaithengbra')";
+            const sysPrompt = `You are a precise transcriber for Meiteilon (Manipuri). Transcribe the audio EXACTLY as spoken in Manipuri using ${script}. Do NOT translate. Do NOT add commentary, quotes, or explanations. Output ONLY the transcript text. If audio is silent or unintelligible, output an empty string.`;
+
+            const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                messages: [
+                  { role: "system", content: sysPrompt },
+                  {
+                    role: "user",
+                    content: [
+                      { type: "text", text: `Transcribe this Manipuri audio in ${script}. Output only the transcript.` },
+                      { type: "input_audio", input_audio: { data: b64, format: audioFmt } },
+                    ],
+                  },
+                ],
+              }),
+            });
+            if (!res.ok) {
+              const err = await res.text().catch(() => "");
+              return new Response(JSON.stringify({ error: err || `Transcription failed (${res.status})` }), {
+                status: res.status, headers: { "Content-Type": "application/json" },
+              });
+            }
+            const json = await res.json();
+            const text: string = (json?.choices?.[0]?.message?.content ?? "").toString().trim().replace(/^["']|["']$/g, "");
+            return new Response(JSON.stringify({ text }), {
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+
+          // English / auto → higher-accuracy OpenAI transcribe.
+          const upstream = new FormData();
+          upstream.append("model", "openai/gpt-4o-transcribe");
           upstream.append("file", file, `recording.${ext}`);
-          // Language hints: mni-mtei / mni → "mni" (Meiteilon ISO 639-1 not standardized); auto = omit
           if (language === "en") upstream.append("language", "en");
 
           const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
