@@ -200,6 +200,7 @@ function VoiceMode() {
         message: userText,
         language: langRef.current,
         mode: "instant",
+        source: "voice",
         signal: abortRef.current.signal,
         onMeta: (m) => { chatIdRef.current = m.chatId; },
         onChunk: (d) => { acc += d; setReply(acc); },
