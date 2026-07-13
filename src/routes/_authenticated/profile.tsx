@@ -73,6 +73,9 @@ function ProfilePage() {
     <AuthedShell>
       <div className="h-full overflow-y-auto">
         <div className="mx-auto max-w-2xl px-6 py-10">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-8 gap-1.5 text-muted-foreground">
+            <Link to="/chat"><ArrowLeft className="h-4 w-4" /> Back to chat</Link>
+          </Button>
           <h1 className="font-display text-3xl font-bold">Profile</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your account details.</p>
 
