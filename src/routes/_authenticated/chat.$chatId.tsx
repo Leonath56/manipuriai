@@ -417,23 +417,35 @@ function MessageRow({
                   <Pencil className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={speak}
-                  disabled={ttsState === "loading"}
-                  aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                  title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                >
-                  {ttsState === "loading" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : ttsState === "playing" ? (
-                    <Square className="h-3.5 w-3.5" />
-                  ) : (
-                    <Volume2 className="h-3.5 w-3.5" />
-                  )}
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={speak}
+                    disabled={ttsState === "loading"}
+                    aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                    title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                  >
+                    {ttsState === "loading" ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : ttsState === "playing" ? (
+                      <Square className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={openCorrection}
+                    aria-label="Suggest a Manipuri correction"
+                    title="Suggest a Manipuri correction — help train Manipuri AI"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                  </Button>
+                </>
               )}
             </div>
           </div>
