@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { AuthedShell } from "@/components/AuthedShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Manipuri AI" }] }),
@@ -72,6 +73,9 @@ function ProfilePage() {
     <AuthedShell>
       <div className="h-full overflow-y-auto">
         <div className="mx-auto max-w-2xl px-6 py-10">
+          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-8 gap-1.5 text-muted-foreground">
+            <Link to="/chat"><ArrowLeft className="h-4 w-4" /> Back to chat</Link>
+          </Button>
           <h1 className="font-display text-3xl font-bold">Profile</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your account details.</p>
 
