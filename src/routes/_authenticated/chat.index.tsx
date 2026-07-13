@@ -136,7 +136,8 @@ export function Composer({
             }}
             rows={1}
             placeholder="Message Manipuri AI…"
-            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 text-sm focus-visible:ring-0"
+            style={{ fontSize: "16px" }}
+            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
           />
           <div className="flex items-center justify-between gap-2 px-1 pt-1">
             <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
