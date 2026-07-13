@@ -10,13 +10,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search } from "lucide-react";
+import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff } from "lucide-react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { deleteChat, renameChat } from "@/lib/chat.functions";
+import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
 import { toast } from "sonner";
 
-type ChatRow = { id: string; title: string; updated_at: string };
+type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean };
 
 export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   const qc = useQueryClient();
@@ -31,10 +31,11 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     queryFn: async (): Promise<ChatRow[]> => {
       const { data, error } = await supabase
         .from("chats")
-        .select("id, title, updated_at")
+        .select("id, title, updated_at, pinned")
+        .order("pinned", { ascending: false })
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as ChatRow[];
     },
   });
 
@@ -48,6 +49,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
 
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
+  const pinFn = useServerFn(togglePinChat);
 
   const renameM = useMutation({
     mutationFn: (v: { chatId: string; title: string }) => renameFn({ data: v }),
@@ -58,6 +60,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     onSuccess: (_, chatId) => {
       qc.invalidateQueries({ queryKey: ["chats"] });
       if (pathname.includes(chatId)) navigate({ to: "/chat" });
+    },
+  });
+  const pinM = useMutation({
+    mutationFn: (v: { chatId: string; pinned: boolean }) => pinFn({ data: v }),
+    onSuccess: (_, v) => {
+      qc.invalidateQueries({ queryKey: ["chats"] });
+      toast.success(v.pinned ? "Pinned" : "Unpinned");
     },
   });
 
