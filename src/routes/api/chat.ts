@@ -131,7 +131,7 @@ export const Route = createFileRoute("/api/chat")({
           // plan + usage in parallel
           const today = new Date().toISOString().slice(0, 10);
           const [profileRes, usageRes] = await Promise.all([
-            supabase.from("profiles").select("plan").eq("id", userId).maybeSingle(),
+            supabase.from("profiles").select("plan, full_name, username, age").eq("id", userId).maybeSingle(),
             supabase
               .from("daily_usage")
               .select("message_count")
@@ -140,6 +140,11 @@ export const Route = createFileRoute("/api/chat")({
               .maybeSingle(),
           ]);
           const plan: Plan = (profileRes.data?.plan as Plan) ?? "free";
+          const displayName =
+            (profileRes.data?.full_name as string | null)?.split(" ")[0] ||
+            (profileRes.data?.username as string | null) ||
+            "";
+          const userAge = profileRes.data?.age as number | null | undefined;
           const limit = PLAN_LIMITS[plan];
           const count = usageRes.data?.message_count ?? 0;
           if (count >= limit.dailyMessages) {
