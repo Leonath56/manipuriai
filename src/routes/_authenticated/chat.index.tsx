@@ -279,6 +279,17 @@ export function Composer({
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => navigate({ to: "/voice" })}
+              aria-label="Voice mode"
+              title="Voice mode"
+              className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            >
+              <AudioLines className="h-5 w-5" />
+            </Button>
             <Button type="submit" size="icon" disabled={!canSubmit} className="h-10 w-10 shrink-0 rounded-full bg-black text-white hover:bg-neutral-800 transition-transform active:scale-90">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 send-fly-target" />}
             </Button>
