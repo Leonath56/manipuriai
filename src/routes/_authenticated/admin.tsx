@@ -22,8 +22,11 @@ function AdminPage() {
   const overviewFn = useServerFn(getAdminOverview);
   const usersFn = useServerFn(listAdminUsers);
   const correctionsFn = useServerFn(listAdminCorrections);
+  const convosFn = useServerFn(getAdminUserConversations);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [viewUserId, setViewUserId] = useState<string | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
