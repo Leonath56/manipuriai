@@ -49,6 +49,23 @@ function AdminPage() {
     queryFn: () => correctionsFn(),
     enabled: adminQ.data?.isAdmin === true,
   });
+  const convoQ = useQuery({
+    queryKey: ["admin-user-convos", viewUserId],
+    queryFn: () => convosFn({ data: { userId: viewUserId! } }),
+    enabled: !!viewUserId && adminQ.data?.isAdmin === true,
+  });
+
+  const chatMessages = useMemo(() => {
+    if (!convoQ.data || !selectedChatId) return [];
+    return convoQ.data.messages.filter((m) => m.chat_id === selectedChatId);
+  }, [convoQ.data, selectedChatId]);
+
+  // Auto-select first chat when data loads
+  useEffect(() => {
+    if (convoQ.data && convoQ.data.chats.length > 0 && !selectedChatId) {
+      setSelectedChatId(convoQ.data.chats[0].id);
+    }
+  }, [convoQ.data, selectedChatId]);
 
   if (adminQ.isLoading) {
     return <AuthedShell><div className="p-8 text-muted-foreground">Checking access…</div></AuthedShell>;
