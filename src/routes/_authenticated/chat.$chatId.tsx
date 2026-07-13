@@ -8,8 +8,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { sendMessage } from "@/lib/chat.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles, Volume2, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { synthesizeSpeech } from "@/lib/tts.functions";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string };
 
@@ -120,12 +121,43 @@ function Avatar({ assistant }: { assistant?: boolean }) {
 
 function MessageRow({ message }: { message: Msg }) {
   const [copied, setCopied] = useState(false);
+  const [ttsState, setTtsState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tts = useServerFn(synthesizeSpeech);
   const isUser = message.role === "user";
   const copy = async () => {
     await navigator.clipboard.writeText(message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
+
+  const speak = async () => {
+    if (ttsState === "playing") {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setTtsState("idle");
+      return;
+    }
+    setTtsState("loading");
+    try {
+      // Strip markdown for cleaner speech
+      const clean = message.content.replace(/```[\s\S]*?```/g, "").replace(/[*_#`>]/g, "").trim();
+      const { audio, mime } = await tts({ data: { text: clean } });
+      const url = `data:${mime};base64,${audio}`;
+      const el = new Audio(url);
+      audioRef.current = el;
+      el.onended = () => setTtsState("idle");
+      el.onerror = () => { setTtsState("idle"); toast.error("Playback failed"); };
+      await el.play();
+      setTtsState("playing");
+    } catch (err) {
+      setTtsState("idle");
+      toast.error(err instanceof Error ? err.message : "Read-aloud failed");
+    }
+  };
+
   return (
     <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       <Avatar assistant={!isUser} />
@@ -141,6 +173,23 @@ function MessageRow({ message }: { message: Msg }) {
           <div className="mt-1 flex items-center gap-0.5 text-muted-foreground">
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={speak}
+              disabled={ttsState === "loading"}
+              aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+              title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+            >
+              {ttsState === "loading" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : ttsState === "playing" ? (
+                <Square className="h-3.5 w-3.5" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5" />
+              )}
             </Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.success("Thanks for the feedback")} aria-label="Like"><ThumbsUp className="h-3.5 w-3.5" /></Button>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.success("Feedback noted")} aria-label="Dislike"><ThumbsDown className="h-3.5 w-3.5" /></Button>
