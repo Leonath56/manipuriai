@@ -6,12 +6,13 @@ export type StreamChatInput = {
   language: "auto" | "mni" | "mni-mtei" | "en";
   mode: "instant" | "think";
   images?: string[]; // data URLs
+  source?: "chat" | "voice";
   onChunk: (delta: string) => void;
   onMeta?: (meta: { chatId: string }) => void;
   signal?: AbortSignal;
 };
 
-export async function streamChat({ chatId, message, language, mode, images, onChunk, onMeta, signal }: StreamChatInput) {
+export async function streamChat({ chatId, message, language, mode, images, source, onChunk, onMeta, signal }: StreamChatInput) {
   const { data: sess } = await supabase.auth.getSession();
   const token = sess.session?.access_token;
   if (!token) throw new Error("Not signed in");
@@ -23,7 +24,7 @@ export async function streamChat({ chatId, message, language, mode, images, onCh
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ chatId, message, language, mode, images: images ?? [] }),
+    body: JSON.stringify({ chatId, message, language, mode, images: images ?? [], source: source ?? "chat" }),
   });
 
   if (!res.ok || !res.body) {
