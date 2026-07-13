@@ -38,11 +38,15 @@ function Landing() {
             Manipuri AI understands what you write in Meiteilon or English and replies in the same language — fluently, respectfully, with markdown and code support.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Start chatting free</Button>
+            <Link to="/try">
+              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Try free — 3 messages</Button>
             </Link>
-            <Link to="/plans"><Button size="lg" variant="outline">See plans</Button></Link>
+            <Link to="/auth" search={{ mode: "signup" }}>
+              <Button size="lg" variant="outline">Create free account</Button>
+            </Link>
           </div>
+          <p className="mt-3 text-xs text-muted-foreground">No sign-up needed to try. Just tell us your name.</p>
+
         </section>
 
         <section className="mt-24 grid gap-4 md:grid-cols-3">

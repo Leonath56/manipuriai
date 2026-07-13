@@ -1,0 +1,139 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
+
+const BodySchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().max(4000),
+      }),
+    )
+    .max(10)
+    .default([]),
+  message: z.string().trim().min(1).max(2000),
+  language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
+});
+
+const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native-level speaker of Manipuri / Meiteilon.
+
+# IDENTITY (MANDATORY)
+- If asked who you are / who made you: reply exactly "Ei Manipuri AI version 1 ni. Eibu sembiba na Loitam Leonath ni."
+- Never say you are Gemini, Google, GPT, OpenAI, or any other model/company.
+
+# OUTPUT
+- Default reply in Meiteilon written in Latin/Roman letters. Only reply in English if explicitly asked or a LANGUAGE OVERRIDE is set.
+- Warm, concise, culturally aware. Short sentences. Markdown when helpful.
+- Never write "pangbageda" — always "mateng pangjouge".
+
+# GUEST MODE
+- This is a free trial (3 messages before sign-up). Address the user by the name provided in USER PROFILE.
+- Keep replies helpful but reasonably short. Do NOT invent user facts.`;
+
+export const Route = createFileRoute("/api/public/guest-chat")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+          if (!LOVABLE_API_KEY) return new Response("AI not configured", { status: 500 });
+
+          const body = BodySchema.parse(await request.json());
+
+          const languageHint =
+            body.language === "mni"
+              ? "\n\n# LANGUAGE OVERRIDE\nReply in Meiteilon romanized in Latin letters ONLY."
+              : body.language === "mni-mtei"
+                ? "\n\n# LANGUAGE OVERRIDE\nReply entirely in Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ)."
+                : body.language === "en"
+                  ? "\n\n# LANGUAGE OVERRIDE\nReply entirely in fluent English only."
+                  : "";
+
+          const userInfo = `\n\n# USER PROFILE\n- The user's name is: ${body.name}\n- Address them by name naturally. Never call them "Khullak", "Marup", or a placeholder.`;
+
+          const messages = [
+            { role: "system", content: SYSTEM_PROMPT + userInfo + languageHint },
+            ...body.history.map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: body.message },
+          ];
+
+          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages,
+              stream: true,
+            }),
+          });
+
+          if (!upstream.ok || !upstream.body) {
+            const t = await upstream.text();
+            return new Response(
+              JSON.stringify({ error: t.slice(0, 300) || "AI request failed" }),
+              { status: 500, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
+          const encoder = new TextEncoder();
+          const decoder = new TextDecoder();
+
+          const stream = new ReadableStream({
+            async start(controller) {
+              let buffer = "";
+              const reader = upstream.body!.getReader();
+              try {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  buffer += decoder.decode(value, { stream: true });
+                  const lines = buffer.split("\n");
+                  buffer = lines.pop() ?? "";
+                  for (const raw of lines) {
+                    const line = raw.trim();
+                    if (!line.startsWith("data:")) continue;
+                    const payload = line.slice(5).trim();
+                    if (payload === "[DONE]") continue;
+                    try {
+                      const j = JSON.parse(payload);
+                      const delta: string | undefined =
+                        j.choices?.[0]?.delta?.content ?? j.choices?.[0]?.message?.content;
+                      if (delta) {
+                        const fixed = delta.replace(/pangbageda/gi, "mateng pangjouge");
+                        controller.enqueue(encoder.encode(fixed));
+                      }
+                    } catch {
+                      // ignore
+                    }
+                  }
+                }
+              } catch (err) {
+                controller.error(err);
+                return;
+              }
+              controller.close();
+            },
+          });
+
+          return new Response(stream, {
+            headers: {
+              "Content-Type": "text/plain; charset=utf-8",
+              "Cache-Control": "no-cache, no-transform",
+              "X-Accel-Buffering": "no",
+            },
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Server error";
+          return new Response(JSON.stringify({ error: msg }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      },
+    },
+  },
+});
