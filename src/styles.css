@@ -43,52 +43,52 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --shadow-soft: 0 1px 2px oklch(0.2 0.02 240 / 0.04), 0 8px 24px oklch(0.2 0.02 240 / 0.06);
-  --shadow-glow: 0 0 0 1px oklch(0.75 0.15 175 / 0.15), 0 12px 40px oklch(0.65 0.15 175 / 0.18);
+  --shadow-soft: 0 1px 2px oklch(0.15 0.02 60 / 0.25), 0 8px 24px oklch(0.1 0.02 60 / 0.35);
+  --shadow-glow: 0 0 0 1px oklch(0.85 0.06 80 / 0.18), 0 12px 40px oklch(0.75 0.08 75 / 0.22);
 }
 
 :root {
   --radius: 0.875rem;
 
-  /* Cloud White + Green palette */
-  --background: oklch(0.99 0.003 240);          /* #fafbfc */
-  --foreground: oklch(0.22 0.02 240);           /* dark gray */
+  /* Dark Cream palette — warm dark browns with cream accents */
+  --background: oklch(0.22 0.018 65);           /* deep espresso */
+  --foreground: oklch(0.93 0.03 85);            /* soft cream */
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 240);
+  --card: oklch(0.26 0.02 65);
+  --card-foreground: oklch(0.93 0.03 85);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 240);
+  --popover: oklch(0.26 0.02 65);
+  --popover-foreground: oklch(0.93 0.03 85);
 
-  /* Deep teal as primary — matches #0f766e */
-  --primary: oklch(0.52 0.11 175);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Cream as primary */
+  --primary: oklch(0.88 0.06 85);
+  --primary-foreground: oklch(0.22 0.03 65);
 
-  --secondary: oklch(0.955 0.006 240);          /* #e8ecf1-ish */
-  --secondary-foreground: oklch(0.22 0.02 240);
+  --secondary: oklch(0.3 0.022 65);
+  --secondary-foreground: oklch(0.93 0.03 85);
 
-  --muted: oklch(0.955 0.006 240);
-  --muted-foreground: oklch(0.5 0.015 240);
+  --muted: oklch(0.28 0.02 65);
+  --muted-foreground: oklch(0.72 0.03 80);
 
-  /* Mint accent — matches #2dd4a8 */
-  --accent: oklch(0.83 0.15 170);
-  --accent-foreground: oklch(0.22 0.05 175);
+  /* Warm caramel accent */
+  --accent: oklch(0.72 0.11 70);
+  --accent-foreground: oklch(0.2 0.03 65);
 
-  --destructive: oklch(0.6 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.62 0.2 25);
+  --destructive-foreground: oklch(0.98 0.01 85);
 
-  --border: oklch(0.92 0.006 240);
-  --input: oklch(0.94 0.006 240);
-  --ring: oklch(0.65 0.12 175);
+  --border: oklch(0.36 0.025 70);
+  --input: oklch(0.32 0.022 65);
+  --ring: oklch(0.78 0.08 80);
 
-  --sidebar: oklch(0.985 0.004 240);
-  --sidebar-foreground: oklch(0.28 0.02 240);
-  --sidebar-primary: oklch(0.52 0.11 175);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.94 0.02 175);
-  --sidebar-accent-foreground: oklch(0.3 0.06 175);
-  --sidebar-border: oklch(0.92 0.006 240);
-  --sidebar-ring: oklch(0.65 0.12 175);
+  --sidebar: oklch(0.19 0.017 65);
+  --sidebar-foreground: oklch(0.9 0.03 85);
+  --sidebar-primary: oklch(0.88 0.06 85);
+  --sidebar-primary-foreground: oklch(0.22 0.03 65);
+  --sidebar-accent: oklch(0.3 0.03 70);
+  --sidebar-accent-foreground: oklch(0.93 0.03 85);
+  --sidebar-border: oklch(0.32 0.025 70);
+  --sidebar-ring: oklch(0.78 0.08 80);
 }
 
 .dark {
@@ -145,8 +145,8 @@
 
 @utility gradient-mesh {
   background:
-    radial-gradient(60% 40% at 20% 0%, oklch(0.83 0.15 170 / 0.18), transparent 70%),
-    radial-gradient(50% 40% at 100% 20%, oklch(0.75 0.13 190 / 0.14), transparent 70%),
+    radial-gradient(60% 40% at 20% 0%, oklch(0.72 0.11 70 / 0.18), transparent 70%),
+    radial-gradient(50% 40% at 100% 20%, oklch(0.85 0.08 85 / 0.14), transparent 70%),
     linear-gradient(180deg, var(--color-background), var(--color-background));
 }
 
