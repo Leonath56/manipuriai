@@ -8,16 +8,22 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Volume2, Square, Loader2 } from "lucide-react";
+import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle } from "lucide-react";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 
-type Msg = { id: string; role: "user" | "assistant" | "system"; content: string };
+type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
 export const Route = createFileRoute("/_authenticated/chat/$chatId")({
   head: () => ({ meta: [{ title: "Chat — Manipuri AI" }] }),
   component: ChatView,
 });
+
+function formatTime(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
 
 function ChatView() {
   const { chatId } = Route.useParams();
@@ -28,6 +34,7 @@ function ChatView() {
   const [streaming, setStreaming] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
 
   const messagesQ = useQuery({
@@ -35,7 +42,7 @@ function ChatView() {
     queryFn: async (): Promise<Msg[]> => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id, role, content")
+        .select("id, role, content, created_at")
         .eq("chat_id", chatId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -51,40 +58,75 @@ function ChatView() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQ.data, streaming]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || sending) return;
+  const runSend = async (text: string) => {
     setSending(true);
-    setInput("");
-
-    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
-      ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user", content: text },
-    ]);
     setStreaming("");
-
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       await streamChat({
         chatId,
         message: text,
         language: lang,
         mode,
+        signal: controller.signal,
         onChunk: (delta) => setStreaming((s) => s + delta),
       });
       setStreaming("");
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to send");
+      const name = (err as { name?: string })?.name;
+      if (name === "AbortError") {
+        toast.message("Stopped");
+        await qc.invalidateQueries({ queryKey: ["messages", chatId] });
+      } else {
+        toast.error(err instanceof Error ? err.message : "Failed to send");
+      }
       setStreaming("");
     } finally {
+      abortRef.current = null;
       setSending(false);
       inputRef.current?.focus();
     }
   };
 
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text || sending) return;
+    setInput("");
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
+      ...(old ?? []),
+      { id: `opt-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString() },
+    ]);
+    await runSend(text);
+  };
+
+  const stop = () => {
+    abortRef.current?.abort();
+  };
+
+  const regenerate = async () => {
+    if (sending) return;
+    // find the last user message
+    const msgs = messagesQ.data ?? [];
+    const lastUser = [...msgs].reverse().find((m) => m.role === "user");
+    if (!lastUser) return;
+    // remove the last assistant message from DB so the model produces a fresh one
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    if (lastAssistant) {
+      await supabase.from("messages").delete().eq("id", lastAssistant.id);
+      qc.setQueryData<Msg[]>(["messages", chatId], (old) => (old ?? []).filter((m) => m.id !== lastAssistant.id));
+    }
+    // also drop the last user row we just re-send (server will re-insert)
+    await supabase.from("messages").delete().eq("id", lastUser.id);
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) => (old ?? []).filter((m) => m.id !== lastUser.id));
+    await runSend(lastUser.content);
+  };
+
   const messages = messagesQ.data ?? [];
+  const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
 
   return (
     <AuthedShell>
@@ -111,6 +153,20 @@ function ChatView() {
               </div>
             )}
             <div ref={bottomRef} />
+
+            <div className="mt-4 flex justify-center">
+              {sending ? (
+                <Button variant="outline" size="sm" onClick={stop} className="gap-1.5">
+                  <StopCircle className="h-3.5 w-3.5" /> Stop generating
+                </Button>
+              ) : (
+                canRegenerate && (
+                  <Button variant="outline" size="sm" onClick={regenerate} className="gap-1.5">
+                    <RefreshCw className="h-3.5 w-3.5" /> Regenerate
+                  </Button>
+                )
+              )}
+            </div>
           </div>
         </div>
         <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
@@ -153,7 +209,6 @@ function MessageRow({ message }: { message: Msg }) {
     }
     setTtsState("loading");
     try {
-      // Strip markdown for cleaner speech
       const clean = message.content.replace(/```[\s\S]*?```/g, "").replace(/[*_#`>]/g, "").trim();
       const { audio, mime } = await tts({ data: { text: clean } });
       const url = `data:${mime};base64,${audio}`;
@@ -180,32 +235,33 @@ function MessageRow({ message }: { message: Msg }) {
             <ChatMarkdown content={message.content} />
           )}
         </div>
-        {!isUser && (
-          <div className="mt-1 flex items-center gap-0.5 text-muted-foreground">
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
-              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={speak}
-              disabled={ttsState === "loading"}
-              aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-              title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-            >
-              {ttsState === "loading" ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : ttsState === "playing" ? (
-                <Square className="h-3.5 w-3.5" />
-              ) : (
-                <Volume2 className="h-3.5 w-3.5" />
-              )}
-            </Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.success("Thanks for the feedback")} aria-label="Like"><ThumbsUp className="h-3.5 w-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toast.success("Feedback noted")} aria-label="Dislike"><ThumbsDown className="h-3.5 w-3.5" /></Button>
-          </div>
-        )}
+        <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
+          <span>{formatTime(message.created_at)}</span>
+          {!isUser && (
+            <div className="ml-1 flex items-center gap-0.5">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={speak}
+                disabled={ttsState === "loading"}
+                aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+              >
+                {ttsState === "loading" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : ttsState === "playing" ? (
+                  <Square className="h-3.5 w-3.5" />
+                ) : (
+                  <Volume2 className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

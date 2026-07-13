@@ -225,6 +225,20 @@ export const deleteChat = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const PinInput = z.object({ chatId: z.string().uuid(), pinned: z.boolean() });
+export const togglePinChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((i: unknown) => PinInput.parse(i))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("chats")
+      .update({ pinned: data.pinned })
+      .eq("id", data.chatId)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const touchLastLogin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
