@@ -69,9 +69,9 @@ function Landing() {
           href="https://t.me/MrLeona"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-soft hover:bg-accent/40"
+          className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow ring-2 ring-primary/40 ring-offset-2 ring-offset-background transition hover:scale-105 hover:brightness-110 animate-pulse"
         >
-          <Send className="h-3.5 w-3.5" /> Contact Developer
+          <Send className="h-4 w-4" /> Contact Developer
         </a>
       </footer>
     </div>
