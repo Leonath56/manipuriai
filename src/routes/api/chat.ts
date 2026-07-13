@@ -35,7 +35,17 @@ const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native
 # CURRENT INFO
 - When WEB CONTEXT is provided below, treat it as fresh, authoritative real-world info (news, sports, prices, events). Prefer it over your internal knowledge and cite the source name inline when useful.`;
 
+// Fast heuristic: skip the LLM decision call unless the message plausibly needs fresh info.
+const FRESH_INFO_REGEX =
+  /\b(news|today|tonight|tomorrow|yesterday|latest|current|now|live|score|scores|match|result|results|world cup|fifa|olympics|election|president|prime minister|ceo|price|stock|market|weather|forecast|202[4-9]|20[3-9]\d|release|released|launch|update|version|who won|what happened|breaking)\b/i;
+
+function mayNeedWebSearch(msg: string): boolean {
+  if (msg.length < 8) return false;
+  return FRESH_INFO_REGEX.test(msg);
+}
+
 async function decideWebSearch(query: string, apiKey: string): Promise<string | null> {
+  if (!mayNeedWebSearch(query)) return null;
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -118,18 +128,20 @@ export const Route = createFileRoute("/api/chat")({
 
           const body = BodySchema.parse(await request.json());
 
-          // plan + usage
-          const { data: profile } = await supabase.from("profiles").select("plan").eq("id", userId).maybeSingle();
-          const plan: Plan = (profile?.plan as Plan) ?? "free";
-          const limit = PLAN_LIMITS[plan];
+          // plan + usage in parallel
           const today = new Date().toISOString().slice(0, 10);
-          const { data: usage } = await supabase
-            .from("daily_usage")
-            .select("message_count")
-            .eq("user_id", userId)
-            .eq("usage_date", today)
-            .maybeSingle();
-          const count = usage?.message_count ?? 0;
+          const [profileRes, usageRes] = await Promise.all([
+            supabase.from("profiles").select("plan").eq("id", userId).maybeSingle(),
+            supabase
+              .from("daily_usage")
+              .select("message_count")
+              .eq("user_id", userId)
+              .eq("usage_date", today)
+              .maybeSingle(),
+          ]);
+          const plan: Plan = (profileRes.data?.plan as Plan) ?? "free";
+          const limit = PLAN_LIMITS[plan];
+          const count = usageRes.data?.message_count ?? 0;
           if (count >= limit.dailyMessages) {
             return new Response(
               JSON.stringify({ error: `Daily limit reached (${limit.dailyMessages} on ${limit.label}).` }),
@@ -158,21 +170,23 @@ export const Route = createFileRoute("/api/chat")({
             if (!chat) return new Response("Chat not found", { status: 404 });
           }
 
-          // save user msg
-          await supabase.from("messages").insert({
-            chat_id: chatId,
-            user_id: userId,
-            role: "user",
-            content: body.message,
-          });
-
-          // history
-          const { data: history } = await supabase
-            .from("messages")
-            .select("role, content")
-            .eq("chat_id", chatId)
-            .order("created_at", { ascending: true })
-            .limit(40);
+          // save user msg + fetch history + kick off web-search decision in parallel
+          const [, historyRes, searchQuery] = await Promise.all([
+            supabase.from("messages").insert({
+              chat_id: chatId,
+              user_id: userId,
+              role: "user",
+              content: body.message,
+            }),
+            supabase
+              .from("messages")
+              .select("role, content")
+              .eq("chat_id", chatId)
+              .order("created_at", { ascending: false })
+              .limit(20),
+            decideWebSearch(body.message, LOVABLE_API_KEY),
+          ]);
+          const history = (historyRes.data ?? []).slice().reverse();
 
           const languageHint =
             body.language === "mni"
@@ -181,19 +195,17 @@ export const Route = createFileRoute("/api/chat")({
                 ? "\n\nUser has forced language: reply in English."
                 : "";
 
-          // Optional web search for fresh info
           let webContext = "";
-          const searchQuery = await decideWebSearch(body.message, LOVABLE_API_KEY);
           if (searchQuery) {
             const results = await firecrawlSearch(searchQuery);
             if (results) {
-              webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${new Date().toISOString().slice(0, 10)})\n${results}`;
+              webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${today})\n${results}`;
             }
           }
 
           const messages = [
             { role: "system", content: SYSTEM_PROMPT + languageHint + webContext },
-            ...(history ?? []).map((m) => ({ role: m.role, content: m.content })),
+            ...history.map((m) => ({ role: m.role, content: m.content })),
           ];
 
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
