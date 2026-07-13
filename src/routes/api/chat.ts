@@ -114,6 +114,62 @@ async function firecrawlSearch(query: string, limit = 5): Promise<string | null>
   }
 }
 
+type UserMemory = {
+  name: string | null;
+  language: string | null;
+  occupation: string | null;
+  interests: string[];
+  favorite_topics: string[];
+  notes: string[];
+};
+
+function dedupeMerge(existing: string[], incoming: string[], max = 20): string[] {
+  const seen = new Set(existing.map((x) => x.toLowerCase().trim()));
+  const out = [...existing];
+  for (const raw of incoming) {
+    const v = (raw ?? "").toString().trim();
+    if (!v) continue;
+    const k = v.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+    if (out.length >= max) break;
+  }
+  return out.slice(-max);
+}
+
+async function extractMemoryUpdate(
+  userMsg: string,
+  assistantMsg: string,
+  apiKey: string,
+): Promise<Partial<UserMemory> | null> {
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "Extract stable long-term facts about the USER from the conversation turn. Return ONLY JSON with any of these keys (omit if nothing new): name (string), language (string, preferred language), occupation (string), interests (string[]), favorite_topics (string[]), notes (string[], other durable personal facts like location, family, goals). Ignore anything about the assistant. Do NOT include one-off questions, greetings, or transient info. If nothing to save, return {}.",
+          },
+          { role: "user", content: `USER: ${userMsg}\n\nASSISTANT: ${assistantMsg}` },
+        ],
+      }),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const raw = j.choices?.[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
@@ -194,7 +250,7 @@ export const Route = createFileRoute("/api/chat")({
           }
 
           // save user msg + fetch history + kick off web-search decision in parallel
-          const [, historyRes, searchQuery] = await Promise.all([
+          const [, historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
             supabase.from("messages").insert({
               chat_id: chatId,
               user_id: userId,
@@ -208,8 +264,22 @@ export const Route = createFileRoute("/api/chat")({
               .order("created_at", { ascending: false })
               .limit(12),
             decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+            supabase
+              .from("user_memory")
+              .select("name, language, occupation, interests, favorite_topics, notes")
+              .eq("user_id", userId)
+              .maybeSingle(),
+            supabase
+              .from("chats")
+              .select("title, updated_at")
+              .eq("user_id", userId)
+              .neq("id", chatId)
+              .order("updated_at", { ascending: false })
+              .limit(8),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
+          const memory = (memoryRes.data ?? null) as UserMemory | null;
+          const recentChats = recentChatsRes.data ?? [];
 
           const languageHint =
             body.language === "mni"
@@ -238,8 +308,22 @@ export const Route = createFileRoute("/api/chat")({
             displayName || userAge
               ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
               : `\n\n# USER PROFILE\n- The user's name is unknown. Do NOT invent a name. NEVER call the user "Khullak" or any generic placeholder.`;
+          const memoryBlock = (() => {
+            const bits: string[] = [];
+            if (memory?.name) bits.push(`- Preferred name: ${memory.name}`);
+            if (memory?.language) bits.push(`- Preferred language: ${memory.language}`);
+            if (memory?.occupation) bits.push(`- Occupation: ${memory.occupation}`);
+            if (memory?.interests?.length) bits.push(`- Interests: ${memory.interests.join(", ")}`);
+            if (memory?.favorite_topics?.length) bits.push(`- Favorite topics: ${memory.favorite_topics.join(", ")}`);
+            if (memory?.notes?.length) bits.push(`- Other facts:\n  • ${memory.notes.join("\n  • ")}`);
+            if (!bits.length) return "";
+            return `\n\n# LONG-TERM MEMORY ABOUT THIS USER\nUse these remembered facts to personalize your reply naturally. Do not list them back verbatim unless asked.\n${bits.join("\n")}`;
+          })();
+          const recentChatsBlock = recentChats.length
+            ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
+            : "";
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + languageHint + webContext },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: body.message },
           ];
@@ -364,6 +448,28 @@ export const Route = createFileRoute("/api/chat")({
                 { user_id: userId, usage_date: today, message_count: count + 1, updated_at: new Date().toISOString() },
                 { onConflict: "user_id,usage_date" },
               );
+
+              // Fire-and-forget memory extraction (do not block stream close)
+              (async () => {
+                try {
+                  const update = await extractMemoryUpdate(body.message, corrected, LOVABLE_API_KEY);
+                  if (!update) return;
+                  const merged: UserMemory = {
+                    name: (update.name as string) ?? memory?.name ?? null,
+                    language: (update.language as string) ?? memory?.language ?? null,
+                    occupation: (update.occupation as string) ?? memory?.occupation ?? null,
+                    interests: dedupeMerge(memory?.interests ?? [], Array.isArray(update.interests) ? update.interests : []),
+                    favorite_topics: dedupeMerge(memory?.favorite_topics ?? [], Array.isArray(update.favorite_topics) ? update.favorite_topics : []),
+                    notes: dedupeMerge(memory?.notes ?? [], Array.isArray(update.notes) ? update.notes : [], 30),
+                  };
+                  await supabase.from("user_memory").upsert(
+                    { user_id: userId, ...merged, updated_at: new Date().toISOString() },
+                    { onConflict: "user_id" },
+                  );
+                } catch {
+                  // best-effort
+                }
+              })();
 
               controller.close();
             },

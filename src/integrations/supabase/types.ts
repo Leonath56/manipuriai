@@ -139,6 +139,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_memory: {
+        Row: {
+          created_at: string
+          favorite_topics: string[]
+          interests: string[]
+          language: string | null
+          name: string | null
+          notes: string[]
+          occupation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          favorite_topics?: string[]
+          interests?: string[]
+          language?: string | null
+          name?: string | null
+          notes?: string[]
+          occupation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          favorite_topics?: string[]
+          interests?: string[]
+          language?: string | null
+          name?: string | null
+          notes?: string[]
+          occupation?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
