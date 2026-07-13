@@ -7,6 +7,7 @@ import { X, Loader2 } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
+import { preprocessAudio } from "@/lib/audio-preprocess";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/voice")({
