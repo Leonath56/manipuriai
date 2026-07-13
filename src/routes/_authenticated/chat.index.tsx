@@ -126,7 +126,7 @@ export function Composer({
   return (
     <div className="border-t border-border bg-white">
       <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-        <div className="relative rounded-2xl border border-neutral-300 bg-white p-2 pr-3 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
+        <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
           <Textarea
             ref={inputRef}
             value={input}
@@ -136,12 +136,12 @@ export function Composer({
             }}
             rows={1}
             placeholder="Message Manipuri AI…"
-            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 pr-14 text-sm focus-visible:ring-0"
+            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 text-sm focus-visible:ring-0"
           />
-          <div className="flex items-center justify-between gap-2 px-1 pt-1 pr-14">
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between gap-2 px-1 pt-1">
+            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
                   {mode === "instant" ? <Zap className="h-3.5 w-3.5 text-black" /> : <Brain className="h-3.5 w-3.5 text-black" />}
                   <SelectValue />
                 </SelectTrigger>
@@ -161,7 +161,7 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -172,11 +172,12 @@ export function Composer({
                 </SelectContent>
               </Select>
             </div>
+            <Button type="submit" size="icon" disabled={!input.trim() || sending} className="h-10 w-10 shrink-0 rounded-full bg-black text-white hover:bg-neutral-800 transition-transform active:scale-90">
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 send-fly-target" />}
+            </Button>
           </div>
-          <Button type="submit" size="icon" disabled={!input.trim() || sending} className="absolute bottom-2 right-2 h-10 w-10 shrink-0 rounded-full bg-black text-white hover:bg-neutral-800 transition-transform active:scale-90">
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 send-fly-target" />}
-          </Button>
         </div>
+
         <p className="mt-2 text-center text-[10px] whitespace-pre-wrap text-muted-foreground">{"Manipuri AI can make mistakes. Verify important info. DEVELOPED BY LEONATH\n"}</p>
       </form>
     </div>
