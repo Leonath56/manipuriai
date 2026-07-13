@@ -122,8 +122,8 @@ function ChatView() {
 function Avatar({ assistant }: { assistant?: boolean }) {
   if (assistant) {
     return (
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <Sparkles className="h-4 w-4" />
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">
+        ꯃ
       </div>
     );
   }
