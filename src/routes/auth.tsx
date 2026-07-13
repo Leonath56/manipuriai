@@ -33,6 +33,7 @@ function AuthPage() {
   const [confirm, setConfirm] = useState("");
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
+  const [age, setAge] = useState("");
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
@@ -67,13 +68,15 @@ function AuthPage() {
     e.preventDefault();
     if (password !== confirm) return toast.error("Passwords don't match");
     if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    const ageNum = parseInt(age, 10);
+    if (!age || Number.isNaN(ageNum) || ageNum < 1 || ageNum > 120) return toast.error("Please enter a valid age");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/chat`,
-        data: { full_name: fullName, username },
+        data: { full_name: fullName, username, age: ageNum },
       },
     });
     setLoading(false);
@@ -150,7 +153,10 @@ function AuthPage() {
                 <Field label="Full name"><Input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></Field>
                 <Field label="Username"><Input required value={username} onChange={(e) => setUsername(e.target.value)} /></Field>
               </div>
-              <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Age"><Input type="number" min={1} max={120} required value={age} onChange={(e) => setAge(e.target.value)} /></Field>
+                <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+              </div>
               <Field label="Password"><Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
               <Field label="Confirm password"><Input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} /></Field>
               <Button type="submit" className="w-full" disabled={loading}>
