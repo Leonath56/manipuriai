@@ -22,7 +22,7 @@ function Landing() {
         </Link>
         <nav className="flex items-center gap-2">
           <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
-          <Link to="/auth" search={{ mode: "signup" }}><Button>Get started</Button></Link>
+          <Link to="/try"><Button>Get started</Button></Link>
         </nav>
       </header>
 
@@ -39,13 +39,13 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/try">
-              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Try free — 3 messages</Button>
+              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Get started</Button>
             </Link>
-            <Link to="/auth" search={{ mode: "signup" }}>
-              <Button size="lg" variant="outline">Create free account</Button>
+            <Link to="/auth">
+              <Button size="lg" variant="outline">Sign in</Button>
             </Link>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">No sign-up needed to try. Just tell us your name.</p>
+
 
         </section>
 
