@@ -48,6 +48,9 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     },
   });
 
+  const checkAdmin = useServerFn(isAdminFn);
+  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin(), staleTime: 60_000 });
+
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
   const pinFn = useServerFn(togglePinChat);
