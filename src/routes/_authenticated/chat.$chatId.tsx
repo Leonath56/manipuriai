@@ -276,7 +276,7 @@ function MessageRow({
     <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse msg-pop" : "animate-fade-in"}`}>
       <Avatar assistant={!isUser} />
       <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
-        <div className={isUser ? "w-full max-w-[85%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-primary-foreground" : ""}>
+        <div className={isUser ? "inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground" : ""}>
           {isUser ? (
             editing ? (
               <div className="flex flex-col gap-2">
@@ -284,7 +284,7 @@ function MessageRow({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={Math.min(8, Math.max(2, draft.split("\n").length))}
-                  className="min-h-[60px] resize-none border-0 bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="min-h-[60px] resize-none border-0 bg-transparent text-secondary-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -297,10 +297,10 @@ function MessageRow({
                   }}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground">
+                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7">
                     Cancel
                   </Button>
-                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
+                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7">
                     Send
                   </Button>
                 </div>
