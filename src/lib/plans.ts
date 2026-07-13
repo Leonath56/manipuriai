@@ -5,7 +5,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     label: "Free",
     price: "$0",
     dailyMessages: 20,
-    model: "google/gemini-3-flash-preview",
+    model: "google/gemini-2.5-pro",
     features: [
       "20 AI messages per day",
       "Bilingual Manipuri & English",
@@ -17,7 +17,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     label: "Pro",
     price: "$9",
     dailyMessages: 500,
-    model: "google/gemini-3-flash-preview",
+    model: "google/gemini-2.5-pro",
     features: [
       "500 messages per day",
       "Faster responses",
