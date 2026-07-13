@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { Mic, X, Loader2 } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
@@ -328,7 +328,16 @@ function VoiceMode() {
             {status === "thinking" ? (
               <Loader2 className="h-8 w-8 animate-spin" />
             ) : (
-              <Mic className="h-9 w-9" />
+              <span
+                className="font-serif text-5xl leading-none text-emerald-100"
+                style={{
+                  textShadow:
+                    "0 0 12px rgba(16,185,129,0.9), 0 0 28px rgba(16,185,129,0.7), 0 0 48px rgba(52,211,153,0.5)",
+                }}
+                aria-hidden
+              >
+                ꯃ
+              </span>
             )}
           </span>
           {status === "listening" && (
