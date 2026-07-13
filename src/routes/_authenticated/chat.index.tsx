@@ -124,7 +124,7 @@ export function Composer({
   setMode: (v: "instant" | "think") => void;
 }) {
   return (
-    <div className="border-t border-border bg-white">
+    <div className="sticky bottom-0 z-10 border-t border-border bg-white">
       <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
           <Textarea
