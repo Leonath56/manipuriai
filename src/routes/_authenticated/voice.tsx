@@ -183,6 +183,7 @@ function VoiceMode() {
   }, [cleanupMic, stopSpeaking]);
 
   const handleAudio = useCallback(async (blob: Blob) => {
+    const myTurn = ++turnIdRef.current;
     setStatus("thinking");
     try {
       const { data: sess } = await supabase.auth.getSession();
