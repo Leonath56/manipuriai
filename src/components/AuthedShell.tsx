@@ -74,7 +74,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     <aside className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
         <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-primary text-primary-foreground"><Sparkles className="h-3.5 w-3.5" /></span>
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
           Manipuri AI
           <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1</span>
         </Link>
