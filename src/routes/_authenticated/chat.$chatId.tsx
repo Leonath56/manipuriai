@@ -401,9 +401,11 @@ function MessageRow({
           <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
             <span>{formatTime(message.created_at)}</span>
             <div className="ml-1 flex items-center gap-0.5">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              </Button>
+              {!isUser && (
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
+              )}
               {isUser ? (
                 <Button
                   variant="ghost"
