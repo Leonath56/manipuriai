@@ -39,10 +39,15 @@ function VoiceMode() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [lang, setLang] = useState<Lang>("auto");
+  const [gender, setGender] = useState<"male" | "female">(() => {
+    if (typeof window === "undefined") return "female";
+    return (localStorage.getItem("voice-gender") as "male" | "female") || "female";
+  });
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [level, setLevel] = useState(0); // 0..1 for orb pulse
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
 
   const chatIdRef = useRef<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
