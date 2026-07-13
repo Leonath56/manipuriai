@@ -8,7 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles, Volume2, Square, Loader2 } from "lucide-react";
+import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Volume2, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 
@@ -122,8 +122,8 @@ function ChatView() {
 function Avatar({ assistant }: { assistant?: boolean }) {
   if (assistant) {
     return (
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
-        <Sparkles className="h-4 w-4" />
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">
+        ꯃ
       </div>
     );
   }
