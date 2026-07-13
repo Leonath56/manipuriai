@@ -80,8 +80,8 @@ function NewChat() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto flex min-h-full max-w-2xl flex-col justify-center px-4 py-10">
             <div className="text-center">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-glow">
-                <Sparkles className="h-6 w-6" />
+              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
+                ꯃ
               </div>
               <h1 className="mt-5 font-display text-3xl font-bold">How can I help you today?</h1>
               <p className="mt-2 text-sm text-muted-foreground">
