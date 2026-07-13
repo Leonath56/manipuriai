@@ -111,13 +111,10 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             {search ? "No matches." : "No chats yet. Start a new one!"}
           </div>
         )}
-        {filtered.length > 0 && (
-          <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Recent
-          </div>
-        )}
-        <ul className="space-y-0.5">
-          {filtered.map((c) => {
+        {(() => {
+          const pinned = filtered.filter((c) => c.pinned);
+          const recent = filtered.filter((c) => !c.pinned);
+          const renderRow = (c: ChatRow) => {
             const active = pathname === `/chat/${c.id}`;
             const isRenaming = renamingId === c.id;
             return (
@@ -135,7 +132,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                   </form>
                 ) : (
                   <Link to="/chat/$chatId" params={{ chatId: c.id }} onClick={onClose} className="flex flex-1 items-center gap-2 truncate px-2 py-2 text-sm">
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    {c.pinned ? <Pin className="h-3.5 w-3.5 shrink-0 text-primary" /> : <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
                     <span className="truncate">{c.title}</span>
                   </Link>
                 )}
@@ -146,6 +143,9 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => pinM.mutate({ chatId: c.id, pinned: !c.pinned })}>
+                      {c.pinned ? <><PinOff className="mr-2 h-3.5 w-3.5" /> Unpin</> : <><Pin className="mr-2 h-3.5 w-3.5" /> Pin</>}
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { setRenamingId(c.id); setRenameValue(c.title); }}>
                       <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
                     </DropdownMenuItem>
@@ -161,8 +161,24 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                 </DropdownMenu>
               </li>
             );
-          })}
-        </ul>
+          };
+          return (
+            <>
+              {pinned.length > 0 && (
+                <>
+                  <div className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Pinned</div>
+                  <ul className="space-y-0.5">{pinned.map(renderRow)}</ul>
+                </>
+              )}
+              {recent.length > 0 && (
+                <>
+                  <div className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Recent</div>
+                  <ul className="space-y-0.5">{recent.map(renderRow)}</ul>
+                </>
+              )}
+            </>
+          );
+        })()}
       </nav>
 
       <div className="border-t border-sidebar-border p-2">
