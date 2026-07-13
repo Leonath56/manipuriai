@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles, Globe, Zap, Send } from "lucide-react";
+import { MessageSquare, Sparkles, Globe, Zap, Send, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -12,8 +14,34 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
+function hasPersistedSession() {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) return true;
+    }
+  } catch {}
+  return false;
+}
+
 function Landing() {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(() => hasPersistedSession());
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) navigate({ to: "/chat", replace: true });
+      else setChecking(false);
+    }).catch(() => setChecking(false));
+  }, [navigate]);
+
+  if (checking) {
+    return <div className="min-h-screen gradient-mesh grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+
   return (
+
     <div className="min-h-screen gradient-mesh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
