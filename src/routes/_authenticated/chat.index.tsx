@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Sparkles, Loader2, Zap, Brain } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
 import { streamChat } from "@/lib/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
