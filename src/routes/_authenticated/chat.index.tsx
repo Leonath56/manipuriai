@@ -142,9 +142,9 @@ export function Composer({
           <div className="flex items-center justify-between gap-2 px-1 pt-1">
             <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <Zap className="h-3.5 w-3.5 text-black" /> : <Brain className="h-3.5 w-3.5 text-black" />}
-                  <SelectValue />
+                  <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instant">
@@ -162,8 +162,10 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                  <span className="max-w-[90px] truncate">
+                    {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto-detect language</SelectItem>
