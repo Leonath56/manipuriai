@@ -1,0 +1,239 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
+import { ChatMarkdown } from "@/components/ChatMarkdown";
+
+const GUEST_LIMIT = 3;
+const NAME_KEY = "manipuri_guest_name";
+const COUNT_KEY = "manipuri_guest_count";
+
+type Msg = { role: "user" | "assistant"; content: string };
+
+export const Route = createFileRoute("/try")({
+  head: () => ({
+    meta: [
+      { title: "Try Manipuri AI — 3 free messages" },
+      { name: "description", content: "Try Manipuri AI for free — chat 3 times without signing up." },
+    ],
+  }),
+  component: TryPage,
+});
+
+function TryPage() {
+  const navigate = useNavigate();
+  const [name, setName] = useState<string | null>(null);
+  const [nameInput, setNameInput] = useState("");
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [input, setInput] = useState("");
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const savedName = localStorage.getItem(NAME_KEY);
+    const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
+    if (savedName) setName(savedName);
+    setCount(savedCount);
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
+
+  const submitName = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = nameInput.trim();
+    if (clean.length < 1) return toast.error("Please enter your name");
+    if (clean.length > 60) return toast.error("Name too long");
+    localStorage.setItem(NAME_KEY, clean);
+    setName(clean);
+  };
+
+  const sendMessage = async () => {
+    const text = input.trim();
+    if (!text || loading || !name) return;
+    if (count >= GUEST_LIMIT) {
+      navigate({ to: "/auth", search: { mode: "signup" } });
+      return;
+    }
+
+    const userMsg: Msg = { role: "user", content: text };
+    const historyForApi = messages.slice(-6);
+    setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const resp = await fetch("/api/public/guest-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          history: historyForApi,
+          message: text,
+          language: "auto",
+        }),
+      });
+
+      if (!resp.ok || !resp.body) {
+        const err = await resp.text();
+        throw new Error(err.slice(0, 200) || "Request failed");
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        full += chunk;
+        setMessages((m) => {
+          const next = [...m];
+          next[next.length - 1] = { role: "assistant", content: full };
+          return next;
+        });
+      }
+
+      const newCount = count + 1;
+      setCount(newCount);
+      localStorage.setItem(COUNT_KEY, String(newCount));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      toast.error(msg);
+      setMessages((m) => m.slice(0, -2));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const remaining = Math.max(0, GUEST_LIMIT - count);
+  const locked = count >= GUEST_LIMIT;
+
+  if (!name) {
+    return (
+      <div className="min-h-screen gradient-mesh grid place-items-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <Link to="/" className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-lg font-semibold" aria-hidden="true">ꯃ</span>
+            Manipuri AI
+          </Link>
+          <Card className="p-6 shadow-soft">
+            <h1 className="font-display text-2xl font-bold text-center">What should I call you?</h1>
+            <p className="mt-2 text-center text-sm text-muted-foreground">
+              Enter your name to try Manipuri AI — {GUEST_LIMIT} free messages, no sign-up.
+            </p>
+            <form onSubmit={submitName} className="mt-6 space-y-3">
+              <Input
+                autoFocus
+                required
+                maxLength={60}
+                placeholder="Your name"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+              />
+              <Button type="submit" className="w-full">Start chatting</Button>
+            </form>
+            <p className="mt-4 text-center text-xs text-muted-foreground">
+              Already have an account? <Link to="/auth" className="text-primary hover:underline">Sign in</Link>
+            </p>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="border-b border-border px-4 py-3 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 font-display font-bold">
+          <ArrowLeft className="h-4 w-4" />
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base font-semibold" aria-hidden="true">ꯃ</span>
+          Manipuri AI
+        </Link>
+        <div className="text-xs text-muted-foreground">
+          Guest · <span className="font-medium text-foreground">{remaining}</span> / {GUEST_LIMIT} left
+        </div>
+      </header>
+
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="mx-auto max-w-2xl space-y-4">
+          {messages.length === 0 && (
+            <div className="text-center text-muted-foreground py-12">
+              <div className="text-5xl mb-4" aria-hidden="true">ꯃ</div>
+              <p className="text-lg">Khurumjari, {name}!</p>
+              <p className="text-sm mt-1">Kari haiba pambano? Ask me anything in Manipuri or English.</p>
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+              <div
+                className={
+                  m.role === "user"
+                    ? "inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm"
+                    : "max-w-[95%] text-sm"
+                }
+              >
+                {m.role === "assistant" ? (
+                  m.content ? <ChatMarkdown>{m.content}</ChatMarkdown> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <span className="whitespace-pre-wrap">{m.content}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-border p-4">
+        <div className="mx-auto max-w-2xl">
+          {locked ? (
+            <Card className="p-5 text-center bg-secondary/40">
+              <Lock className="h-6 w-6 mx-auto mb-2 text-primary" />
+              <p className="font-semibold">You've used your {GUEST_LIMIT} free messages, {name}.</p>
+              <p className="text-sm text-muted-foreground mt-1">Create a free account to keep chatting with memory, history, voice mode and more.</p>
+              <div className="mt-4 flex gap-2 justify-center">
+                <Link to="/auth" search={{ mode: "signup" }}>
+                  <Button>Create free account</Button>
+                </Link>
+                <Link to="/auth">
+                  <Button variant="outline">Sign in</Button>
+                </Link>
+              </div>
+            </Card>
+          ) : (
+            <div className="flex gap-2 items-end">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                placeholder="Message Manipuri AI..."
+                rows={1}
+                className="resize-none min-h-[48px] text-base"
+                disabled={loading}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                size="icon"
+                className="h-12 w-12 shrink-0"
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
