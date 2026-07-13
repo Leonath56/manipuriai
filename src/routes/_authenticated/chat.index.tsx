@@ -124,13 +124,20 @@ export function Composer({
   setMode: (v: "instant" | "think") => void;
 }) {
   return (
-    <div className="border-t border-border bg-background/80 backdrop-blur">
+    <div className="border-t border-border bg-white">
       <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3">
-        <div className="rounded-2xl border border-border bg-card p-2 shadow-soft focus-within:ring-2 focus-within:ring-primary/40">
+        <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
           <Textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e as unknown as React.FormEvent); }
+            }}
+            rows={1}
+            placeholder="Message Manipuri AI…"
+            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 text-sm focus-visible:ring-0"
+          />
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e as unknown as React.FormEvent); }
             }}
