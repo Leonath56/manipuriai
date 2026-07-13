@@ -153,7 +153,10 @@ function AuthPage() {
                 <Field label="Full name"><Input required value={fullName} onChange={(e) => setFullName(e.target.value)} /></Field>
                 <Field label="Username"><Input required value={username} onChange={(e) => setUsername(e.target.value)} /></Field>
               </div>
-              <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Age"><Input type="number" min={1} max={120} required value={age} onChange={(e) => setAge(e.target.value)} /></Field>
+                <Field label="Email"><Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+              </div>
               <Field label="Password"><Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
               <Field label="Confirm password"><Input type="password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} /></Field>
               <Button type="submit" className="w-full" disabled={loading}>
