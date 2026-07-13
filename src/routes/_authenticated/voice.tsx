@@ -208,7 +208,7 @@ function VoiceMode() {
         chatId: chatIdRef.current,
         message: userText,
         language: langRef.current,
-        mode: "instant",
+        mode: "think",
         source: "voice",
         signal: abortRef.current.signal,
         onMeta: (m) => { chatIdRef.current = m.chatId; },
