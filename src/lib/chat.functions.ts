@@ -174,8 +174,8 @@ export const sendMessage = createServerFn({ method: "POST" })
       choices?: Array<{ message?: { content?: string } }>;
     };
     const rawReply = json.choices?.[0]?.message?.content?.trim() ?? "";
-    // Vocabulary correction: replace incorrect "pangbageda" with "pangjouge"
-    const reply = rawReply.replace(/pangbageda/gi, "pangjouge");
+    // Vocabulary correction: replace incorrect "pangbageda" with "mateng pangjouge"
+    const reply = rawReply.replace(/pangbageda/gi, "mateng pangjouge");
 
     // Save assistant reply
     await supabase.from("messages").insert({
