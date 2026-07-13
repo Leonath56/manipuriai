@@ -297,10 +297,10 @@ function MessageRow({
                   }}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground">
+                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7">
                     Cancel
                   </Button>
-                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
+                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7">
                     Send
                   </Button>
                 </div>
