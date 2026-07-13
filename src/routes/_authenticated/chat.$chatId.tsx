@@ -23,6 +23,7 @@ function ChatView() {
   const { chatId } = Route.useParams();
   const [input, setInput] = useState("");
   const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
+  const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -67,7 +68,7 @@ function ChatView() {
     setTyping(true);
 
     try {
-      await send({ data: { chatId, message: text, language: lang } });
+      await send({ data: { chatId, message: text, language: lang, mode } });
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
     } catch (err) {
@@ -102,7 +103,7 @@ function ChatView() {
             <div ref={bottomRef} />
           </div>
         </div>
-        <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} />
+        <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
     </AuthedShell>
   );
