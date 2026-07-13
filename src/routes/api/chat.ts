@@ -45,8 +45,12 @@ function mayNeedWebSearch(msg: string): boolean {
   return FRESH_INFO_REGEX.test(msg);
 }
 
-async function decideWebSearch(query: string, apiKey: string): Promise<string | null> {
-  if (!mayNeedWebSearch(query)) return null;
+async function decideWebSearch(
+  query: string,
+  apiKey: string,
+  force: boolean,
+): Promise<string | null> {
+  if (!force && !mayNeedWebSearch(query)) return null;
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -56,8 +60,9 @@ async function decideWebSearch(query: string, apiKey: string): Promise<string | 
         messages: [
           {
             role: "system",
-            content:
-              "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
+            content: force
+              ? "You are a research assistant. For the user's question, output ONLY the best English web search query (max 12 words) that would fetch accurate, up-to-date info to answer it. If the question is pure chit-chat with no factual content at all, output exactly: NO."
+              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
           },
           { role: "user", content: query },
         ],
@@ -73,22 +78,23 @@ async function decideWebSearch(query: string, apiKey: string): Promise<string | 
   }
 }
 
-async function firecrawlSearch(query: string): Promise<string | null> {
+
+async function firecrawlSearch(query: string, limit = 5): Promise<string | null> {
   const key = process.env.FIRECRAWL_API_KEY;
   if (!key) return null;
   try {
     const r = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ query, limit: 5 }),
+      body: JSON.stringify({ query, limit }),
     });
     if (!r.ok) return null;
     const j = await r.json();
     const results: Array<{ title?: string; url?: string; description?: string; snippet?: string }> =
       j.data?.web ?? j.data ?? [];
     if (!results.length) return null;
-    const lines = results.slice(0, 5).map((x, i) => {
-      const desc = (x.description ?? x.snippet ?? "").replace(/\s+/g, " ").slice(0, 400);
+    const lines = results.slice(0, limit).map((x, i) => {
+      const desc = (x.description ?? x.snippet ?? "").replace(/\s+/g, " ").slice(0, 500);
       return `[${i + 1}] ${x.title ?? "Untitled"} — ${x.url ?? ""}\n${desc}`;
     });
     return lines.join("\n\n");
@@ -190,7 +196,7 @@ export const Route = createFileRoute("/api/chat")({
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
               .limit(20),
-            decideWebSearch(body.message, LOVABLE_API_KEY),
+            decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
 
@@ -205,7 +211,7 @@ export const Route = createFileRoute("/api/chat")({
 
           let webContext = "";
           if (searchQuery) {
-            const results = await firecrawlSearch(searchQuery);
+            const results = await firecrawlSearch(searchQuery, body.mode === "think" ? 8 : 5);
             if (results) {
               webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${today})\n${results}`;
             }
