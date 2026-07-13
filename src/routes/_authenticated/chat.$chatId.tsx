@@ -94,13 +94,19 @@ function ChatView() {
             {messages.map((m) => (
               <MessageRow key={m.id} message={m} />
             ))}
-            {typing && (
+            {sending && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
-                <div className="flex items-center gap-1 pt-3">
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                <div className="min-w-0 flex-1">
+                  {streaming ? (
+                    <ChatMarkdown content={streaming} />
+                  ) : (
+                    <div className="flex items-center gap-1 pt-3">
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
