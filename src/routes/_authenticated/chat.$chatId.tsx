@@ -252,10 +252,14 @@ function UserContent({ content }: { content: string }) {
 
 function MessageRow({
   message,
+  chatId,
+  lang,
   onEdit,
   disabled,
 }: {
   message: Msg;
+  chatId: string;
+  lang: "auto" | "mni" | "mni-mtei" | "en";
   onEdit: (msg: Msg, newText: string) => Promise<void>;
   disabled: boolean;
 }) {
@@ -263,6 +267,10 @@ function MessageRow({
   const [ttsState, setTtsState] = useState<"idle" | "loading" | "playing">("idle");
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.content);
+  const [correctOpen, setCorrectOpen] = useState(false);
+  const [correction, setCorrection] = useState("");
+  const [correctionNote, setCorrectionNote] = useState("");
+  const [savingCorrection, setSavingCorrection] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tts = useServerFn(synthesizeSpeech);
   const isUser = message.role === "user";
