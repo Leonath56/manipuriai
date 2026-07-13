@@ -170,7 +170,7 @@ function MessageRow({ message }: { message: Msg }) {
   };
 
   return (
-    <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+    <div className={`my-6 flex items-start gap-3 animate-fade-in ${isUser ? "flex-row-reverse" : ""}`}>
       <Avatar assistant={!isUser} />
       <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
         <div className={isUser ? "max-w-[85%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-primary-foreground" : ""}>
