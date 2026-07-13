@@ -62,6 +62,7 @@ function VoiceMode() {
   const spokeRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
+  const turnIdRef = useRef(0);
   const langRef = useRef<Lang>("auto");
   useEffect(() => { langRef.current = lang; }, [lang]);
 
