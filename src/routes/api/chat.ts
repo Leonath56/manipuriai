@@ -211,7 +211,7 @@ export const Route = createFileRoute("/api/chat")({
 
           let webContext = "";
           if (searchQuery) {
-            const results = await firecrawlSearch(searchQuery);
+            const results = await firecrawlSearch(searchQuery, body.mode === "think" ? 8 : 5);
             if (results) {
               webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${today})\n${results}`;
             }
