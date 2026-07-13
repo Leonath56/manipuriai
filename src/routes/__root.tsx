@@ -111,6 +111,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const pathname = router.state.location.pathname;
+  const hideReport = pathname.startsWith("/chat");
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -124,7 +126,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      <ReportIssue />
+      {!hideReport && <ReportIssue />}
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
