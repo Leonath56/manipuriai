@@ -324,9 +324,10 @@ function VoiceMode() {
               <SelectItem value="male">♂ Male voice</SelectItem>
             </SelectContent>
           </Select>
-        <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
-          <X className="h-5 w-5" />
-        </Button>
+          <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
