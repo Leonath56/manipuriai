@@ -79,22 +79,22 @@ async function decideWebSearch(
 }
 
 
-async function firecrawlSearch(query: string): Promise<string | null> {
+async function firecrawlSearch(query: string, limit = 5): Promise<string | null> {
   const key = process.env.FIRECRAWL_API_KEY;
   if (!key) return null;
   try {
     const r = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ query, limit: 5 }),
+      body: JSON.stringify({ query, limit }),
     });
     if (!r.ok) return null;
     const j = await r.json();
     const results: Array<{ title?: string; url?: string; description?: string; snippet?: string }> =
       j.data?.web ?? j.data ?? [];
     if (!results.length) return null;
-    const lines = results.slice(0, 5).map((x, i) => {
-      const desc = (x.description ?? x.snippet ?? "").replace(/\s+/g, " ").slice(0, 400);
+    const lines = results.slice(0, limit).map((x, i) => {
+      const desc = (x.description ?? x.snippet ?? "").replace(/\s+/g, " ").slice(0, 500);
       return `[${i + 1}] ${x.title ?? "Untitled"} — ${x.url ?? ""}\n${desc}`;
     });
     return lines.join("\n\n");
