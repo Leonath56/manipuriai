@@ -5,13 +5,22 @@ import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
-  message: z.string().trim().min(1).max(8000),
+  message: z.string().trim().max(8000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
   mode: z.enum(["instant", "think"]).default("instant"),
+  images: z.array(z.string()).max(4).optional().default([]),
+}).refine((v) => v.message.length > 0 || (v.images && v.images.length > 0), {
+  message: "Message or image is required",
 });
 
 const MODEL_BY_MODE = {
   instant: "google/gemini-3-flash-preview",
+  think: "google/gemini-2.5-pro",
+} as const;
+
+// Vision-capable models used when images are attached
+const VISION_MODEL_BY_MODE = {
+  instant: "google/gemini-2.5-flash",
   think: "google/gemini-2.5-pro",
 } as const;
 
