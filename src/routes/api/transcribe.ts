@@ -36,13 +36,13 @@ export const Route = createFileRoute("/api/transcribe")({
             : mime === "audio/ogg" ? "ogg"
             : "webm";
 
-          // For Manipuri, Whisper-family models perform poorly. Route through
-          // Gemini chat completions with audio input — it handles Meiteilon
-          // much better and can output romanized Latin or Meitei Mayek.
-          const isManipuri = language === "mni" || language === "mni-mtei";
-          if (isManipuri) {
+          // Whisper-family models perform poorly on Meiteilon. Route Manipuri
+          // AND auto-detect through Gemini chat completions with audio input —
+          // it handles Meiteilon much better and can output romanized Latin or
+          // Meitei Mayek, and also transcribes English cleanly.
+          const useGemini = language === "mni" || language === "mni-mtei" || language === "auto";
+          if (useGemini) {
             const buf = new Uint8Array(await file.arrayBuffer());
-            // base64 encode
             let bin = "";
             for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
             const b64 = btoa(bin);
@@ -52,10 +52,19 @@ export const Route = createFileRoute("/api/transcribe")({
               : ext === "ogg" ? "ogg"
               : "webm";
 
-            const script = language === "mni-mtei"
-              ? "Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ)"
-              : "romanized Latin letters (e.g. 'Nungaithengbra')";
-            const sysPrompt = `You are a precise transcriber for Meiteilon (Manipuri). Transcribe the audio EXACTLY as spoken in Manipuri using ${script}. Do NOT translate. Do NOT add commentary, quotes, or explanations. Output ONLY the transcript text. If audio is silent or unintelligible, output an empty string.`;
+            let sysPrompt: string;
+            let userText: string;
+            if (language === "mni-mtei") {
+              sysPrompt = "You are a precise transcriber for Meiteilon (Manipuri). Transcribe the audio EXACTLY as spoken in Manipuri using Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ). Do NOT translate. Do NOT add commentary, quotes, or explanations. Output ONLY the transcript. If audio is silent or unintelligible, output an empty string.";
+              userText = "Transcribe this Manipuri audio in Meitei Mayek script. Output only the transcript.";
+            } else if (language === "mni") {
+              sysPrompt = "You are a precise transcriber for Meiteilon (Manipuri). Transcribe the audio EXACTLY as spoken in Manipuri using romanized Latin letters (e.g. 'Nungaithengbra'). Do NOT translate. Do NOT add commentary, quotes, or explanations. Output ONLY the transcript. If audio is silent or unintelligible, output an empty string.";
+              userText = "Transcribe this Manipuri audio in romanized Latin letters. Output only the transcript.";
+            } else {
+              // auto: detect Manipuri vs English and transcribe in the spoken language
+              sysPrompt = "You are a precise transcriber that supports Meiteilon (Manipuri) and English. Detect the spoken language and transcribe the audio EXACTLY as spoken. For Manipuri, use romanized Latin letters (e.g. 'Nungaithengbra'). For English, use standard English. Do NOT translate between languages. Do NOT add commentary, quotes, or explanations. Output ONLY the transcript text. If audio is silent or unintelligible, output an empty string.";
+              userText = "Transcribe this audio in the spoken language (Manipuri in romanized Latin, or English). Output only the transcript.";
+            }
 
             const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
               method: "POST",
@@ -70,7 +79,7 @@ export const Route = createFileRoute("/api/transcribe")({
                   {
                     role: "user",
                     content: [
-                      { type: "text", text: `Transcribe this Manipuri audio in ${script}. Output only the transcript.` },
+                      { type: "text", text: userText },
                       { type: "input_audio", input_audio: { data: b64, format: audioFmt } },
                     ],
                   },
