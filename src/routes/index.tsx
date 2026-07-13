@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Sparkles, Globe, Zap } from "lucide-react";
+import { MessageSquare, Sparkles, Globe, Zap, Send } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -17,9 +17,7 @@ function Landing() {
     <div className="min-h-screen gradient-mesh">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
-            <Sparkles className="h-4 w-4" />
-          </span>
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-lg leading-none font-semibold shadow-soft" aria-hidden="true">ꯃ</span>
           Manipuri AI
         </Link>
         <nav className="flex items-center gap-2">
@@ -67,6 +65,14 @@ function Landing() {
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} Manipuri AI · Built with care for Meiteilon speakers.
         <div className="mt-1 font-semibold tracking-wider text-foreground">DEVELOPED BY LEONATH</div>
+        <a
+          href="https://t.me/MrLeona"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-soft hover:bg-accent/40"
+        >
+          <Send className="h-3.5 w-3.5" /> Contact Developer
+        </a>
       </footer>
     </div>
   );
