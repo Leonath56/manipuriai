@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TryRouteImport } from './routes/try'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -24,6 +25,11 @@ import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authentica
 import { Route as ApiPublicGuestChatRouteImport } from './routes/api/public/guest-chat'
 import { Route as AuthenticatedChatChatIdRouteImport } from './routes/_authenticated/chat.$chatId'
 
+const TryRoute = TryRouteImport.update({
+  id: '/try',
+  path: '/try',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/try': typeof TryRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/try'
     | '/admin'
     | '/dashboard'
     | '/profile'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/try'
     | '/admin'
     | '/dashboard'
     | '/profile'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/try'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/profile'
@@ -196,6 +208,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  TryRoute: typeof TryRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
@@ -203,6 +216,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/try': {
+      id: '/try'
+      path: '/try'
+      fullPath: '/try'
+      preLoaderRoute: typeof TryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  TryRoute: TryRoute,
   ApiChatRoute: ApiChatRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
