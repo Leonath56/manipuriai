@@ -118,8 +118,8 @@ export function Composer({
   onSubmit: (e: React.FormEvent) => void;
   sending: boolean;
   inputRef: React.RefObject<HTMLTextAreaElement | null>;
-  lang: "auto" | "mni" | "en";
-  setLang: (v: "auto" | "mni" | "en") => void;
+  lang: "auto" | "mni" | "mni-mtei" | "en";
+  setLang: (v: "auto" | "mni" | "mni-mtei" | "en") => void;
   mode: "instant" | "think";
   setMode: (v: "instant" | "think") => void;
 }) {
