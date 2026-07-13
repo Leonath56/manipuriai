@@ -9,6 +9,7 @@ const BodySchema = z.object({
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
   mode: z.enum(["instant", "think"]).default("instant"),
   images: z.array(z.string()).max(4).optional().default([]),
+  source: z.enum(["chat", "voice"]).optional().default("chat"),
 }).refine((v) => v.message.length > 0 || (v.images && v.images.length > 0), {
   message: "Message or image is required",
 });
