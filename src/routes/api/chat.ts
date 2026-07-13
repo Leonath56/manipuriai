@@ -6,7 +6,7 @@ import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
   message: z.string().trim().min(1).max(8000),
-  language: z.enum(["auto", "mni", "en"]).default("auto"),
+  language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
   mode: z.enum(["instant", "think"]).default("instant"),
 });
 
