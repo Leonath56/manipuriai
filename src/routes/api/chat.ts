@@ -203,9 +203,16 @@ export const Route = createFileRoute("/api/chat")({
             }
           }
 
+          // Drop the just-inserted current user message from history if present,
+          // then append it explicitly at the end so the model always sees the
+          // latest question as the final turn (fixes "replies with previous answer").
+          const priorHistory = history.filter(
+            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === body.message),
+          );
           const messages = [
             { role: "system", content: SYSTEM_PROMPT + languageHint + webContext },
-            ...history.map((m) => ({ role: m.role, content: m.content })),
+            ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
+            { role: "user", content: body.message },
           ];
 
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
