@@ -22,7 +22,7 @@ function Landing() {
         </Link>
         <nav className="flex items-center gap-2">
           <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
-          <Link to="/auth" search={{ mode: "signup" }}><Button>Get started</Button></Link>
+          <Link to="/try"><Button>Get started</Button></Link>
         </nav>
       </header>
 
