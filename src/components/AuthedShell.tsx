@@ -191,7 +191,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
     supabase.from("profiles").update({ last_login_at: new Date().toISOString() }).then(() => {});
   }, []);
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-background">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
       <div className="hidden md:block"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
