@@ -39,10 +39,15 @@ function VoiceMode() {
 
   const [status, setStatus] = useState<Status>("idle");
   const [lang, setLang] = useState<Lang>("auto");
+  const [gender, setGender] = useState<"male" | "female">(() => {
+    if (typeof window === "undefined") return "female";
+    return (localStorage.getItem("voice-gender") as "male" | "female") || "female";
+  });
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [level, setLevel] = useState(0); // 0..1 for orb pulse
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
 
   const chatIdRef = useRef<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -215,7 +220,7 @@ function VoiceMode() {
         return;
       }
       setStatus("speaking");
-      const audio = await tts({ data: { text: speak } });
+      const audio = await tts({ data: { text: speak, gender } });
       if (stoppedRef.current) return;
       const bytes = Uint8Array.from(atob(audio.audio), (c) => c.charCodeAt(0));
       const b = new Blob([bytes], { type: audio.mime });
@@ -309,9 +314,20 @@ function VoiceMode() {
             <SelectItem value="en">English</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Select value={gender} onValueChange={(v) => setGender(v as "male" | "female")}>
+            <SelectTrigger className="h-9 w-auto gap-1.5 border-white/20 bg-white/5 px-3 text-xs text-white hover:bg-white/10">
+              <span>{gender === "male" ? "♂ Male" : "♀ Female"}</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="female">♀ Female voice</SelectItem>
+              <SelectItem value="male">♂ Male voice</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6">
