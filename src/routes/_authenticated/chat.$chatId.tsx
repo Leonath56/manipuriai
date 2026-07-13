@@ -161,7 +161,7 @@ function ChatView() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
-              <MessageRow key={m.id} message={m} onEdit={editAndResend} disabled={sending} />
+              <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
             {sending && (
               <div className="my-6 flex items-start gap-3">
