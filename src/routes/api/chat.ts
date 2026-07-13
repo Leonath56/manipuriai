@@ -488,8 +488,19 @@ export const Route = createFileRoute("/api/chat")({
               // Fire-and-forget memory extraction (do not block stream close)
               (async () => {
                 try {
+                  // Heuristic gate: only run extraction when the user clearly talks about themselves.
+                  // Skip questions and third-person / topic queries so we don't hallucinate user facts.
+                  const msg = body.message.trim();
+                  const lower = msg.toLowerCase();
+                  const selfEn = /\b(i|i'm|im|i am|my|mine|myself|me|call me|i'?ve|i have|i like|i love|i want|i work|i live|i study|remember (that|this)|note that i)\b/i.test(msg);
+                  const selfMni = /\b(ei|eigi|eibu|eina|eidi|eikhoi|eigidi|eigimak)\b/i.test(lower);
+                  const isQuestion = /[?？]\s*$/.test(msg) || /^(what|who|where|when|why|how|which|is|are|do|does|did|can|could|should|would|will|kari|kanaa|kadaida|karamna|karigi|kadai)\b/i.test(msg);
+                  const hasSelfSignal = selfEn || selfMni;
+                  if (!hasSelfSignal || (isQuestion && !/\b(my|i am|i'm|im|eigi|ei .* ni)\b/i.test(msg))) return;
+
                   const update = await extractMemoryUpdate(body.message, corrected, LOVABLE_API_KEY);
                   if (!update) return;
+
                   const merged: UserMemory = {
                     name: (update.name as string) ?? memory?.name ?? null,
                     language: (update.language as string) ?? memory?.language ?? null,
