@@ -312,7 +312,7 @@ function MessageRow({
                 </div>
               </div>
             ) : (
-              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+              <UserContent content={message.content} />
             )
           ) : (
             <ChatMarkdown content={message.content} />
