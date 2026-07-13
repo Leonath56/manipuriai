@@ -451,6 +451,49 @@ function MessageRow({
           </div>
         )}
       </div>
+      <Dialog open={correctOpen} onOpenChange={setCorrectOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Suggest a Manipuri correction</DialogTitle>
+            <DialogDescription>
+              Help improve Manipuri AI. Fix grammar, spelling, tone, or the whole sentence — your correction gets sent to the developer for review.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <div className="mb-1 text-xs font-medium text-muted-foreground">Original reply</div>
+              <div className="max-h-32 overflow-y-auto rounded-md border border-border bg-muted/40 p-2 text-xs whitespace-pre-wrap">{message.content}</div>
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Your corrected version</div>
+              <Textarea
+                value={correction}
+                onChange={(e) => setCorrection(e.target.value)}
+                rows={5}
+                placeholder="Write how it should have been said in Manipuri…"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <div className="mb-1 text-xs font-medium">Note (optional)</div>
+              <Textarea
+                value={correctionNote}
+                onChange={(e) => setCorrectionNote(e.target.value)}
+                rows={2}
+                placeholder="e.g. 'pangbageda' should be 'mateng pangjouge'"
+                className="text-sm"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCorrectOpen(false)} disabled={savingCorrection}>Cancel</Button>
+            <Button onClick={submitCorrection} disabled={savingCorrection}>
+              {savingCorrection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Submit correction
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
