@@ -162,8 +162,10 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100">
-                  <SelectValue />
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                  <span className="max-w-[90px] truncate">
+                    {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto-detect language</SelectItem>
