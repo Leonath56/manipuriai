@@ -220,7 +220,7 @@ function VoiceMode() {
         return;
       }
       setStatus("speaking");
-      const audio = await tts({ data: { text: speak } });
+      const audio = await tts({ data: { text: speak, gender } });
       if (stoppedRef.current) return;
       const bytes = Uint8Array.from(atob(audio.audio), (c) => c.charCodeAt(0));
       const b = new Blob([bytes], { type: audio.mime });
