@@ -159,6 +159,7 @@ function AdminPage() {
             )}
           </div>
         </Card>
+        </div>
       </div>
     </AuthedShell>
   );
