@@ -4,7 +4,7 @@ import { AuthedShell } from "@/components/AuthedShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Sparkles, Loader2 } from "lucide-react";
+import { Send, Sparkles, Loader2, Zap, Brain } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { sendMessage } from "@/lib/chat.functions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/_authenticated/chat/")({
 function NewChat() {
   const [input, setInput] = useState("");
   const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
+  const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
   const send = useServerFn(sendMessage);
@@ -31,7 +32,7 @@ function NewChat() {
     if (!input.trim() || sending) return;
     setSending(true);
     try {
-      const res = await send({ data: { chatId: null, message: input.trim(), language: lang } });
+      const res = await send({ data: { chatId: null, message: input.trim(), language: lang, mode } });
       qc.invalidateQueries({ queryKey: ["chats"] });
       qc.setQueryData(["messages", res.chatId], [
         { id: "u-1", role: "user", content: input.trim() },
@@ -81,7 +82,83 @@ function NewChat() {
           </div>
         </div>
 
-        <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} />
+        <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
+      </div>
+    </AuthedShell>
+  );
+}
+
+export function Composer({
+  input, setInput, onSubmit, sending, inputRef, lang, setLang, mode, setMode,
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  sending: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement | null>;
+  lang: "auto" | "mni" | "en";
+  setLang: (v: "auto" | "mni" | "en") => void;
+  mode: "instant" | "think";
+  setMode: (v: "instant" | "think") => void;
+}) {
+  return (
+    <div className="border-t border-border bg-background/80 backdrop-blur">
+      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3">
+        <div className="rounded-2xl border border-border bg-card p-2 shadow-soft focus-within:ring-2 focus-within:ring-primary/40">
+          <Textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e as unknown as React.FormEvent); }
+            }}
+            rows={1}
+            placeholder="Message Manipuri AI…"
+            className="min-h-11 resize-none border-0 bg-transparent px-2 py-2 text-sm focus-visible:ring-0"
+          />
+          <div className="flex items-center justify-between gap-2 px-1 pt-1">
+            <div className="flex items-center gap-1">
+              <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
+                <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs text-muted-foreground hover:bg-secondary">
+                  {mode === "instant" ? <Zap className="h-3.5 w-3.5" /> : <Brain className="h-3.5 w-3.5" />}
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="instant">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Instant reply</span>
+                      <span className="text-[11px] text-muted-foreground">Fast responses for everyday chat</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="think">
+                    <div className="flex flex-col">
+                      <span className="font-medium">Deep thinking</span>
+                      <span className="text-[11px] text-muted-foreground">Slower, better for research & reasoning</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "en")}>
+                <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs text-muted-foreground hover:bg-secondary">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Auto-detect language</SelectItem>
+                  <SelectItem value="mni">Reply in Manipuri</SelectItem>
+                  <SelectItem value="en">Reply in English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" size="icon" disabled={!input.trim() || sending}>
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+        <p className="mt-2 text-center text-[10px] text-muted-foreground">Manipuri AI can make mistakes. Verify important info.</p>
+      </form>
+    </div>
+  );
+}
       </div>
     </AuthedShell>
   );
