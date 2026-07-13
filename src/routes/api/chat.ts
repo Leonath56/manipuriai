@@ -181,8 +181,18 @@ export const Route = createFileRoute("/api/chat")({
                 ? "\n\nUser has forced language: reply in English."
                 : "";
 
+          // Optional web search for fresh info
+          let webContext = "";
+          const searchQuery = await decideWebSearch(body.message, LOVABLE_API_KEY);
+          if (searchQuery) {
+            const results = await firecrawlSearch(searchQuery);
+            if (results) {
+              webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${new Date().toISOString().slice(0, 10)})\n${results}`;
+            }
+          }
+
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + languageHint },
+            { role: "system", content: SYSTEM_PROMPT + languageHint + webContext },
             ...(history ?? []).map((m) => ({ role: m.role, content: m.content })),
           ];
 
