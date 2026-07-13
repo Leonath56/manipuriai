@@ -322,7 +322,7 @@ export const Route = createFileRoute("/api/chat")({
           // then append it explicitly at the end so the model always sees the
           // latest question as the final turn (fixes "replies with previous answer").
           const priorHistory = history.filter(
-            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === body.message),
+            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText),
           );
           const userInfo =
             displayName || userAge
@@ -342,13 +342,23 @@ export const Route = createFileRoute("/api/chat")({
           const recentChatsBlock = recentChats.length
             ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
             : "";
+
+          // Build the final user turn: multimodal content when images are attached
+          const finalUserContent = hasImages
+            ? [
+                { type: "text", text: effectiveMessage },
+                ...body.images!.map((url) => ({ type: "image_url", image_url: { url } })),
+              ]
+            : effectiveMessage;
+
           const messages = [
             { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: body.message },
+            { role: "user", content: finalUserContent },
           ];
 
-          const modelId = MODEL_BY_MODE[body.mode];
+          const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
