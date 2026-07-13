@@ -35,7 +35,17 @@ const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native
 # CURRENT INFO
 - When WEB CONTEXT is provided below, treat it as fresh, authoritative real-world info (news, sports, prices, events). Prefer it over your internal knowledge and cite the source name inline when useful.`;
 
+// Fast heuristic: skip the LLM decision call unless the message plausibly needs fresh info.
+const FRESH_INFO_REGEX =
+  /\b(news|today|tonight|tomorrow|yesterday|latest|current|now|live|score|scores|match|result|results|world cup|fifa|olympics|election|president|prime minister|ceo|price|stock|market|weather|forecast|202[4-9]|20[3-9]\d|release|released|launch|update|version|who won|what happened|breaking)\b/i;
+
+function mayNeedWebSearch(msg: string): boolean {
+  if (msg.length < 8) return false;
+  return FRESH_INFO_REGEX.test(msg);
+}
+
 async function decideWebSearch(query: string, apiKey: string): Promise<string | null> {
+  if (!mayNeedWebSearch(query)) return null;
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
