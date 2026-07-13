@@ -227,13 +227,14 @@ export const Route = createFileRoute("/api/chat")({
             { role: "user", content: body.message },
           ];
 
+          const modelId = MODEL_BY_MODE[body.mode];
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${LOVABLE_API_KEY}`,
             },
-            body: JSON.stringify({ model: MODEL_BY_MODE[body.mode], messages, stream: true }),
+            body: JSON.stringify({ model: modelId, messages, stream: true }),
           });
 
           if (!upstream.ok || !upstream.body) {
@@ -254,6 +255,15 @@ export const Route = createFileRoute("/api/chat")({
               // Send chatId header-frame first
               controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
 
+              // Heartbeat: send a zero-width space every 8s while waiting so the
+              // client fetch/proxy doesn't idle-timeout during deep-thinking pauses.
+              let firstChunkSeen = false;
+              const heartbeat = setInterval(() => {
+                if (!firstChunkSeen) {
+                  try { controller.enqueue(encoder.encode("\u200B")); } catch { /* closed */ }
+                }
+              }, 8000);
+
               let buffer = "";
               let full = "";
               const reader = upstream.body!.getReader();
@@ -271,8 +281,11 @@ export const Route = createFileRoute("/api/chat")({
                     if (payload === "[DONE]") continue;
                     try {
                       const j = JSON.parse(payload);
-                      const delta: string | undefined = j.choices?.[0]?.delta?.content;
+                      const choice = j.choices?.[0];
+                      const delta: string | undefined =
+                        choice?.delta?.content ?? choice?.message?.content;
                       if (delta) {
+                        firstChunkSeen = true;
                         full += delta;
                         controller.enqueue(encoder.encode(delta));
                       }
@@ -282,8 +295,41 @@ export const Route = createFileRoute("/api/chat")({
                   }
                 }
               } catch (err) {
+                clearInterval(heartbeat);
                 controller.error(err);
                 return;
+              }
+              clearInterval(heartbeat);
+
+              // Fallback: reasoning model emitted only thinking tokens with no
+              // visible content. Do a non-streaming call and emit the full text.
+              if (!full.trim()) {
+                try {
+                  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                    },
+                    body: JSON.stringify({ model: modelId, messages }),
+                  });
+                  if (r.ok) {
+                    const j = await r.json();
+                    const content: string = j.choices?.[0]?.message?.content ?? "";
+                    if (content) {
+                      full = content;
+                      controller.enqueue(encoder.encode(content));
+                    }
+                  }
+                } catch {
+                  // ignore, fall through to save-empty guard
+                }
+              }
+
+              if (!full.trim()) {
+                const msg = "Sorry, deep thinking didn't return a reply. Please try again or switch to Instant reply.";
+                full = msg;
+                controller.enqueue(encoder.encode(msg));
               }
 
               // vocab correction
