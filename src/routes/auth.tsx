@@ -68,13 +68,15 @@ function AuthPage() {
     e.preventDefault();
     if (password !== confirm) return toast.error("Passwords don't match");
     if (password.length < 6) return toast.error("Password must be at least 6 characters");
+    const ageNum = parseInt(age, 10);
+    if (!age || Number.isNaN(ageNum) || ageNum < 1 || ageNum > 120) return toast.error("Please enter a valid age");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/chat`,
-        data: { full_name: fullName, username },
+        data: { full_name: fullName, username, age: ageNum },
       },
     });
     setLoading(false);
