@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+// re-export usage in Composer
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
 import { Button } from "@/components/ui/button";
