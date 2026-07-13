@@ -125,8 +125,8 @@ export function Composer({
 }) {
   return (
     <div className="border-t border-border bg-white">
-      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3">
-        <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
+      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="rounded-2xl border border-neutral-300 bg-white p-2 pr-3 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
           <Textarea
             ref={inputRef}
             value={input}
