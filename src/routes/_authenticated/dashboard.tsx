@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
-import { MessageSquare, Sparkles, CreditCard, ArrowUpRight } from "lucide-react";
+import { MessageSquare, Sparkles, CreditCard, ArrowUpRight, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Manipuri AI" }] }),
