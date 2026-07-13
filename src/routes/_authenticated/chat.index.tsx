@@ -172,8 +172,8 @@ export function Composer({
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" size="icon" disabled={!input.trim() || sending} className="transition-transform active:scale-90">
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 send-fly-target" />}
+            <Button type="submit" size="icon" disabled={!input.trim() || sending} className="h-11 w-11 rounded-full bg-black text-white hover:bg-neutral-800 transition-transform active:scale-90">
+              {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 send-fly-target" />}
             </Button>
           </div>
         </div>
