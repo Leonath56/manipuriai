@@ -126,6 +126,25 @@ function ChatView() {
     await runSend(lastUser.content);
   };
 
+  const editAndResend = async (msg: Msg, newText: string) => {
+    if (sending) return;
+    const trimmed = newText.trim();
+    if (!trimmed) return;
+    const msgs = messagesQ.data ?? [];
+    const target = msgs.find((m) => m.id === msg.id);
+    const cutoff = target?.created_at;
+    // delete target + everything after in DB (server will re-insert the edited turn)
+    if (cutoff) {
+      await supabase.from("messages").delete().eq("chat_id", chatId).gte("created_at", cutoff);
+    } else {
+      await supabase.from("messages").delete().eq("id", msg.id);
+    }
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) =>
+      (old ?? []).filter((m) => (cutoff ? (m.created_at ?? "") < cutoff : m.id !== msg.id)),
+    );
+    await runSend(trimmed);
+  };
+
   const messages = messagesQ.data ?? [];
   const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
 
@@ -135,7 +154,7 @@ function ChatView() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
-              <MessageRow key={m.id} message={m} />
+              <MessageRow key={m.id} message={m} onEdit={editAndResend} disabled={sending} />
             ))}
             {sending && (
               <div className="my-6 flex items-start gap-3">
