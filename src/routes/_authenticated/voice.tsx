@@ -62,6 +62,7 @@ function VoiceMode() {
   const spokeRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
+  const turnIdRef = useRef(0);
   const langRef = useRef<Lang>("auto");
   useEffect(() => { langRef.current = lang; }, [lang]);
 
@@ -85,10 +86,16 @@ function VoiceMode() {
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    if (audioElRef.current) {
-      try { audioElRef.current.pause(); } catch { /* ignore */ }
-      audioElRef.current.src = "";
-      audioElRef.current = null;
+    const el = audioElRef.current;
+    audioElRef.current = null;
+    if (el) {
+      // Detach handlers BEFORE mutating src so pause/clear doesn't trigger
+      // onerror/onended → which would re-enter startListening and overlap.
+      el.onended = null;
+      el.onerror = null;
+      el.onpause = null;
+      try { el.pause(); } catch { /* ignore */ }
+      try { el.removeAttribute("src"); el.load(); } catch { /* ignore */ }
     }
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
@@ -176,6 +183,7 @@ function VoiceMode() {
   }, [cleanupMic, stopSpeaking]);
 
   const handleAudio = useCallback(async (blob: Blob) => {
+    const myTurn = ++turnIdRef.current;
     setStatus("thinking");
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -221,7 +229,9 @@ function VoiceMode() {
       }
       setStatus("speaking");
       const audio = await tts({ data: { text: speak, gender } });
-      if (stoppedRef.current) return;
+      if (stoppedRef.current || myTurn !== turnIdRef.current) return;
+      // Ensure no prior audio is still around (defensive against overlap)
+      stopSpeaking();
       const bytes = Uint8Array.from(atob(audio.audio), (c) => c.charCodeAt(0));
       const b = new Blob([bytes], { type: audio.mime });
       const url = URL.createObjectURL(b);
@@ -229,10 +239,12 @@ function VoiceMode() {
       const el = new Audio(url);
       audioElRef.current = el;
       el.onended = () => {
+        if (myTurn !== turnIdRef.current) return;
         stopSpeaking();
         if (!stoppedRef.current) startListening();
       };
       el.onerror = () => {
+        if (myTurn !== turnIdRef.current) return;
         stopSpeaking();
         if (!stoppedRef.current) startListening();
       };
@@ -262,7 +274,9 @@ function VoiceMode() {
 
   const onOrbTap = () => {
     if (status === "speaking") {
-      // Interrupt AI and start listening again
+      // Interrupt AI and start listening again — invalidate any pending turn
+      turnIdRef.current++;
+      abortRef.current?.abort();
       stopSpeaking();
       startListening();
     } else if (status === "listening") {
@@ -272,8 +286,10 @@ function VoiceMode() {
         recorderRef.current.stop();
       }
     } else if (status === "thinking") {
-      // Cancel generation
+      // Cancel generation and invalidate turn so any late tts/audio is ignored
+      turnIdRef.current++;
       abortRef.current?.abort();
+      stopSpeaking();
       setStatus("idle");
       setTimeout(() => { if (!stoppedRef.current) startListening(); }, 100);
     } else {
@@ -283,9 +299,10 @@ function VoiceMode() {
 
   const exit = () => {
     stoppedRef.current = true;
+    turnIdRef.current++;
     abortRef.current?.abort();
-    cleanupMic();
     stopSpeaking();
+    cleanupMic();
     if (chatIdRef.current) navigate({ to: "/chat/$chatId", params: { chatId: chatIdRef.current } });
     else navigate({ to: "/chat" });
   };
