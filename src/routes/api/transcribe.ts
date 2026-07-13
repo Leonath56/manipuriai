@@ -73,7 +73,7 @@ export const Route = createFileRoute("/api/transcribe")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3.1-pro-preview",
+                model: "google/gemini-2.5-flash",
                 messages: [
                   { role: "system", content: sysPrompt },
                   {
