@@ -180,7 +180,7 @@ function TryPage() {
                 }
               >
                 {m.role === "assistant" ? (
-                  m.content ? <ChatMarkdown>{m.content}</ChatMarkdown> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  m.content ? <ChatMarkdown content={m.content} /> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 ) : (
                   <span className="whitespace-pre-wrap">{m.content}</span>
                 )}
