@@ -5,13 +5,22 @@ import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
-  message: z.string().trim().min(1).max(8000),
+  message: z.string().trim().max(8000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
   mode: z.enum(["instant", "think"]).default("instant"),
+  images: z.array(z.string()).max(4).optional().default([]),
+}).refine((v) => v.message.length > 0 || (v.images && v.images.length > 0), {
+  message: "Message or image is required",
 });
 
 const MODEL_BY_MODE = {
   instant: "google/gemini-3-flash-preview",
+  think: "google/gemini-2.5-pro",
+} as const;
+
+// Vision-capable models used when images are attached
+const VISION_MODEL_BY_MODE = {
+  instant: "google/gemini-2.5-flash",
   think: "google/gemini-2.5-pro",
 } as const;
 
@@ -228,10 +237,20 @@ export const Route = createFileRoute("/api/chat")({
             );
           }
 
+          const hasImages = (body.images?.length ?? 0) > 0;
+          // Text saved to DB for the user turn (image bytes are NOT persisted)
+          const storedUserText = body.message
+            ? hasImages
+              ? `${body.message}\n\n_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`
+              : body.message
+            : `_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`;
+          // Effective text sent to the model (fallback prompt when user attached only images)
+          const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
+
           // ensure chat
           let chatId = body.chatId;
           if (!chatId) {
-            const title = body.message.slice(0, 60);
+            const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
               .from("chats")
               .insert({ user_id: userId, title })
@@ -255,7 +274,7 @@ export const Route = createFileRoute("/api/chat")({
               chat_id: chatId,
               user_id: userId,
               role: "user",
-              content: body.message,
+              content: storedUserText,
             }),
             supabase
               .from("messages")
@@ -263,7 +282,8 @@ export const Route = createFileRoute("/api/chat")({
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
               .limit(12),
-            decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+            hasImages ? Promise.resolve(null) : decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+
             supabase
               .from("user_memory")
               .select("name, language, occupation, interests, favorite_topics, notes")
@@ -302,7 +322,7 @@ export const Route = createFileRoute("/api/chat")({
           // then append it explicitly at the end so the model always sees the
           // latest question as the final turn (fixes "replies with previous answer").
           const priorHistory = history.filter(
-            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === body.message),
+            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText),
           );
           const userInfo =
             displayName || userAge
@@ -322,13 +342,23 @@ export const Route = createFileRoute("/api/chat")({
           const recentChatsBlock = recentChats.length
             ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
             : "";
+
+          // Build the final user turn: multimodal content when images are attached
+          const finalUserContent = hasImages
+            ? [
+                { type: "text", text: effectiveMessage },
+                ...body.images!.map((url) => ({ type: "image_url", image_url: { url } })),
+              ]
+            : effectiveMessage;
+
           const messages = [
             { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: body.message },
+            { role: "user", content: finalUserContent },
           ];
 
-          const modelId = MODEL_BY_MODE[body.mode];
+          const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+
           const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: {

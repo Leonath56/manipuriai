@@ -29,6 +29,7 @@ function formatTime(iso?: string) {
 function ChatView() {
   const { chatId } = Route.useParams();
   const [input, setInput] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
@@ -59,7 +60,7 @@ function ChatView() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQ.data, streaming]);
 
-  const runSend = async (text: string) => {
+  const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
     setStreaming("");
     const controller = new AbortController();
@@ -68,6 +69,7 @@ function ChatView() {
       await streamChat({
         chatId,
         message: text,
+        images: imgs,
         language: lang,
         mode,
         signal: controller.signal,
@@ -95,13 +97,20 @@ function ChatView() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const text = input.trim();
-    if (!text || sending) return;
+    if ((!text && images.length === 0) || sending) return;
+    const sentImages = images;
+    const stored = text
+      ? sentImages.length
+        ? `${text}\n\n_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`
+        : text
+      : `_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`;
     setInput("");
+    setImages([]);
     qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
       ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user", content: text, created_at: new Date().toISOString() },
+      { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
     ]);
-    await runSend(text);
+    await runSend(text, sentImages);
   };
 
   const stop = () => {
@@ -189,7 +198,7 @@ function ChatView() {
             </div>
           </div>
         </div>
-        <Composer input={input} setInput={setInput} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
+        <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
     </AuthedShell>
   );
