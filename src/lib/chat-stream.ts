@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type StreamChatInput = {
   chatId: string | null;
   message: string;
-  language: "auto" | "mni" | "en";
+  language: "auto" | "mni" | "mni-mtei" | "en";
   mode: "instant" | "think";
   onChunk: (delta: string) => void;
   onMeta?: (meta: { chatId: string }) => void;

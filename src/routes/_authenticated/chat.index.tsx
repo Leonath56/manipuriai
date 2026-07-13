@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/chat/")({
 
 function NewChat() {
   const [input, setInput] = useState("");
-  const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
+  const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
@@ -160,13 +160,14 @@ export function Composer({
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "en")}>
+              <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
                 <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-transparent px-2 text-xs text-muted-foreground hover:bg-secondary">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="auto">Auto-detect language</SelectItem>
-                  <SelectItem value="mni">Reply in Manipuri</SelectItem>
+                  <SelectItem value="mni">Reply in Manipuri (Latin)</SelectItem>
+                  <SelectItem value="mni-mtei">Reply in Manipuri (Meitei Mayek ꯃꯌꯦꯛ)</SelectItem>
                   <SelectItem value="en">Reply in English</SelectItem>
                 </SelectContent>
               </Select>

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/chat/$chatId")({
 function ChatView() {
   const { chatId } = Route.useParams();
   const [input, setInput] = useState("");
-  const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
+  const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const [streaming, setStreaming] = useState("");
