@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      manipuri_corrections: {
+        Row: {
+          chat_id: string | null
+          corrected_text: string
+          created_at: string
+          id: string
+          language: string | null
+          message_id: string | null
+          note: string | null
+          original_text: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          chat_id?: string | null
+          corrected_text: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id?: string | null
+          note?: string | null
+          original_text: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string | null
+          corrected_text?: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id?: string | null
+          note?: string | null
+          original_text?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manipuri_corrections_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manipuri_corrections_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chat_id: string
