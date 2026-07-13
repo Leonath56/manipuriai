@@ -237,10 +237,20 @@ export const Route = createFileRoute("/api/chat")({
             );
           }
 
+          const hasImages = (body.images?.length ?? 0) > 0;
+          // Text saved to DB for the user turn (image bytes are NOT persisted)
+          const storedUserText = body.message
+            ? hasImages
+              ? `${body.message}\n\n_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`
+              : body.message
+            : `_[📷 ${body.images!.length} image${body.images!.length > 1 ? "s" : ""} attached]_`;
+          // Effective text sent to the model (fallback prompt when user attached only images)
+          const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
+
           // ensure chat
           let chatId = body.chatId;
           if (!chatId) {
-            const title = body.message.slice(0, 60);
+            const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
               .from("chats")
               .insert({ user_id: userId, title })
@@ -264,7 +274,7 @@ export const Route = createFileRoute("/api/chat")({
               chat_id: chatId,
               user_id: userId,
               role: "user",
-              content: body.message,
+              content: storedUserText,
             }),
             supabase
               .from("messages")
@@ -272,7 +282,8 @@ export const Route = createFileRoute("/api/chat")({
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
               .limit(12),
-            decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+            hasImages ? Promise.resolve(null) : decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+
             supabase
               .from("user_memory")
               .select("name, language, occupation, interests, favorite_topics, notes")
