@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+// re-export usage in Composer
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2, Zap, Brain, ImagePlus, X } from "lucide-react";
+import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -157,6 +158,7 @@ export function Composer({
   setMode: (v: "instant" | "think") => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const onPickFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -279,6 +281,17 @@ export function Composer({
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => navigate({ to: "/voice" })}
+              aria-label="Voice mode"
+              title="Voice mode"
+              className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            >
+              <AudioLines className="h-5 w-5" />
+            </Button>
             <Button type="submit" size="icon" disabled={!canSubmit} className="h-10 w-10 shrink-0 rounded-full bg-black text-white hover:bg-neutral-800 transition-transform active:scale-90">
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4 send-fly-target" />}
             </Button>
