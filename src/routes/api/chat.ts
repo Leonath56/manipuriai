@@ -30,7 +30,61 @@ const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native
 - Never write "pangbageda" — the correct phrase is "mateng pangjouge". Always use "mateng pangjouge".
 
 # STYLE
-- Warm, concise, culturally aware of Manipur. Natural everyday Meiteilon. Short sentences. Use markdown when it helps.`;
+- Warm, concise, culturally aware of Manipur. Natural everyday Meiteilon. Short sentences. Use markdown when it helps.
+
+# CURRENT INFO
+- When WEB CONTEXT is provided below, treat it as fresh, authoritative real-world info (news, sports, prices, events). Prefer it over your internal knowledge and cite the source name inline when useful.`;
+
+async function decideWebSearch(query: string, apiKey: string): Promise<string | null> {
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
+          },
+          { role: "user", content: query },
+        ],
+      }),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const out: string = (j.choices?.[0]?.message?.content ?? "").trim();
+    if (!out || /^no\b/i.test(out)) return null;
+    return out.replace(/^["']|["']$/g, "").slice(0, 200);
+  } catch {
+    return null;
+  }
+}
+
+async function firecrawlSearch(query: string): Promise<string | null> {
+  const key = process.env.FIRECRAWL_API_KEY;
+  if (!key) return null;
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v2/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({ query, limit: 5 }),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const results: Array<{ title?: string; url?: string; description?: string; snippet?: string }> =
+      j.data?.web ?? j.data ?? [];
+    if (!results.length) return null;
+    const lines = results.slice(0, 5).map((x, i) => {
+      const desc = (x.description ?? x.snippet ?? "").replace(/\s+/g, " ").slice(0, 400);
+      return `[${i + 1}] ${x.title ?? "Untitled"} — ${x.url ?? ""}\n${desc}`;
+    });
+    return lines.join("\n\n");
+  } catch {
+    return null;
+  }
+}
 
 export const Route = createFileRoute("/api/chat")({
   server: {
