@@ -5,8 +5,8 @@ import { Composer } from "./chat.index";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { sendMessage } from "@/lib/chat.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, RefreshCw, ThumbsUp, ThumbsDown, Sparkles, Volume2, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,12 +25,10 @@ function ChatView() {
   const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
-  const [typing, setTyping] = useState(false);
+  const [streaming, setStreaming] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const send = useServerFn(sendMessage);
   const qc = useQueryClient();
-  
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -51,7 +49,7 @@ function ChatView() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQ.data, typing]);
+  }, [messagesQ.data, streaming]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,21 +58,27 @@ function ChatView() {
     setSending(true);
     setInput("");
 
-    // optimistic
     qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
       ...(old ?? []),
       { id: `opt-${Date.now()}`, role: "user", content: text },
     ]);
-    setTyping(true);
+    setStreaming("");
 
     try {
-      await send({ data: { chatId, message: text, language: lang, mode } });
+      await streamChat({
+        chatId,
+        message: text,
+        language: lang,
+        mode,
+        onChunk: (delta) => setStreaming((s) => s + delta),
+      });
+      setStreaming("");
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");
+      setStreaming("");
     } finally {
-      setTyping(false);
       setSending(false);
       inputRef.current?.focus();
     }
@@ -90,13 +94,19 @@ function ChatView() {
             {messages.map((m) => (
               <MessageRow key={m.id} message={m} />
             ))}
-            {typing && (
+            {sending && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
-                <div className="flex items-center gap-1 pt-3">
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                  <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                <div className="min-w-0 flex-1">
+                  {streaming ? (
+                    <ChatMarkdown content={streaming} />
+                  ) : (
+                    <div className="flex items-center gap-1 pt-3">
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}

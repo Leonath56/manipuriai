@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Sparkles, Loader2, Zap, Brain } from "lucide-react";
-import { useServerFn } from "@tanstack/react-start";
-import { sendMessage } from "@/lib/chat.functions";
+import { streamChat } from "@/lib/chat-stream";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -21,7 +20,6 @@ function NewChat() {
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
-  const send = useServerFn(sendMessage);
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -29,16 +27,40 @@ function NewChat() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || sending) return;
+    const text = input.trim();
+    if (!text || sending) return;
     setSending(true);
     try {
-      const res = await send({ data: { chatId: null, message: input.trim(), language: lang, mode } });
+      let newChatId: string | null = null;
+      let acc = "";
+      await streamChat({
+        chatId: null,
+        message: text,
+        language: lang,
+        mode,
+        onMeta: (m) => {
+          newChatId = m.chatId;
+          // Seed the messages cache and navigate right away so streaming continues visibly
+          qc.setQueryData(["messages", m.chatId], [
+            { id: "u-1", role: "user", content: text },
+          ]);
+          navigate({ to: "/chat/$chatId", params: { chatId: m.chatId } });
+        },
+        onChunk: (delta) => {
+          acc += delta;
+          if (newChatId) {
+            qc.setQueryData<Array<{ id: string; role: string; content: string }>>(
+              ["messages", newChatId],
+              [
+                { id: "u-1", role: "user", content: text },
+                { id: "a-1", role: "assistant", content: acc },
+              ],
+            );
+          }
+        },
+      });
       qc.invalidateQueries({ queryKey: ["chats"] });
-      qc.setQueryData(["messages", res.chatId], [
-        { id: "u-1", role: "user", content: input.trim() },
-        { id: "a-1", role: "assistant", content: res.reply },
-      ]);
-      navigate({ to: "/chat/$chatId", params: { chatId: res.chatId } });
+      if (newChatId) qc.invalidateQueries({ queryKey: ["messages", newChatId] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setSending(false);
