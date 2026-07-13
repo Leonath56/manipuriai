@@ -163,9 +163,10 @@ async function extractMemoryUpdate(
           {
             role: "system",
             content:
-              "Extract stable long-term facts about the USER from the conversation turn. Return ONLY JSON with any of these keys (omit if nothing new): name (string), language (string, preferred language), occupation (string), interests (string[]), favorite_topics (string[]), notes (string[], other durable personal facts like location, family, goals). Ignore anything about the assistant. Do NOT include one-off questions, greetings, or transient info. If nothing to save, return {}.",
+              "You extract long-term facts ABOUT THE USER (the human) from ONE conversation turn. Be extremely strict.\n\nONLY save a fact when the USER explicitly self-discloses it in first person about themselves, e.g. 'my name is...', 'I am a ...', 'I live in ...', 'I like ...', 'call me ...', 'I want you to remember ...', or a direct answer to a question the assistant asked about the user.\n\nDO NOT save anything if:\n- The user is asking a question (about a topic, person, place, history, coding, math, news, etc.).\n- The user is talking about someone else, a public figure, a fictional character, or a general topic.\n- The user is requesting help, translation, summary, or opinion.\n- The information came from the assistant's reply, web search, or general knowledge — never treat assistant content as facts about the user.\n- The user mentions a name/place/topic in passing without saying it belongs to them (e.g. 'who is Ronaldo' does NOT mean the user is Ronaldo or likes football).\n- It is a greeting, chit-chat, one-off curiosity, or transient mood.\n\nIf you are unsure whether it is truly about the user, return {}.\n\nReturn ONLY JSON with any of: name, language, occupation, interests (string[]), favorite_topics (string[]), notes (string[], durable personal facts like location/family/goals stated by the user themselves). Omit keys with nothing new. If nothing qualifies, return {}.",
           },
-          { role: "user", content: `USER: ${userMsg}\n\nASSISTANT: ${assistantMsg}` },
+          { role: "user", content: `USER_MESSAGE: ${userMsg}\n\n(The assistant's reply is provided only for context — never extract facts about the user from it.)\nASSISTANT_REPLY: ${assistantMsg}` },
+
         ],
       }),
     });
@@ -487,8 +488,19 @@ export const Route = createFileRoute("/api/chat")({
               // Fire-and-forget memory extraction (do not block stream close)
               (async () => {
                 try {
+                  // Heuristic gate: only run extraction when the user clearly talks about themselves.
+                  // Skip questions and third-person / topic queries so we don't hallucinate user facts.
+                  const msg = body.message.trim();
+                  const lower = msg.toLowerCase();
+                  const selfEn = /\b(i|i'm|im|i am|my|mine|myself|me|call me|i'?ve|i have|i like|i love|i want|i work|i live|i study|remember (that|this)|note that i)\b/i.test(msg);
+                  const selfMni = /\b(ei|eigi|eibu|eina|eidi|eikhoi|eigidi|eigimak)\b/i.test(lower);
+                  const isQuestion = /[?？]\s*$/.test(msg) || /^(what|who|where|when|why|how|which|is|are|do|does|did|can|could|should|would|will|kari|kanaa|kadaida|karamna|karigi|kadai)\b/i.test(msg);
+                  const hasSelfSignal = selfEn || selfMni;
+                  if (!hasSelfSignal || (isQuestion && !/\b(my|i am|i'm|im|eigi|ei .* ni)\b/i.test(msg))) return;
+
                   const update = await extractMemoryUpdate(body.message, corrected, LOVABLE_API_KEY);
                   if (!update) return;
+
                   const merged: UserMemory = {
                     name: (update.name as string) ?? memory?.name ?? null,
                     language: (update.language as string) ?? memory?.language ?? null,
