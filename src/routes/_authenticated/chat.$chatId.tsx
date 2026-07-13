@@ -211,6 +211,43 @@ function Avatar({ assistant }: { assistant?: boolean }) {
   }
   return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>;
 }
+function UserContent({ content }: { content: string }) {
+  const parts: Array<{ type: "img"; url: string } | { type: "text"; text: string }> = [];
+  const re = /!\[[^\]]*\]\(([^)]+)\)/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(content)) !== null) {
+    if (m.index > last) {
+      const t = content.slice(last, m.index).trim();
+      if (t) parts.push({ type: "text", text: t });
+    }
+    parts.push({ type: "img", url: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < content.length) {
+    const t = content.slice(last).trim();
+    if (t) parts.push({ type: "text", text: t });
+  }
+  const imgs = parts.filter((p) => p.type === "img") as Array<{ type: "img"; url: string }>;
+  const texts = parts.filter((p) => p.type === "text") as Array<{ type: "text"; text: string }>;
+  return (
+    <div className="flex flex-col gap-2">
+      {imgs.length > 0 && (
+        <div className={`flex flex-wrap gap-1.5 ${imgs.length === 1 ? "" : ""}`}>
+          {imgs.map((p, i) => (
+            <a key={i} href={p.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border">
+              <img src={p.url} alt="attachment" className="max-h-64 max-w-[220px] object-cover" />
+            </a>
+          ))}
+        </div>
+      )}
+      {texts.length > 0 && (
+        <p className="whitespace-pre-wrap text-sm">{texts.map((t) => t.text).join("\n\n")}</p>
+      )}
+    </div>
+  );
+}
+
 
 function MessageRow({
   message,
