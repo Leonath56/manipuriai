@@ -321,9 +321,12 @@ export const Route = createFileRoute("/api/chat")({
           // Drop the just-inserted current user message from history if present,
           // then append it explicitly at the end so the model always sees the
           // latest question as the final turn (fixes "replies with previous answer").
-          const priorHistory = history.filter(
-            (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText),
-          );
+          // Also strip embedded image markdown (data URLs) from prior user turns
+          // so we don't resend huge base64 blobs on every request.
+          const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").trim();
+          const priorHistory = history
+            .filter((m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText))
+            .map((m) => (m.role === "user" ? { ...m, content: stripImgs(m.content) } : m));
           const userInfo =
             displayName || userAge
               ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
