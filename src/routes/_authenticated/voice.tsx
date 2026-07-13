@@ -314,6 +314,16 @@ function VoiceMode() {
             <SelectItem value="en">English</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Select value={gender} onValueChange={(v) => setGender(v as "male" | "female")}>
+            <SelectTrigger className="h-9 w-auto gap-1.5 border-white/20 bg-white/5 px-3 text-xs text-white hover:bg-white/10">
+              <span>{gender === "male" ? "♂ Male" : "♀ Female"}</span>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="female">♀ Female voice</SelectItem>
+              <SelectItem value="male">♂ Male voice</SelectItem>
+            </SelectContent>
+          </Select>
         <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
           <X className="h-5 w-5" />
         </Button>
