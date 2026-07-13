@@ -324,6 +324,39 @@ function MessageRow({
     await onEdit(message, t);
   };
 
+  const openCorrection = () => {
+    setCorrection(message.content);
+    setCorrectionNote("");
+    setCorrectOpen(true);
+  };
+  const submitCorrection = async () => {
+    const corrected = correction.trim();
+    if (!corrected) { toast.error("Please write the corrected version"); return; }
+    if (corrected === message.content.trim()) { toast.error("Correction is the same as the original"); return; }
+    setSavingCorrection(true);
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      const userId = sess.user?.id;
+      if (!userId) throw new Error("Not signed in");
+      const { error } = await supabase.from("manipuri_corrections").insert({
+        user_id: userId,
+        chat_id: chatId,
+        message_id: message.id.startsWith("opt-") || message.id.startsWith("a-") ? null : message.id,
+        original_text: message.content,
+        corrected_text: corrected,
+        note: correctionNote.trim() || null,
+        language: lang,
+      });
+      if (error) throw error;
+      toast.success("Thanks! Your correction helps train Manipuri AI 🙏");
+      setCorrectOpen(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit correction");
+    } finally {
+      setSavingCorrection(false);
+    }
+  };
+
   return (
     <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse msg-pop" : "animate-fade-in"}`}>
       <Avatar assistant={!isUser} />
