@@ -274,7 +274,9 @@ function VoiceMode() {
 
   const onOrbTap = () => {
     if (status === "speaking") {
-      // Interrupt AI and start listening again
+      // Interrupt AI and start listening again — invalidate any pending turn
+      turnIdRef.current++;
+      abortRef.current?.abort();
       stopSpeaking();
       startListening();
     } else if (status === "listening") {
@@ -284,8 +286,10 @@ function VoiceMode() {
         recorderRef.current.stop();
       }
     } else if (status === "thinking") {
-      // Cancel generation
+      // Cancel generation and invalidate turn so any late tts/audio is ignored
+      turnIdRef.current++;
       abortRef.current?.abort();
+      stopSpeaking();
       setStatus("idle");
       setTimeout(() => { if (!stoppedRef.current) startListening(); }, 100);
     } else {
