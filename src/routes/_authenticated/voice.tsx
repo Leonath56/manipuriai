@@ -291,8 +291,8 @@ function VoiceMode() {
   };
 
   const statusLabel =
-    status === "listening" ? "Listening…" :
-    status === "thinking" ? "Thinking…" :
+    status === "listening" ? "Listening… (tap to cancel)" :
+    status === "thinking" ? "Thinking… (tap to cancel)" :
     status === "speaking" ? "Speaking… (tap to interrupt)" :
     "Tap to start";
 
