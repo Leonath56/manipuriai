@@ -145,8 +145,24 @@ function AdminPage() {
                     <td className="py-2 pr-3 text-muted-foreground">{u.email}</td>
                     <td className="py-2 pr-3">{u.age ?? "—"}</td>
                     <td className="py-2 pr-3 capitalize">{u.plan}</td>
-                    <td className="py-2 pr-3">{u.chatCount}</td>
-                    <td className="py-2 pr-3">{u.messageCount}</td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.chatCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.chatCount}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.messageCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.messageCount}
+                      </button>
+                    </td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">
                       {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "—"}
