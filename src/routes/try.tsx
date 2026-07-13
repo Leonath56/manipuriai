@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const GUEST_LIMIT = 3;
 const NAME_KEY = "manipuri_guest_name";
@@ -35,9 +37,14 @@ function TryPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // If already signed in, skip trial UI entirely.
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) navigate({ to: "/chat" });
+    });
     const savedName = localStorage.getItem(NAME_KEY);
     const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
     if (savedName) setName(savedName);
+
     setCount(savedCount);
   }, []);
 
