@@ -54,11 +54,8 @@ function NewChat() {
     if ((!text && images.length === 0) || sending) return;
     setSending(true);
     const sentImages = images;
-    const stored = text
-      ? sentImages.length
-        ? `${text}\n\n_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`
-        : text
-      : `_[📷 ${sentImages.length} image${sentImages.length > 1 ? "s" : ""} attached]_`;
+    const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
+    const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
     try {
       let newChatId: string | null = null;
       let acc = "";
