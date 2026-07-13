@@ -158,6 +158,7 @@ export function Composer({
   setMode: (v: "instant" | "think") => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   const onPickFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
