@@ -216,8 +216,12 @@ export const Route = createFileRoute("/api/chat")({
           const priorHistory = history.filter(
             (m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === body.message),
           );
+          const userInfo =
+            displayName || userAge
+              ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
+              : `\n\n# USER PROFILE\n- The user's name is unknown. Do NOT invent a name. NEVER call the user "Khullak" or any generic placeholder.`;
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + languageHint + webContext },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + languageHint + webContext },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: body.message },
           ];
