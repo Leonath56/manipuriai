@@ -284,7 +284,7 @@ function MessageRow({
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   rows={Math.min(8, Math.max(2, draft.split("\n").length))}
-                  className="min-h-[60px] resize-none border-0 bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  className="min-h-[60px] resize-none border-0 bg-transparent text-secondary-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
