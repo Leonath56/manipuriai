@@ -1,24 +1,72 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Sparkles, Globe, Zap } from "lucide-react";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
-  component: Index,
+  head: () => ({
+    meta: [
+      { title: "Manipuri AI — Bilingual AI chat in Meiteilon & English" },
+      { name: "description", content: "The first ChatGPT-style AI that speaks Manipuri (Meiteilon) and English fluently. Free to start." },
+    ],
+  }),
+  component: Landing,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
+function Landing() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen gradient-mesh">
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          Manipuri AI
+        </Link>
+        <nav className="flex items-center gap-2">
+          <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
+          <Link to="/auth" search={{ mode: "signup" }}><Button>Get started</Button></Link>
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-6 pb-24 pt-16 md:pt-24">
+        <section className="mx-auto max-w-3xl text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Meiteilon · English · One AI
+          </span>
+          <h1 className="mt-6 font-display text-5xl font-bold tracking-tight md:text-6xl">
+            Chat with AI in <span className="text-primary">Manipuri</span> and English.
+          </h1>
+          <p className="mt-6 text-lg text-muted-foreground">
+            Manipuri AI understands what you write in Meiteilon or English and replies in the same language — fluently, respectfully, with markdown and code support.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link to="/auth" search={{ mode: "signup" }}>
+              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Start chatting free</Button>
+            </Link>
+            <Link to="/plans"><Button size="lg" variant="outline">See plans</Button></Link>
+          </div>
+        </section>
+
+        <section className="mt-24 grid gap-4 md:grid-cols-3">
+          {[
+            { icon: Globe, title: "Bilingual by design", body: "Auto-detects Manipuri or English and replies in the same language. Switch anytime." },
+            { icon: Zap, title: "Fast & modern", body: "Streaming-style typing, markdown, code blocks with syntax hints, and a clean ChatGPT-like feel." },
+            { icon: Sparkles, title: "Made for Manipur", body: "Culturally aware answers with support for Meitei Mayek, Bengali script, and Latin transliteration." },
+          ].map(({ icon: Icon, title, body }) => (
+            <div key={title} className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent/40 text-primary">
+                <Icon className="h-5 w-5" />
+              </div>
+              <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+            </div>
+          ))}
+        </section>
+      </main>
+
+      <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} Manipuri AI · Built with care for Meiteilon speakers.
+      </footer>
     </div>
   );
 }
