@@ -364,7 +364,26 @@ function VoiceMode() {
           />
           <span className="relative flex h-24 w-24 items-center justify-center rounded-full bg-black/80 text-white">
             {status === "thinking" ? (
-              <Loader2 className="h-8 w-8 animate-spin" />
+              <>
+                {/* ChatGPT-style breathing orb: soft pulsing white core + concentric ripples */}
+                <span
+                  className="absolute inset-0 rounded-full bg-white/90 blur-md"
+                  style={{ animation: "voiceBreath 1.6s ease-in-out infinite" }}
+                />
+                <span
+                  className="absolute inset-0 rounded-full border border-white/40"
+                  style={{ animation: "voiceRipple 1.8s ease-out infinite" }}
+                />
+                <span
+                  className="absolute inset-0 rounded-full border border-white/30"
+                  style={{ animation: "voiceRipple 1.8s ease-out 0.6s infinite" }}
+                />
+                <span
+                  className="absolute inset-0 rounded-full border border-white/20"
+                  style={{ animation: "voiceRipple 1.8s ease-out 1.2s infinite" }}
+                />
+                <span className="relative h-3 w-3 rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.9)]" />
+              </>
             ) : (
               <span
                 className="font-serif text-5xl leading-none text-emerald-100"
