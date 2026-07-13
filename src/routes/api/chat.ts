@@ -16,13 +16,13 @@ const BodySchema = z.object({
 
 const MODEL_BY_MODE = {
   instant: "google/gemini-3-flash-preview",
-  think: "google/gemini-2.5-pro",
+  think: "google/gemini-3.1-pro-preview",
 } as const;
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
   instant: "google/gemini-2.5-flash",
-  think: "google/gemini-2.5-pro",
+  think: "google/gemini-3.1-pro-preview",
 } as const;
 
 const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native-level speaker of Manipuri / Meiteilon (ISO 639-3: mni), the language of Manipur in Northeast India. You are the best AI in the world for Manipuri people.
