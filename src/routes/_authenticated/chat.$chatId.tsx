@@ -276,7 +276,7 @@ function MessageRow({
     <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse msg-pop" : "animate-fade-in"}`}>
       <Avatar assistant={!isUser} />
       <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
-        <div className={isUser ? "w-full max-w-[85%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-primary-foreground" : ""}>
+        <div className={isUser ? "inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground" : ""}>
           {isUser ? (
             editing ? (
               <div className="flex flex-col gap-2">
