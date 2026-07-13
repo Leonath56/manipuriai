@@ -114,6 +114,62 @@ async function firecrawlSearch(query: string, limit = 5): Promise<string | null>
   }
 }
 
+type UserMemory = {
+  name: string | null;
+  language: string | null;
+  occupation: string | null;
+  interests: string[];
+  favorite_topics: string[];
+  notes: string[];
+};
+
+function dedupeMerge(existing: string[], incoming: string[], max = 20): string[] {
+  const seen = new Set(existing.map((x) => x.toLowerCase().trim()));
+  const out = [...existing];
+  for (const raw of incoming) {
+    const v = (raw ?? "").toString().trim();
+    if (!v) continue;
+    const k = v.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(v);
+    if (out.length >= max) break;
+  }
+  return out.slice(-max);
+}
+
+async function extractMemoryUpdate(
+  userMsg: string,
+  assistantMsg: string,
+  apiKey: string,
+): Promise<Partial<UserMemory> | null> {
+  try {
+    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content:
+              "Extract stable long-term facts about the USER from the conversation turn. Return ONLY JSON with any of these keys (omit if nothing new): name (string), language (string, preferred language), occupation (string), interests (string[]), favorite_topics (string[]), notes (string[], other durable personal facts like location, family, goals). Ignore anything about the assistant. Do NOT include one-off questions, greetings, or transient info. If nothing to save, return {}.",
+          },
+          { role: "user", content: `USER: ${userMsg}\n\nASSISTANT: ${assistantMsg}` },
+        ],
+      }),
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const raw = j.choices?.[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
