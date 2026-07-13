@@ -91,10 +91,11 @@ export const sendMessage = createServerFn({ method: "POST" })
 
     const languageHint =
       data.language === "mni"
-        ? "\n\nUser has forced language: reply in Manipuri (Meiteilon)."
+        ? "\n\nUser has forced language: reply in Meiteilon (romanized in English letters only)."
         : data.language === "en"
           ? "\n\nUser has forced language: reply in English."
           : "";
+
 
     const messages = [
       { role: "system", content: SYSTEM_PROMPT + languageHint },
