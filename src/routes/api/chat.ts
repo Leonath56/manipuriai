@@ -308,8 +308,22 @@ export const Route = createFileRoute("/api/chat")({
             displayName || userAge
               ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
               : `\n\n# USER PROFILE\n- The user's name is unknown. Do NOT invent a name. NEVER call the user "Khullak" or any generic placeholder.`;
+          const memoryBlock = (() => {
+            const bits: string[] = [];
+            if (memory?.name) bits.push(`- Preferred name: ${memory.name}`);
+            if (memory?.language) bits.push(`- Preferred language: ${memory.language}`);
+            if (memory?.occupation) bits.push(`- Occupation: ${memory.occupation}`);
+            if (memory?.interests?.length) bits.push(`- Interests: ${memory.interests.join(", ")}`);
+            if (memory?.favorite_topics?.length) bits.push(`- Favorite topics: ${memory.favorite_topics.join(", ")}`);
+            if (memory?.notes?.length) bits.push(`- Other facts:\n  • ${memory.notes.join("\n  • ")}`);
+            if (!bits.length) return "";
+            return `\n\n# LONG-TERM MEMORY ABOUT THIS USER\nUse these remembered facts to personalize your reply naturally. Do not list them back verbatim unless asked.\n${bits.join("\n")}`;
+          })();
+          const recentChatsBlock = recentChats.length
+            ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
+            : "";
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + languageHint + webContext },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: body.message },
           ];
