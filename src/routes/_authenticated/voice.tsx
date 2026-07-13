@@ -328,7 +328,16 @@ function VoiceMode() {
             {status === "thinking" ? (
               <Loader2 className="h-8 w-8 animate-spin" />
             ) : (
-              <Mic className="h-9 w-9" />
+              <span
+                className="font-serif text-5xl leading-none text-emerald-100"
+                style={{
+                  textShadow:
+                    "0 0 12px rgba(16,185,129,0.9), 0 0 28px rgba(16,185,129,0.7), 0 0 48px rgba(52,211,153,0.5)",
+                }}
+                aria-hidden
+              >
+                ꯃ
+              </span>
             )}
           </span>
           {status === "listening" && (
