@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Send } from "lucide-react";
 
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup", "forgot"]).optional(),
@@ -180,6 +180,17 @@ function AuthPage() {
             </form>
           )}
         </Card>
+
+        <div className="mt-6 text-center">
+          <a
+            href="https://t.me/MrLeona"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground shadow-soft hover:bg-accent/40"
+          >
+            <Send className="h-3.5 w-3.5" /> Contact Developer
+          </a>
+        </div>
       </div>
     </div>
   );
