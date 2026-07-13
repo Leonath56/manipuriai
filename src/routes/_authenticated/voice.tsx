@@ -229,7 +229,9 @@ function VoiceMode() {
       }
       setStatus("speaking");
       const audio = await tts({ data: { text: speak, gender } });
-      if (stoppedRef.current) return;
+      if (stoppedRef.current || myTurn !== turnIdRef.current) return;
+      // Ensure no prior audio is still around (defensive against overlap)
+      stopSpeaking();
       const bytes = Uint8Array.from(atob(audio.audio), (c) => c.charCodeAt(0));
       const b = new Blob([bytes], { type: audio.mime });
       const url = URL.createObjectURL(b);
@@ -237,10 +239,12 @@ function VoiceMode() {
       const el = new Audio(url);
       audioElRef.current = el;
       el.onended = () => {
+        if (myTurn !== turnIdRef.current) return;
         stopSpeaking();
         if (!stoppedRef.current) startListening();
       };
       el.onerror = () => {
+        if (myTurn !== turnIdRef.current) return;
         stopSpeaking();
         if (!stoppedRef.current) startListening();
       };
