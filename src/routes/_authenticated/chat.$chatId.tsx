@@ -25,12 +25,10 @@ function ChatView() {
   const [lang, setLang] = useState<"auto" | "mni" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
-  const [typing, setTyping] = useState(false);
+  const [streaming, setStreaming] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const send = useServerFn(sendMessage);
   const qc = useQueryClient();
-  
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -51,7 +49,7 @@ function ChatView() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQ.data, typing]);
+  }, [messagesQ.data, streaming]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,21 +58,27 @@ function ChatView() {
     setSending(true);
     setInput("");
 
-    // optimistic
     qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
       ...(old ?? []),
       { id: `opt-${Date.now()}`, role: "user", content: text },
     ]);
-    setTyping(true);
+    setStreaming("");
 
     try {
-      await send({ data: { chatId, message: text, language: lang, mode } });
+      await streamChat({
+        chatId,
+        message: text,
+        language: lang,
+        mode,
+        onChunk: (delta) => setStreaming((s) => s + delta),
+      });
+      setStreaming("");
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");
+      setStreaming("");
     } finally {
-      setTyping(false);
       setSending(false);
       inputRef.current?.focus();
     }
