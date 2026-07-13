@@ -85,10 +85,16 @@ function VoiceMode() {
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    if (audioElRef.current) {
-      try { audioElRef.current.pause(); } catch { /* ignore */ }
-      audioElRef.current.src = "";
-      audioElRef.current = null;
+    const el = audioElRef.current;
+    audioElRef.current = null;
+    if (el) {
+      // Detach handlers BEFORE mutating src so pause/clear doesn't trigger
+      // onerror/onended → which would re-enter startListening and overlap.
+      el.onended = null;
+      el.onerror = null;
+      el.onpause = null;
+      try { el.pause(); } catch { /* ignore */ }
+      try { el.removeAttribute("src"); el.load(); } catch { /* ignore */ }
     }
     if (audioUrlRef.current) {
       URL.revokeObjectURL(audioUrlRef.current);
