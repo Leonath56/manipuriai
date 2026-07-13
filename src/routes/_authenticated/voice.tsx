@@ -299,9 +299,10 @@ function VoiceMode() {
 
   const exit = () => {
     stoppedRef.current = true;
+    turnIdRef.current++;
     abortRef.current?.abort();
-    cleanupMic();
     stopSpeaking();
+    cleanupMic();
     if (chatIdRef.current) navigate({ to: "/chat/$chatId", params: { chatId: chatIdRef.current } });
     else navigate({ to: "/chat" });
   };
