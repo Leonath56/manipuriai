@@ -202,6 +202,9 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/plans"><CreditCard className="mr-2 h-4 w-4" /> Plans & billing</Link></DropdownMenuItem>
+            {adminQ.data?.isAdmin && (
+              <DropdownMenuItem asChild><Link to="/admin"><Shield className="mr-2 h-4 w-4" /> Admin</Link></DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" /> Sign out
