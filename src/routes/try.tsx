@@ -138,6 +138,10 @@ function TryPage() {
   const remaining = Math.max(0, GUEST_LIMIT - count);
   const locked = count >= GUEST_LIMIT;
 
+  if (checking) {
+    return <div className="min-h-screen gradient-mesh grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  }
+
   if (!name) {
     return (
       <div className="min-h-screen gradient-mesh grid place-items-center px-4 py-10">
