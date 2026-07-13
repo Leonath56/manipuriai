@@ -45,8 +45,12 @@ function mayNeedWebSearch(msg: string): boolean {
   return FRESH_INFO_REGEX.test(msg);
 }
 
-async function decideWebSearch(query: string, apiKey: string): Promise<string | null> {
-  if (!mayNeedWebSearch(query)) return null;
+async function decideWebSearch(
+  query: string,
+  apiKey: string,
+  force: boolean,
+): Promise<string | null> {
+  if (!force && !mayNeedWebSearch(query)) return null;
   try {
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -56,8 +60,9 @@ async function decideWebSearch(query: string, apiKey: string): Promise<string | 
         messages: [
           {
             role: "system",
-            content:
-              "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
+            content: force
+              ? "You are a research assistant. For the user's question, output ONLY the best English web search query (max 12 words) that would fetch accurate, up-to-date info to answer it. If the question is pure chit-chat with no factual content at all, output exactly: NO."
+              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
           },
           { role: "user", content: query },
         ],
@@ -72,6 +77,7 @@ async function decideWebSearch(query: string, apiKey: string): Promise<string | 
     return null;
   }
 }
+
 
 async function firecrawlSearch(query: string): Promise<string | null> {
   const key = process.env.FIRECRAWL_API_KEY;
