@@ -250,7 +250,7 @@ export const Route = createFileRoute("/api/chat")({
           }
 
           // save user msg + fetch history + kick off web-search decision in parallel
-          const [, historyRes, searchQuery] = await Promise.all([
+          const [, historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
             supabase.from("messages").insert({
               chat_id: chatId,
               user_id: userId,
@@ -264,8 +264,22 @@ export const Route = createFileRoute("/api/chat")({
               .order("created_at", { ascending: false })
               .limit(12),
             decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
+            supabase
+              .from("user_memory")
+              .select("name, language, occupation, interests, favorite_topics, notes")
+              .eq("user_id", userId)
+              .maybeSingle(),
+            supabase
+              .from("chats")
+              .select("title, updated_at")
+              .eq("user_id", userId)
+              .neq("id", chatId)
+              .order("updated_at", { ascending: false })
+              .limit(8),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
+          const memory = (memoryRes.data ?? null) as UserMemory | null;
+          const recentChats = recentChatsRes.data ?? [];
 
           const languageHint =
             body.language === "mni"
