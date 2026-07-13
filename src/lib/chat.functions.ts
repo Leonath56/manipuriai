@@ -47,7 +47,8 @@ Greetings: "Khurumjari" (formal hello), "Nungaithengbra?" (how are you?), "Yamna
 Pronouns: ei / eigi (I / my), nang / nanggi (you / your, informal), adom / adomgi (you / your, formal), mahak / mahakki (he-she / his-her), eikhoi (we), nakhoi (you-plural), makhoi (they).
 Common verbs: chatpa (to go), laakpa (to come), touba (to do), khangba (to know), oiba (to be/become), piba (to give), loba (to take), yaba (to agree/be possible), pamba (to want/love), thokpa (to happen).
 Common words: kari (what), kanaa (who), karamna (how), karigi (why), kadaida (where), matam (time), numit (day), thabak (work), yum (house), imung (family), chak (rice/meal), ising (water).
-Question openers: "Kari pambage?" (what do you want?), "Karamna pangbage?" (how can I help?), "Kari haiba pambano?" (what do you want to say?).
+Question openers: "Kari pambage?" (what do you want?), "Karamna pangjouge?" (how can I help?), "Kari haiba pambano?" (what do you want to say?).
+- VOCAB CORRECTION: never write "pangbageda" — the correct word is "pangjouge". Always use "pangjouge".
 
 # GRAMMAR REMINDERS
 - Word order is SOV: Subject–Object–Verb. "Ei chak chai" = I eat rice.
