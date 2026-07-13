@@ -176,9 +176,12 @@ function VoiceMode() {
       const token = sess.session?.access_token;
       if (!token) throw new Error("Not signed in");
 
+      // Preprocess: mono, 16kHz, high-pass, peak-normalize → WAV
+      const processed = await preprocessAudio(blob);
       const fd = new FormData();
-      const ext = (blob.type.includes("mp4") ? "mp4" : blob.type.includes("mpeg") ? "mp3" : "webm");
-      fd.append("file", blob, `recording.${ext}`);
+      const ext = processed.type.includes("wav") ? "wav"
+        : (blob.type.includes("mp4") ? "mp4" : blob.type.includes("mpeg") ? "mp3" : "webm");
+      fd.append("file", processed, `recording.${ext}`);
       fd.append("language", langRef.current);
       const tRes = await fetch("/api/transcribe", {
         method: "POST", headers: { Authorization: `Bearer ${token}` }, body: fd,
