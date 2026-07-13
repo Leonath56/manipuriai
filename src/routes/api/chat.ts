@@ -206,7 +206,7 @@ export const Route = createFileRoute("/api/chat")({
               .select("role, content")
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
-              .limit(20),
+              .limit(12),
             decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
