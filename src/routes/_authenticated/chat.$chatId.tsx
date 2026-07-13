@@ -8,7 +8,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle } from "lucide-react";
+import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle, Pencil } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 
@@ -125,6 +126,25 @@ function ChatView() {
     await runSend(lastUser.content);
   };
 
+  const editAndResend = async (msg: Msg, newText: string) => {
+    if (sending) return;
+    const trimmed = newText.trim();
+    if (!trimmed) return;
+    const msgs = messagesQ.data ?? [];
+    const target = msgs.find((m) => m.id === msg.id);
+    const cutoff = target?.created_at;
+    // delete target + everything after in DB (server will re-insert the edited turn)
+    if (cutoff) {
+      await supabase.from("messages").delete().eq("chat_id", chatId).gte("created_at", cutoff);
+    } else {
+      await supabase.from("messages").delete().eq("id", msg.id);
+    }
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) =>
+      (old ?? []).filter((m) => (cutoff ? (m.created_at ?? "") < cutoff : m.id !== msg.id)),
+    );
+    await runSend(trimmed);
+  };
+
   const messages = messagesQ.data ?? [];
   const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
 
@@ -134,7 +154,7 @@ function ChatView() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
-              <MessageRow key={m.id} message={m} />
+              <MessageRow key={m.id} message={m} onEdit={editAndResend} disabled={sending} />
             ))}
             {sending && (
               <div className="my-6 flex items-start gap-3">
@@ -186,9 +206,19 @@ function Avatar({ assistant }: { assistant?: boolean }) {
   return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>;
 }
 
-function MessageRow({ message }: { message: Msg }) {
+function MessageRow({
+  message,
+  onEdit,
+  disabled,
+}: {
+  message: Msg;
+  onEdit: (msg: Msg, newText: string) => Promise<void>;
+  disabled: boolean;
+}) {
   const [copied, setCopied] = useState(false);
   const [ttsState, setTtsState] = useState<"idle" | "loading" | "playing">("idle");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tts = useServerFn(synthesizeSpeech);
   const isUser = message.role === "user";
@@ -224,44 +254,105 @@ function MessageRow({ message }: { message: Msg }) {
     }
   };
 
+  const startEdit = () => {
+    setDraft(message.content);
+    setEditing(true);
+  };
+  const cancelEdit = () => {
+    setEditing(false);
+    setDraft(message.content);
+  };
+  const saveEdit = async () => {
+    const t = draft.trim();
+    if (!t || t === message.content) {
+      setEditing(false);
+      return;
+    }
+    setEditing(false);
+    await onEdit(message, t);
+  };
+
   return (
     <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse msg-pop" : "animate-fade-in"}`}>
       <Avatar assistant={!isUser} />
       <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
-        <div className={isUser ? "max-w-[85%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-primary-foreground" : ""}>
+        <div className={isUser ? "w-full max-w-[85%] rounded-2xl rounded-tr-md bg-primary px-4 py-2.5 text-primary-foreground" : ""}>
           {isUser ? (
-            <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+            editing ? (
+              <div className="flex flex-col gap-2">
+                <Textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={Math.min(8, Math.max(2, draft.split("\n").length))}
+                  className="min-h-[60px] resize-none border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground placeholder:text-primary-foreground/50 focus-visible:ring-primary-foreground/40"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void saveEdit();
+                    } else if (e.key === "Escape") {
+                      e.preventDefault();
+                      cancelEdit();
+                    }
+                  }}
+                />
+                <div className="flex justify-end gap-2">
+                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7 text-primary-foreground hover:bg-primary-foreground/15 hover:text-primary-foreground">
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
+                    Send
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+            )
           ) : (
             <ChatMarkdown content={message.content} />
           )}
         </div>
-        <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
-          <span>{formatTime(message.created_at)}</span>
-          {!isUser && (
+        {!editing && (
+          <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
+            <span>{formatTime(message.created_at)}</span>
             <div className="ml-1 flex items-center gap-0.5">
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
                 {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={speak}
-                disabled={ttsState === "loading"}
-                aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-              >
-                {ttsState === "loading" ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : ttsState === "playing" ? (
-                  <Square className="h-3.5 w-3.5" />
-                ) : (
-                  <Volume2 className="h-3.5 w-3.5" />
-                )}
-              </Button>
+              {isUser ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={startEdit}
+                  disabled={disabled}
+                  aria-label="Edit message"
+                  title="Edit message"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={speak}
+                  disabled={ttsState === "loading"}
+                  aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                  title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                >
+                  {ttsState === "loading" ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : ttsState === "playing" ? (
+                    <Square className="h-3.5 w-3.5" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
