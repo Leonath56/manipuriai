@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
 import { Composer } from "./chat.index";
@@ -28,7 +28,7 @@ function ChatView() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const send = useServerFn(sendMessage);
   const qc = useQueryClient();
-  const router = useRouter();
+  
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
