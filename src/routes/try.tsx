@@ -26,6 +26,17 @@ export const Route = createFileRoute("/try")({
   component: TryPage,
 });
 
+function hasPersistedSession() {
+  if (typeof window === "undefined") return false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) return true;
+    }
+  } catch {}
+  return false;
+}
+
 function TryPage() {
   const navigate = useNavigate();
   const [name, setName] = useState<string | null>(null);
@@ -34,19 +45,24 @@ function TryPage() {
   const [input, setInput] = useState("");
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(() => hasPersistedSession());
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // If already signed in, skip trial UI entirely.
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/chat" });
-    });
+      if (data.user) {
+        navigate({ to: "/chat", replace: true });
+      } else {
+        setChecking(false);
+      }
+    }).catch(() => setChecking(false));
     const savedName = localStorage.getItem(NAME_KEY);
     const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
     if (savedName) setName(savedName);
-
     setCount(savedCount);
-  }, []);
+  }, [navigate]);
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
