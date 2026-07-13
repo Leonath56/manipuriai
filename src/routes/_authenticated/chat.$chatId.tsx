@@ -60,7 +60,7 @@ function ChatView() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messagesQ.data, streaming]);
 
-  const runSend = async (text: string) => {
+  const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
     setStreaming("");
     const controller = new AbortController();
@@ -69,6 +69,7 @@ function ChatView() {
       await streamChat({
         chatId,
         message: text,
+        images: imgs,
         language: lang,
         mode,
         signal: controller.signal,
