@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const GUEST_LIMIT = 3;
 const NAME_KEY = "manipuri_guest_name";
