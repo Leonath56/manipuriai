@@ -22,7 +22,7 @@ function Landing() {
         </Link>
         <nav className="flex items-center gap-2">
           <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
-          <Link to="/try"><Button>Get started</Button></Link>
+          <Link to="/try"><Button>Chat now</Button></Link>
         </nav>
       </header>
 
@@ -39,7 +39,7 @@ function Landing() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link to="/try">
-              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Get started</Button>
+              <Button size="lg" className="gap-2"><MessageSquare className="h-4 w-4" /> Chat now</Button>
             </Link>
             <Link to="/auth">
               <Button size="lg" variant="outline">Sign in</Button>
