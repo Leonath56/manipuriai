@@ -66,6 +66,7 @@ function Landing() {
 
       <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
         © {new Date().getFullYear()} Manipuri AI · Built with care for Meiteilon speakers.
+        <div className="mt-1 font-semibold tracking-wider text-foreground">DEVELOPED BY LEONATH</div>
       </footer>
     </div>
   );
