@@ -190,10 +190,12 @@ export const Route = createFileRoute("/api/chat")({
 
           const languageHint =
             body.language === "mni"
-              ? "\n\nUser has forced language: reply in Meiteilon (romanized)."
-              : body.language === "en"
-                ? "\n\nUser has forced language: reply in English."
-                : "";
+              ? "\n\nUser has forced language/script: reply in Meiteilon romanized in Latin letters only. Do NOT use Meitei Mayek or Bengali script."
+              : body.language === "mni-mtei"
+                ? "\n\nUser has forced language/script: reply in Meiteilon written in Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ) ONLY. Do not use Latin/Roman letters or Bengali script for Meiteilon content. Keep code, URLs, numbers, and proper nouns in their original script. Use Meitei Mayek digits or Arabic digits as appropriate. Example greetings: ꯈꯨꯔꯨꯝꯖꯔꯤ, ꯅꯨꯡꯉꯥꯏꯊꯦꯡꯕ꯭ꯔꯥ?"
+                : body.language === "en"
+                  ? "\n\nUser has forced language: reply in English."
+                  : "";
 
           let webContext = "";
           if (searchQuery) {
