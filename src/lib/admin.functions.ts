@@ -1,0 +1,127 @@
+import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+async function assertAdmin(userId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Forbidden: admin only");
+}
+
+export const isAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    return { isAdmin: !!data };
+  });
+
+export const getAdminOverview = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const today = new Date().toISOString().slice(0, 10);
+    const since7 = new Date(Date.now() - 7 * 864e5).toISOString();
+
+    const [profiles, chats, messages, msgs7, usageToday, corrections] = await Promise.all([
+      supabaseAdmin.from("profiles").select("*", { count: "exact", head: true }),
+      supabaseAdmin.from("chats").select("*", { count: "exact", head: true }),
+      supabaseAdmin.from("messages").select("*", { count: "exact", head: true }),
+      supabaseAdmin.from("messages").select("*", { count: "exact", head: true }).gte("created_at", since7),
+      supabaseAdmin.from("daily_usage").select("message_count").eq("usage_date", today),
+      supabaseAdmin.from("manipuri_corrections").select("*", { count: "exact", head: true }),
+    ]);
+
+    const messagesToday = (usageToday.data ?? []).reduce((a, r) => a + (r.message_count ?? 0), 0);
+
+    // Plan breakdown
+    const { data: planRows } = await supabaseAdmin.from("profiles").select("plan");
+    const planCounts: Record<string, number> = {};
+    for (const r of planRows ?? []) planCounts[r.plan] = (planCounts[r.plan] ?? 0) + 1;
+
+    return {
+      totalUsers: profiles.count ?? 0,
+      totalChats: chats.count ?? 0,
+      totalMessages: messages.count ?? 0,
+      messagesLast7d: msgs7.count ?? 0,
+      messagesToday,
+      totalCorrections: corrections.count ?? 0,
+      planCounts,
+    };
+  });
+
+export const listAdminUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { search?: string; limit?: number } | undefined) => d ?? {})
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const limit = Math.min(data.limit ?? 100, 500);
+
+    let q = supabaseAdmin
+      .from("profiles")
+      .select("id, email, username, full_name, age, plan, preferred_language, last_login_at, created_at, avatar_url")
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (data.search) {
+      const s = `%${data.search}%`;
+      q = q.or(`email.ilike.${s},username.ilike.${s},full_name.ilike.${s}`);
+    }
+    const { data: users, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const ids = (users ?? []).map((u) => u.id);
+    if (ids.length === 0) return { users: [] };
+
+    const [{ data: roles }, { data: chatCounts }, { data: msgCounts }] = await Promise.all([
+      supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids),
+      supabaseAdmin.from("chats").select("user_id").in("user_id", ids),
+      supabaseAdmin.from("messages").select("user_id").in("user_id", ids),
+    ]);
+
+    const roleMap = new Map<string, string[]>();
+    for (const r of roles ?? []) {
+      const arr = roleMap.get(r.user_id) ?? [];
+      arr.push(r.role);
+      roleMap.set(r.user_id, arr);
+    }
+    const chatCount = new Map<string, number>();
+    for (const c of chatCounts ?? []) chatCount.set(c.user_id, (chatCount.get(c.user_id) ?? 0) + 1);
+    const msgCount = new Map<string, number>();
+    for (const m of msgCounts ?? []) msgCount.set(m.user_id, (msgCount.get(m.user_id) ?? 0) + 1);
+
+    return {
+      users: (users ?? []).map((u) => ({
+        ...u,
+        roles: roleMap.get(u.id) ?? [],
+        chatCount: chatCount.get(u.id) ?? 0,
+        messageCount: msgCount.get(u.id) ?? 0,
+      })),
+    };
+  });
+
+export const listAdminCorrections = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("manipuri_corrections")
+      .select("id, user_id, original_text, corrected_text, note, language, status, created_at")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return { corrections: data ?? [] };
+  });

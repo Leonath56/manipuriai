@@ -10,7 +10,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff } from "lucide-react";
+import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield } from "lucide-react";
+import { isAdmin as isAdminFn } from "@/lib/admin.functions";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
@@ -46,6 +47,9 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
       return data;
     },
   });
+
+  const checkAdmin = useServerFn(isAdminFn);
+  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin(), staleTime: 60_000 });
 
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
@@ -198,6 +202,9 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/plans"><CreditCard className="mr-2 h-4 w-4" /> Plans & billing</Link></DropdownMenuItem>
+            {adminQ.data?.isAdmin && (
+              <DropdownMenuItem asChild><Link to="/admin"><Shield className="mr-2 h-4 w-4" /> Admin</Link></DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" /> Sign out
