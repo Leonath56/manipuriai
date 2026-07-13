@@ -66,7 +66,8 @@ function AdminPage() {
 
   return (
     <AuthedShell>
-      <div className="mx-auto w-full max-w-6xl p-4 md:p-8 space-y-6">
+      <div className="h-full overflow-y-auto">
+        <div className="mx-auto w-full max-w-6xl p-4 md:p-8 space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
@@ -158,6 +159,7 @@ function AdminPage() {
             )}
           </div>
         </Card>
+        </div>
       </div>
     </AuthedShell>
   );
