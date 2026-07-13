@@ -4,11 +4,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections } from "@/lib/admin.functions";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations } from "@/lib/admin.functions";
 import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Manipuri AI" }] }),
@@ -21,8 +22,11 @@ function AdminPage() {
   const overviewFn = useServerFn(getAdminOverview);
   const usersFn = useServerFn(listAdminUsers);
   const correctionsFn = useServerFn(listAdminCorrections);
+  const convosFn = useServerFn(getAdminUserConversations);
   const [search, setSearch] = useState("");
   const [debounced, setDebounced] = useState("");
+  const [viewUserId, setViewUserId] = useState<string | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -45,6 +49,23 @@ function AdminPage() {
     queryFn: () => correctionsFn(),
     enabled: adminQ.data?.isAdmin === true,
   });
+  const convoQ = useQuery({
+    queryKey: ["admin-user-convos", viewUserId],
+    queryFn: () => convosFn({ data: { userId: viewUserId! } }),
+    enabled: !!viewUserId && adminQ.data?.isAdmin === true,
+  });
+
+  const chatMessages = useMemo(() => {
+    if (!convoQ.data || !selectedChatId) return [];
+    return convoQ.data.messages.filter((m) => m.chat_id === selectedChatId);
+  }, [convoQ.data, selectedChatId]);
+
+  // Auto-select first chat when data loads
+  useEffect(() => {
+    if (convoQ.data && convoQ.data.chats.length > 0 && !selectedChatId) {
+      setSelectedChatId(convoQ.data.chats[0].id);
+    }
+  }, [convoQ.data, selectedChatId]);
 
   if (adminQ.isLoading) {
     return <AuthedShell><div className="p-8 text-muted-foreground">Checking access…</div></AuthedShell>;
@@ -124,8 +145,24 @@ function AdminPage() {
                     <td className="py-2 pr-3 text-muted-foreground">{u.email}</td>
                     <td className="py-2 pr-3">{u.age ?? "—"}</td>
                     <td className="py-2 pr-3 capitalize">{u.plan}</td>
-                    <td className="py-2 pr-3">{u.chatCount}</td>
-                    <td className="py-2 pr-3">{u.messageCount}</td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.chatCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.chatCount}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.messageCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.messageCount}
+                      </button>
+                    </td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="py-2 pr-3 text-xs text-muted-foreground">
                       {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "—"}
@@ -161,6 +198,51 @@ function AdminPage() {
         </Card>
         </div>
       </div>
+
+      <Dialog open={!!viewUserId} onOpenChange={(o) => { if (!o) { setViewUserId(null); setSelectedChatId(null); } }}>
+        <DialogContent className="max-w-5xl p-0 sm:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="border-b border-border/40 px-4 py-3">
+            <DialogTitle className="text-base">
+              {convoQ.data?.profile
+                ? `${convoQ.data.profile.full_name || convoQ.data.profile.username || convoQ.data.profile.email} — conversations`
+                : "Conversations"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] h-[70vh]">
+            <div className="border-r border-border/40 overflow-y-auto">
+              {convoQ.isLoading && <div className="p-4 text-sm text-muted-foreground">Loading…</div>}
+              {(convoQ.data?.chats ?? []).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChatId(c.id)}
+                  className={`w-full text-left px-3 py-2 text-sm border-b border-border/30 hover:bg-muted/50 ${selectedChatId === c.id ? "bg-muted" : ""}`}
+                >
+                  <div className="line-clamp-1 font-medium">{c.title || "Untitled chat"}</div>
+                  <div className="text-[10px] text-muted-foreground">{new Date(c.updated_at).toLocaleString()}</div>
+                </button>
+              ))}
+              {!convoQ.isLoading && (convoQ.data?.chats ?? []).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">No chats.</div>
+              )}
+            </div>
+            <div className="overflow-y-auto p-4 space-y-3">
+              {chatMessages.length === 0 && !convoQ.isLoading && (
+                <div className="text-sm text-muted-foreground">Select a chat to view messages.</div>
+              )}
+              {chatMessages.map((m) => (
+                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                    <div className="mb-1 text-[10px] opacity-70">
+                      {m.role === "user" ? "User" : "AI"} · {new Date(m.created_at).toLocaleString()}
+                    </div>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AuthedShell>
   );
 }

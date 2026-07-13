@@ -125,3 +125,37 @@ export const listAdminCorrections = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { corrections: data ?? [] };
   });
+
+export const getAdminUserConversations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { userId: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const [{ data: profile }, { data: chats }, { data: messages }] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id, email, username, full_name")
+        .eq("id", data.userId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("chats")
+        .select("id, title, created_at, updated_at")
+        .eq("user_id", data.userId)
+        .order("updated_at", { ascending: false })
+        .limit(200),
+      supabaseAdmin
+        .from("messages")
+        .select("id, chat_id, role, content, created_at")
+        .eq("user_id", data.userId)
+        .order("created_at", { ascending: true })
+        .limit(2000),
+    ]);
+
+    return {
+      profile: profile ?? null,
+      chats: chats ?? [],
+      messages: messages ?? [],
+    };
+  });
