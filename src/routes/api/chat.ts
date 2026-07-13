@@ -449,6 +449,28 @@ export const Route = createFileRoute("/api/chat")({
                 { onConflict: "user_id,usage_date" },
               );
 
+              // Fire-and-forget memory extraction (do not block stream close)
+              (async () => {
+                try {
+                  const update = await extractMemoryUpdate(body.message, corrected, LOVABLE_API_KEY);
+                  if (!update) return;
+                  const merged: UserMemory = {
+                    name: (update.name as string) ?? memory?.name ?? null,
+                    language: (update.language as string) ?? memory?.language ?? null,
+                    occupation: (update.occupation as string) ?? memory?.occupation ?? null,
+                    interests: dedupeMerge(memory?.interests ?? [], Array.isArray(update.interests) ? update.interests : []),
+                    favorite_topics: dedupeMerge(memory?.favorite_topics ?? [], Array.isArray(update.favorite_topics) ? update.favorite_topics : []),
+                    notes: dedupeMerge(memory?.notes ?? [], Array.isArray(update.notes) ? update.notes : [], 30),
+                  };
+                  await supabase.from("user_memory").upsert(
+                    { user_id: userId, ...merged, updated_at: new Date().toISOString() },
+                    { onConflict: "user_id" },
+                  );
+                } catch {
+                  // best-effort
+                }
+              })();
+
               controller.close();
             },
           });
