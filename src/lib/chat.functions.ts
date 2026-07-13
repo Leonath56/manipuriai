@@ -172,7 +172,9 @@ export const sendMessage = createServerFn({ method: "POST" })
     const json = (await resp.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
-    const reply = json.choices?.[0]?.message?.content?.trim() ?? "";
+    const rawReply = json.choices?.[0]?.message?.content?.trim() ?? "";
+    // Vocabulary correction: replace incorrect "pangbageda" with "pangjouge"
+    const reply = rawReply.replace(/pangbageda/gi, "pangjouge");
 
     // Save assistant reply
     await supabase.from("messages").insert({
