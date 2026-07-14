@@ -43,11 +43,14 @@ function NewChat() {
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
+  const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,10 @@ function NewChat() {
     const sentImages = images;
     const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
+    // Instantly reflect the message in the UI and clear the composer.
+    setInput("");
+    setImages([]);
+    setPending({ text: stored, images: sentImages });
     try {
       let newChatId: string | null = null;
       let acc = "";
@@ -90,6 +97,7 @@ function NewChat() {
       if (newChatId) qc.invalidateQueries({ queryKey: ["messages", newChatId] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
+      setPending(null);
       setSending(false);
     }
   };
@@ -105,29 +113,53 @@ function NewChat() {
     <AuthedShell>
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto flex min-h-full max-w-2xl flex-col justify-center px-4 py-10">
-            <div className="text-center">
-              <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
-                ꯃ
-              </div>
-              <h1 className="mt-5 font-display text-3xl font-bold">How can I help you today?</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Write in Manipuri or English — attach photos of homework, math, docs, or screenshots and I'll answer based on them.
-              </p>
-            </div>
+          <div className={`mx-auto ${pending ? "" : "flex min-h-full justify-center"} max-w-2xl flex-col px-4 py-10`}>
+            {!pending && (
+              <>
+                <div className="text-center">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
+                    ꯃ
+                  </div>
+                  <h1 className="mt-5 font-display text-3xl font-bold">How can I help you today?</h1>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Write in Manipuri or English — attach photos of homework, math, docs, or screenshots and I'll answer based on them.
+                  </p>
+                </div>
 
-            <div className="mt-8 grid gap-2 sm:grid-cols-2">
-              {suggestions.map((s) => (
-                <button
-                  key={s.title}
-                  onClick={() => { setInput(s.prompt); inputRef.current?.focus(); }}
-                  className="rounded-xl border border-border bg-card p-3 text-left text-sm shadow-soft transition-colors hover:border-primary/40 hover:bg-accent/20"
-                >
-                  <div className="font-medium">{s.title}</div>
-                  <div className="mt-0.5 truncate text-xs text-muted-foreground">{s.prompt}</div>
-                </button>
-              ))}
-            </div>
+                <div className="mt-8 grid gap-2 sm:grid-cols-2">
+                  {suggestions.map((s) => (
+                    <button
+                      key={s.title}
+                      onClick={() => { setInput(s.prompt); inputRef.current?.focus(); }}
+                      className="rounded-xl border border-border bg-card p-3 text-left text-sm shadow-soft transition-colors hover:border-primary/40 hover:bg-accent/20"
+                    >
+                      <div className="font-medium">{s.title}</div>
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">{s.prompt}</div>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            {pending && (
+              <div className="animate-fade-in">
+                <div className="my-6 flex flex-row-reverse items-start gap-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
+                    <p className="whitespace-pre-wrap text-sm">{pending.text.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                  </div>
+                </div>
+                <div className="my-6 flex items-start gap-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
+                  <div className="flex items-center gap-1 pt-3">
+                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                  </div>
+                </div>
+                <div ref={bottomRef} />
+              </div>
+            )}
           </div>
         </div>
 
