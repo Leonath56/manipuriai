@@ -17,7 +17,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
 import { toast } from "sonner";
 
-type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean };
+type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean; kind?: string };
 
 export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   const qc = useQueryClient();
