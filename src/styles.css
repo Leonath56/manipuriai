@@ -183,6 +183,57 @@ iframe[src*="lovable.dev/badge"] {
   100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
+.image-gen-stage {
+  background:
+    radial-gradient(circle at 50% 28%, oklch(1 0 0 / 0.12), transparent 34%),
+    linear-gradient(135deg, var(--color-card), var(--color-muted));
+}
+
+.image-gen-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+  animation: image-grid-drift 3.6s linear infinite;
+}
+
+.image-gen-scan {
+  background: linear-gradient(180deg, transparent, oklch(1 0 0 / 0.26), transparent);
+  filter: blur(10px);
+  animation: image-scan 1.8s ease-in-out infinite;
+}
+
+.image-gen-progress {
+  width: 42%;
+  animation: image-progress 1.6s ease-in-out infinite;
+}
+
+.image-gen-pulse {
+  animation: image-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes image-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 22px 22px, 22px 22px; }
+}
+
+@keyframes image-scan {
+  0% { transform: translateY(-110%); opacity: 0; }
+  18%, 82% { opacity: 1; }
+  100% { transform: translateY(360%); opacity: 0; }
+}
+
+@keyframes image-progress {
+  0% { transform: translateX(-105%); }
+  50% { transform: translateX(90%); }
+  100% { transform: translateX(250%); }
+}
+
+@keyframes image-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
 /* ChatGPT-style voice "thinking" animations */
 @keyframes voiceBreath {
   0%, 100% { transform: scale(0.85); opacity: 0.55; }
