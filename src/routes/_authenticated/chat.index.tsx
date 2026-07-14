@@ -69,6 +69,21 @@ function NewChat() {
     setPending({ text: stored, images: sentImages });
     setStreaming("");
     try {
+      // Auto-detect image generation intent (no images attached, text prompt)
+      if (text && sentImages.length === 0 && looksLikeImagePrompt(text)) {
+        const result = await generateImages({
+          chatId: null,
+          prompt: text,
+          aspectRatio: "1:1",
+          quality: "standard",
+          count: 1,
+          style: "realistic",
+        });
+        qc.invalidateQueries({ queryKey: ["chats"] });
+        navigate({ to: "/chat/$chatId", params: { chatId: result.chatId } });
+        return;
+      }
+
       let newChatId: string | null = null;
       let acc = "";
       await streamChat({
