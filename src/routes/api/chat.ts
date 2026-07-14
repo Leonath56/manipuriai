@@ -447,14 +447,15 @@ export const Route = createFileRoute("/api/chat")({
           ];
 
           const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+          const chatEp = chatCompletionsEndpoint(modelId);
 
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const upstream = await fetch(chatEp.url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${chatEp.apiKey}`,
             },
-            body: JSON.stringify({ model: modelId, messages, stream: true }),
+            body: JSON.stringify({ model: chatEp.model, messages, stream: true }),
           });
 
           if (!upstream.ok || !upstream.body) {
@@ -525,13 +526,13 @@ export const Route = createFileRoute("/api/chat")({
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                  const r = await fetch(chatEp.url, {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
-                      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                      Authorization: `Bearer ${chatEp.apiKey}`,
                     },
-                    body: JSON.stringify({ model: modelId, messages }),
+                    body: JSON.stringify({ model: chatEp.model, messages }),
                   });
                   if (r.ok) {
                     const j = await r.json();
