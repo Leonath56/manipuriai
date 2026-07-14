@@ -65,6 +65,71 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_messages: {
+        Row: {
+          content: string
+          created_at: string
+          guest_session_id: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          guest_session_id: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          guest_session_id?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_messages_guest_session_id_fkey"
+            columns: ["guest_session_id"]
+            isOneToOne: false
+            referencedRelation: "guest_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guest_sessions: {
+        Row: {
+          created_at: string
+          guest_id: string
+          id: string
+          ip_hint: string | null
+          message_count: number
+          name: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_id: string
+          id?: string
+          ip_hint?: string | null
+          message_count?: number
+          name: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_id?: string
+          id?: string
+          ip_hint?: string | null
+          message_count?: number
+          name?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       manipuri_corrections: {
         Row: {
           chat_id: string | null
