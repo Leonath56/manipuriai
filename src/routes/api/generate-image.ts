@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -63,14 +64,15 @@ export const Route = createFileRoute("/api/generate-image")({
               //     concrete visual detail so the model doesn't drift.
           let translatedPrompt = body.prompt;
           try {
-            const tr = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const trEp = chatCompletionsEndpoint("google/gemini-2.5-flash");
+            const tr = await fetch(trEp.url, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                Authorization: `Bearer ${trEp.apiKey}`,
               },
               body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
+                model: trEp.model,
                 messages: [
                   {
                     role: "system",

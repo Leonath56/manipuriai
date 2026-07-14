@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   name: z.string().trim().min(1).max(60),
@@ -89,7 +90,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
           if (!LOVABLE_API_KEY) return new Response("AI not configured", { status: 500 });
 
           const body = BodySchema.parse(await request.json());
@@ -111,14 +112,15 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             { role: "user", content: body.message },
           ];
 
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
+          const upstream = await fetch(ep.url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${ep.apiKey}`,
             },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: ep.model,
               messages,
               stream: true,
             }),

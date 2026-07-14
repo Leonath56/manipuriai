@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
+import { chatCompletionsEndpoint, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -58,16 +59,17 @@ function mayNeedWebSearch(msg: string): boolean {
 
 async function decideWebSearch(
   query: string,
-  apiKey: string,
+  _apiKey: string,
   force: boolean,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
   try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
+    const r = await fetch(ep.url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${ep.apiKey}` },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: ep.model,
         messages: [
           {
             role: "system",
@@ -141,14 +143,15 @@ function dedupeMerge(existing: string[], incoming: string[], max = 20): string[]
 async function extractMemoryUpdate(
   userMsg: string,
   assistantMsg: string,
-  apiKey: string,
+  _apiKey: string,
 ): Promise<Partial<UserMemory> | null> {
   try {
-    const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
+    const r = await fetch(ep.url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${ep.apiKey}` },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: ep.model,
         response_format: { type: "json_object" },
         messages: [
           {
@@ -157,7 +160,6 @@ async function extractMemoryUpdate(
               "You extract long-term facts ABOUT THE USER (the human) from ONE conversation turn. Be extremely strict.\n\nONLY save a fact when the USER explicitly self-discloses it in first person about themselves, e.g. 'my name is...', 'I am a ...', 'I live in ...', 'I like ...', 'call me ...', 'I want you to remember ...', or a direct answer to a question the assistant asked about the user.\n\nDO NOT save anything if:\n- The user is asking a question (about a topic, person, place, history, coding, math, news, etc.).\n- The user is talking about someone else, a public figure, a fictional character, or a general topic.\n- The user is requesting help, translation, summary, or opinion.\n- The information came from the assistant's reply, web search, or general knowledge — never treat assistant content as facts about the user.\n- The user mentions a name/place/topic in passing without saying it belongs to them (e.g. 'who is Ronaldo' does NOT mean the user is Ronaldo or likes football).\n- It is a greeting, chit-chat, one-off curiosity, or transient mood.\n\nIf you are unsure whether it is truly about the user, return {}.\n\nReturn ONLY JSON with any of: name, language, occupation, interests (string[]), favorite_topics (string[]), notes (string[], durable personal facts like location/family/goals stated by the user themselves). Omit keys with nothing new. If nothing qualifies, return {}.",
           },
           { role: "user", content: `USER_MESSAGE: ${userMsg}\n\n(The assistant's reply is provided only for context — never extract facts about the user from it.)\nASSISTANT_REPLY: ${assistantMsg}` },
-
         ],
       }),
     });
@@ -178,8 +180,8 @@ export const Route = createFileRoute("/api/chat")({
         try {
           const SUPABASE_URL = process.env.SUPABASE_URL!;
           const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-          if (!LOVABLE_API_KEY) return new Response("AI not configured", { status: 500 });
+          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
+          if (!LOVABLE_API_KEY) return new Response("AI not configured (set LOVABLE_API_KEY or GEMINI_API_KEY)", { status: 500 });
 
           const auth = request.headers.get("authorization");
           if (!auth) return new Response("Unauthorized", { status: 401 });
@@ -264,11 +266,17 @@ export const Route = createFileRoute("/api/chat")({
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
           if (imageRequest) {
-            const imageRes = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+            const lovable = lovableOnlyEndpoint();
+            if (!lovable) {
+              return new Response(JSON.stringify({ error: "Image generation requires LOVABLE_API_KEY on this deployment." }), {
+                status: 501, headers: { "Content-Type": "application/json" },
+              });
+            }
+            const imageRes = await fetch(`${lovable.baseUrl}/images/generations`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                Authorization: `Bearer ${lovable.apiKey}`,
               },
               body: JSON.stringify({
                 model: "openai/gpt-image-2",
@@ -439,14 +447,15 @@ export const Route = createFileRoute("/api/chat")({
           ];
 
           const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+          const chatEp = chatCompletionsEndpoint(modelId);
 
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const upstream = await fetch(chatEp.url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              Authorization: `Bearer ${chatEp.apiKey}`,
             },
-            body: JSON.stringify({ model: modelId, messages, stream: true }),
+            body: JSON.stringify({ model: chatEp.model, messages, stream: true }),
           });
 
           if (!upstream.ok || !upstream.body) {
@@ -517,13 +526,13 @@ export const Route = createFileRoute("/api/chat")({
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                  const r = await fetch(chatEp.url, {
                     method: "POST",
                     headers: {
                       "Content-Type": "application/json",
-                      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                      Authorization: `Bearer ${chatEp.apiKey}`,
                     },
-                    body: JSON.stringify({ model: modelId, messages }),
+                    body: JSON.stringify({ model: chatEp.model, messages }),
                   });
                   if (r.ok) {
                     const j = await r.json();

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
+import { chatCompletionsEndpoint, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 
 export const Route = createFileRoute("/api/transcribe")({
   server: {
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/api/transcribe")({
         try {
           const SUPABASE_URL = process.env.SUPABASE_URL!;
           const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
+          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
           if (!LOVABLE_API_KEY) return new Response("AI not configured", { status: 500 });
 
           const auth = request.headers.get("authorization");
@@ -66,14 +67,15 @@ export const Route = createFileRoute("/api/transcribe")({
               userText = "Transcribe this audio in the spoken language (Manipuri in romanized Latin, or English). Output only the transcript.";
             }
 
-            const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
+            const res = await fetch(ep.url, {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                Authorization: `Bearer ${ep.apiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-2.5-flash",
+                model: ep.model,
                 messages: [
                   { role: "system", content: sysPrompt },
                   {
@@ -99,15 +101,22 @@ export const Route = createFileRoute("/api/transcribe")({
             });
           }
 
-          // English / auto → higher-accuracy OpenAI transcribe.
+          // English → higher-accuracy OpenAI transcribe via Lovable Gateway (falls back
+          // to Gemini path above if LOVABLE_API_KEY is unavailable, e.g. self-hosted).
+          const lovable = lovableOnlyEndpoint();
+          if (!lovable) {
+            return new Response(JSON.stringify({ error: "English transcription requires LOVABLE_API_KEY on this deployment." }), {
+              status: 501, headers: { "Content-Type": "application/json" },
+            });
+          }
           const upstream = new FormData();
           upstream.append("model", "openai/gpt-4o-transcribe");
           upstream.append("file", file, `recording.${ext}`);
           if (language === "en") upstream.append("language", "en");
 
-          const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/transcriptions", {
+          const res = await fetch(`${lovable.baseUrl}/audio/transcriptions`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}` },
+            headers: { Authorization: `Bearer ${lovable.apiKey}` },
             body: upstream,
           });
           if (!res.ok) {
