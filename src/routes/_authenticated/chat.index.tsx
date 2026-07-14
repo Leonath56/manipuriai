@@ -204,22 +204,79 @@ function NewChat() {
 }
 
 export function ImageGeneratingAnimation() {
+  const stages = [
+    { key: "queued", label: "Queued", target: 15 },
+    { key: "generating", label: "Generating", target: 65 },
+    { key: "rendering", label: "Rendering", target: 95 },
+  ] as const;
+  const [stageIdx, setStageIdx] = useState(0);
+  const [progress, setProgress] = useState(4);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setStageIdx(1), 1200);
+    const t2 = setTimeout(() => setStageIdx(2), 6500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  useEffect(() => {
+    const target = stages[stageIdx].target;
+    const id = setInterval(() => {
+      setProgress((p) => {
+        if (p >= target) return p;
+        const step = Math.max(0.3, (target - p) * 0.08);
+        return Math.min(target, p + step);
+      });
+    }, 120);
+    return () => clearInterval(id);
+  }, [stageIdx]);
+
   return (
     <div className="pt-1.5">
-      <div className="image-gen-stage relative grid aspect-square w-full max-w-[260px] place-items-center overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-        <div className="image-gen-scan absolute inset-x-0 top-0 h-16" />
-        <div className="image-gen-grid absolute inset-0 opacity-70" />
-        <div className="relative grid h-20 w-20 place-items-center rounded-full border border-border bg-background/80 text-4xl font-semibold leading-none shadow-glow" aria-hidden="true">
-          ꯃ
+      <div className="image-gen-stage relative w-full max-w-[300px] overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft">
+        <div className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl border border-border/60 bg-background/40">
+          <div className="image-gen-scan absolute inset-x-0 top-0 h-16" />
+          <div className="image-gen-grid absolute inset-0 opacity-70" />
+          <div className="relative grid h-16 w-16 place-items-center rounded-full border border-border bg-background/80 text-3xl font-semibold leading-none shadow-glow" aria-hidden="true">
+            ꯃ
+          </div>
         </div>
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Creating image</span>
-            <span className="image-gen-pulse">AI</span>
+
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-foreground">{stages[stageIdx].label}…</span>
+            <span className="tabular-nums text-muted-foreground">{Math.round(progress)}%</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="image-gen-progress h-full rounded-full bg-primary" />
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
+          <ul className="mt-2 space-y-1 text-[11px]">
+            {stages.map((s, i) => {
+              const done = i < stageIdx;
+              const active = i === stageIdx;
+              return (
+                <li key={s.key} className="flex items-center gap-2">
+                  <span
+                    className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border text-[9px] ${
+                      done
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : active
+                        ? "border-primary text-primary"
+                        : "border-border text-muted-foreground"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    {done ? "✓" : active ? <span className="image-gen-pulse">●</span> : i + 1}
+                  </span>
+                  <span className={done || active ? "text-foreground" : "text-muted-foreground"}>
+                    {s.label}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     </div>
