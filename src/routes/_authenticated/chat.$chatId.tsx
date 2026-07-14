@@ -395,9 +395,33 @@ function MessageRow({
             ) : (
               <UserContent content={message.content} />
             )
-          ) : (
-            <ChatMarkdown content={message.content} />
-          )}
+          ) : (() => {
+            const imgMeta = parseImageMessage(message.content);
+            if (imgMeta) {
+              return (
+                <ImageResultCard
+                  prompt={imgMeta.prompt}
+                  images={imgMeta.images}
+                  onRegenerate={async () => {
+                    try {
+                      await generateImages({
+                        chatId,
+                        prompt: imgMeta.prompt,
+                        aspectRatio: imgMeta.aspectRatio,
+                        quality: imgMeta.quality,
+                        count: imgMeta.images.length,
+                        style: imgMeta.style,
+                      });
+                      window.location.reload();
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Regeneration failed");
+                    }
+                  }}
+                />
+              );
+            }
+            return <ChatMarkdown content={message.content} />;
+          })()}
         </div>
         {!editing && (
           <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
