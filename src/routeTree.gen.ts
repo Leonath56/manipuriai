@@ -20,6 +20,7 @@ import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-imag
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedImageRouteImport } from './routes/_authenticated/image'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
@@ -80,6 +81,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedImageRoute = AuthenticatedImageRouteImport.update({
+  id: '/image',
+  path: '/image',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/image': typeof AuthenticatedImageRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/image': typeof AuthenticatedImageRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/try': typeof TryRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/image': typeof AuthenticatedImageRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
@@ -169,6 +178,7 @@ export interface FileRouteTypes {
     | '/try'
     | '/admin'
     | '/dashboard'
+    | '/image'
     | '/profile'
     | '/voice'
     | '/api/chat'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/try'
     | '/admin'
     | '/dashboard'
+    | '/image'
     | '/profile'
     | '/voice'
     | '/api/chat'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/try'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/image'
     | '/_authenticated/profile'
     | '/_authenticated/voice'
     | '/api/chat'
@@ -306,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/image': {
+      id: '/_authenticated/image'
+      path: '/image'
+      fullPath: '/image'
+      preLoaderRoute: typeof AuthenticatedImageRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -347,6 +366,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImageRoute: typeof AuthenticatedImageRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
@@ -356,6 +376,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedImageRoute: AuthenticatedImageRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedVoiceRoute: AuthenticatedVoiceRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
