@@ -255,14 +255,11 @@ export const Route = createFileRoute("/api/chat")({
             if (!chat) return new Response("Chat not found", { status: 404 });
           }
 
-          // save user msg + fetch history + kick off web-search decision in parallel
-          const [, historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
-            supabase.from("messages").insert({
-              chat_id: chatId,
-              user_id: userId,
-              role: "user",
-              content: storedUserText,
-            }),
+          // Fetch history + kick off web-search decision in parallel.
+          // NOTE: The user message is intentionally NOT inserted here — it gets
+          // saved together with the assistant reply AFTER streaming completes,
+          // so the model call fires without waiting on a DB round-trip.
+          const [historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
@@ -287,6 +284,7 @@ export const Route = createFileRoute("/api/chat")({
           const history = (historyRes.data ?? []).slice().reverse();
           const memory = (memoryRes.data ?? null) as UserMemory | null;
           const recentChats = recentChatsRes.data ?? [];
+
 
           const languageHint =
             body.language === "mni"
@@ -456,18 +454,27 @@ export const Route = createFileRoute("/api/chat")({
               // vocab correction
               const corrected = full.replace(/pangbageda/gi, "mateng pangjouge");
 
-              // save assistant + usage
-              await supabase.from("messages").insert({
-                chat_id: finalChatId,
-                user_id: userId,
-                role: "assistant",
-                content: corrected,
-              });
-              await supabase.from("chats").update({ updated_at: new Date().toISOString() }).eq("id", finalChatId);
-              await supabase.from("daily_usage").upsert(
-                { user_id: userId, usage_date: today, message_count: count + 1, updated_at: new Date().toISOString() },
-                { onConflict: "user_id,usage_date" },
-              );
+              // Close the stream to the client FIRST so the user sees the full reply
+              // immediately, then persist to DB in the background while they read.
+              controller.close();
+
+              // save user turn + assistant reply + usage (background, after close)
+              void (async () => {
+                try {
+                  await supabase.from("messages").insert([
+                    { chat_id: finalChatId, user_id: userId, role: "user", content: storedUserText },
+                    { chat_id: finalChatId, user_id: userId, role: "assistant", content: corrected },
+                  ]);
+                  await supabase.from("chats").update({ updated_at: new Date().toISOString() }).eq("id", finalChatId);
+                  await supabase.from("daily_usage").upsert(
+                    { user_id: userId, usage_date: today, message_count: count + 1, updated_at: new Date().toISOString() },
+                    { onConflict: "user_id,usage_date" },
+                  );
+                } catch {
+                  // best-effort persistence
+                }
+              })();
+
 
               // Fire-and-forget memory extraction (do not block stream close)
               (async () => {
@@ -504,10 +511,9 @@ export const Route = createFileRoute("/api/chat")({
                   // best-effort
                 }
               })();
-
-              controller.close();
             },
           });
+
 
           return new Response(stream, {
             headers: {
