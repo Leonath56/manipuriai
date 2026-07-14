@@ -141,7 +141,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                   </form>
                 ) : (
                   <Link to="/chat/$chatId" params={{ chatId: c.id }} onClick={onClose} className="flex flex-1 items-center gap-2 truncate px-2 py-2 text-sm">
-                    {c.pinned ? <Pin className="h-3.5 w-3.5 shrink-0 text-primary" /> : <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                    {c.pinned ? (
+                      <Pin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    ) : c.kind === "image" ? (
+                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
                     <span className="truncate">{c.title}</span>
                   </Link>
                 )}
