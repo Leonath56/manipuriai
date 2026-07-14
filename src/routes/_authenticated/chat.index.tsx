@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
-import { generateImages, parseImageRequest } from "@/lib/image-gen";
+import { generateImages, parseImageMessage, parseImageRequest } from "@/lib/image-gen";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
+import { ImageResultCard } from "@/components/ImageResultCard";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -175,7 +176,7 @@ function NewChat() {
                     {generatingImage ? (
                       <ImageGeneratingAnimation />
                     ) : streaming ? (
-                      <ChatMarkdown content={streaming} />
+                      <StreamingAssistantContent content={streaming} />
                     ) : (
                       <div className="flex items-center gap-1 pt-3">
                         <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
@@ -223,6 +224,14 @@ export function ImageGeneratingAnimation() {
       </div>
     </div>
   );
+}
+
+export function StreamingAssistantContent({ content }: { content: string }) {
+  const imageMeta = parseImageMessage(content);
+  if (imageMeta) {
+    return <ImageResultCard prompt={imageMeta.prompt} images={imageMeta.images} />;
+  }
+  return <ChatMarkdown content={content} />;
 }
 
 export function Composer({
