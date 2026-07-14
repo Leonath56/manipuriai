@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
-import { Composer } from "./chat.index";
+import { Composer, ImageGeneratingAnimation } from "./chat.index";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -36,6 +36,7 @@ function ChatView() {
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ function ChatView() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQ.data, streaming]);
+  }, [messagesQ.data, streaming, generatingImage]);
 
   const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
@@ -115,6 +116,7 @@ function ChatView() {
     const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     if (imageRequest) {
       setSending(true);
+      setGeneratingImage(true);
       try {
         await generateImages({
           chatId,
@@ -129,6 +131,7 @@ function ChatView() {
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Image generation failed");
       } finally {
+        setGeneratingImage(false);
         setSending(false);
         inputRef.current?.focus();
       }
@@ -194,7 +197,9 @@ function ChatView() {
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
                 <div className="min-w-0 flex-1">
-                  {streaming ? (
+                  {generatingImage ? (
+                    <ImageGeneratingAnimation />
+                  ) : streaming ? (
                     <ChatMarkdown content={streaming} />
                   ) : (
                     <div className="flex items-center gap-1 pt-3">
