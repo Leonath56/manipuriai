@@ -45,6 +45,7 @@ function NewChat() {
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
   const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
   const [streaming, setStreaming] = useState("");
   const navigate = useNavigate();
@@ -53,7 +54,7 @@ function NewChat() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending, streaming]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending, streaming, generatingImage]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,14 +64,15 @@ function NewChat() {
     const sentImages = images;
     const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
+    const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     // Instantly reflect the message in the UI and clear the composer.
     setInput("");
     setImages([]);
     setPending({ text: stored, images: sentImages });
     setStreaming("");
+    setGeneratingImage(Boolean(imageRequest));
     try {
       // Auto-detect image generation intent (no images attached, text prompt)
-      const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
       if (imageRequest) {
         const result = await generateImages({
           chatId: null,
@@ -114,6 +116,7 @@ function NewChat() {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setPending(null);
       setStreaming("");
+      setGeneratingImage(false);
       setSending(false);
     }
   };
@@ -169,7 +172,9 @@ function NewChat() {
                 <div className="my-6 flex items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
                   <div className="min-w-0 flex-1">
-                    {streaming ? (
+                    {generatingImage ? (
+                      <ImageGeneratingAnimation />
+                    ) : streaming ? (
                       <ChatMarkdown content={streaming} />
                     ) : (
                       <div className="flex items-center gap-1 pt-3">
@@ -194,6 +199,29 @@ function NewChat() {
         />
       </div>
     </AuthedShell>
+  );
+}
+
+export function ImageGeneratingAnimation() {
+  return (
+    <div className="pt-1.5">
+      <div className="image-gen-stage relative grid aspect-square w-full max-w-[260px] place-items-center overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
+        <div className="image-gen-scan absolute inset-x-0 top-0 h-16" />
+        <div className="image-gen-grid absolute inset-0 opacity-70" />
+        <div className="relative grid h-20 w-20 place-items-center rounded-full border border-border bg-background/80 text-4xl font-semibold leading-none shadow-glow" aria-hidden="true">
+          ꯃ
+        </div>
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+            <span>Creating image</span>
+            <span className="image-gen-pulse">AI</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="image-gen-progress h-full rounded-full bg-primary" />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
