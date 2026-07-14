@@ -3,11 +3,16 @@ export type ImageRequest = {
   aspectRatio: "1:1" | "16:9" | "9:16";
 };
 
-const IMAGE_INTENT = /\b(generate|create|make|draw|paint|render|design|show me|imagine|picture|image|photo|artwork|illustration|logo)\s+(a|an|the|me|some|of)?\s*(image|picture|photo|illustration|drawing|painting|artwork|logo|render)\b/i;
-const IMAGE_START = /^\s*(image|picture|photo|draw|paint|render|generate image|create image|make image)\s*[:\-]/i;
+// Explicit image nouns (English + romanized Manipuri).
+const IMAGE_NOUN = /\b(image|images|picture|pictures|pic|pics|photo|photos|photograph|illustration|drawing|painting|artwork|logo|render|wallpaper|poster|thumbnail|sketch|mityeng|chithra|chitra|foto)\b/i;
+
+// Explicit imagining/drawing verbs that only make sense for pictures.
+const DRAW_VERB = /\b(draw|sketch|paint|illustrate|render|photograph)\s+/i;
+
+// Generic create verbs (English + Manipuri). Only count as image intent when paired with an image noun.
+const CREATE_VERB = /\b(generate|create|make|produce|design|show\s+me|imagine|give\s+me|sembiyu|sembiyou|sembi-?yu|sembiba|sembigadouribani|semmu|sem-?mu|semge|utpiyu|utpi-?yu|utpiyou|sagatpiyu|sagatpiyou|sagat-?piyu)\b/i;
+
 const DALLE_JSON = /\b(dalle|text2im|image_generation|image_url)\b/i;
-const VISUAL_VERB = /^\s*(please\s+)?(generate|create|make|draw|paint|render|design)\s+(me\s+)?(a|an|the|some)?\s*\S+/i;
-const TEXT_GENERATION_TARGET = /\b(code|program|app|website|essay|story|poem|song|caption|reply|answer|summary|translation|table|list|email|letter|script|function|regex|sql|json|html|css|javascript|typescript)\b/i;
 const ASPECT_RATIO = /"(?:aspect_ratio|aspectRatio)"\s*:\s*"(1:1|16:9|9:16)"/i;
 const PROMPT_FIELD = /"prompt"\s*:\s*"((?:[^"\\]|\\.)*)"/i;
 
@@ -32,12 +37,12 @@ function parseJsonPrompt(value: unknown): string | null {
 
 export function looksLikeImagePrompt(text: string): boolean {
   const trimmed = text.trim();
-  return (
-    IMAGE_INTENT.test(trimmed) ||
-    IMAGE_START.test(trimmed) ||
-    DALLE_JSON.test(trimmed) ||
-    (VISUAL_VERB.test(trimmed) && !TEXT_GENERATION_TARGET.test(trimmed))
-  );
+  if (!trimmed) return false;
+  if (DALLE_JSON.test(trimmed)) return true;
+  if (DRAW_VERB.test(trimmed)) return true;
+  // Require BOTH a create verb AND an explicit image noun.
+  if (CREATE_VERB.test(trimmed) && IMAGE_NOUN.test(trimmed)) return true;
+  return false;
 }
 
 export function extractImageAspectRatio(text: string): "1:1" | "16:9" | "9:16" {
@@ -62,13 +67,7 @@ export function extractImagePrompt(text: string): string {
   if (m) {
     try { return JSON.parse(`"${m[1]}"`); } catch { return m[1]; }
   }
-  return text
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/```$/i, "")
-    .replace(/^\s*(please\s+)?(generate|create|make|draw|paint|render|design)\s+(me\s+)?(a|an|the|some)?\s*(image|picture|photo|illustration|drawing|painting|artwork|logo|render)?\s*(of|for)?\s*/i, "")
-    .replace(/^\s*(image|picture|photo)\s*[:\-]\s*/i, "")
-    .trim();
+  return text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
 }
 
 export function parseImageRequest(text: string): ImageRequest | null {
