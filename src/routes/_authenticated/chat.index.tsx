@@ -43,11 +43,14 @@ function NewChat() {
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
+  const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
   const navigate = useNavigate();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +60,10 @@ function NewChat() {
     const sentImages = images;
     const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
+    // Instantly reflect the message in the UI and clear the composer.
+    setInput("");
+    setImages([]);
+    setPending({ text: stored, images: sentImages });
     try {
       let newChatId: string | null = null;
       let acc = "";
@@ -90,6 +97,7 @@ function NewChat() {
       if (newChatId) qc.invalidateQueries({ queryKey: ["messages", newChatId] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
+      setPending(null);
       setSending(false);
     }
   };
