@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations } from "@/lib/admin.functions";
-import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2 } from "lucide-react";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages } from "@/lib/admin.functions";
+import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
