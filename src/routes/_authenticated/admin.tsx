@@ -57,6 +57,16 @@ function AdminPage() {
     queryFn: () => convosFn({ data: { userId: viewUserId! } }),
     enabled: !!viewUserId && adminQ.data?.isAdmin === true,
   });
+  const guestsQ = useQuery({
+    queryKey: ["admin-guest-sessions"],
+    queryFn: () => guestsFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+  const guestMsgsQ = useQuery({
+    queryKey: ["admin-guest-messages", viewGuestId],
+    queryFn: () => guestMsgsFn({ data: { sessionId: viewGuestId! } }),
+    enabled: !!viewGuestId && adminQ.data?.isAdmin === true,
+  });
 
   const chatMessages = useMemo(() => {
     if (!convoQ.data || !selectedChatId) return [];
