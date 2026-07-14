@@ -71,10 +71,13 @@ function NewChat() {
     try {
       // Auto-detect image generation intent (no images attached, text prompt)
       if (text && sentImages.length === 0 && looksLikeImagePrompt(text)) {
+        const cleanPrompt = extractImagePrompt(text);
+        // Detect aspect ratio from JSON body if present
+        const arMatch = text.match(/"aspect_ratio"\s*:\s*"(1:1|16:9|9:16)"/);
         const result = await generateImages({
           chatId: null,
-          prompt: text,
-          aspectRatio: "1:1",
+          prompt: cleanPrompt,
+          aspectRatio: (arMatch?.[1] as "1:1" | "16:9" | "9:16") ?? "1:1",
           quality: "standard",
           count: 1,
           style: "realistic",
