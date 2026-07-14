@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
