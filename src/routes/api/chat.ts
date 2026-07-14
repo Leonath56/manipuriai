@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
+import { parseImageRequest } from "@/lib/image-intent";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -24,6 +25,12 @@ const VISION_MODEL_BY_MODE = {
   instant: "google/gemini-2.5-flash",
   think: "google/gemini-3.1-pro-preview",
 } as const;
+
+function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
+  if (aspect === "16:9") return "1536x1024";
+  if (aspect === "9:16") return "1024x1536";
+  return "1024x1024";
+}
 
 const SYSTEM_PROMPT = `You are Manipuri AI, a native-level speaker of Meiteilon (Manipuri, mni). Best AI for Manipuri people.
 
@@ -253,6 +260,92 @@ export const Route = createFileRoute("/api/chat")({
               .eq("user_id", userId)
               .maybeSingle();
             if (!chat) return new Response("Chat not found", { status: 404 });
+          }
+
+          const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
+          if (imageRequest) {
+            const imageRes = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: "openai/gpt-image-2",
+                prompt: imageRequest.prompt,
+                size: imageSizeFor(imageRequest.aspectRatio),
+                quality: "medium",
+                n: 1,
+              }),
+            });
+
+            if (!imageRes.ok) {
+              const t = await imageRes.text().catch(() => "");
+              const status = imageRes.status === 429 ? 429 : imageRes.status === 402 ? 402 : 500;
+              return new Response(JSON.stringify({ error: t.slice(0, 300) || "Image generation failed" }), {
+                status,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+
+            const imageJson = await imageRes.json();
+            const b64: string | undefined = imageJson?.data?.[0]?.b64_json;
+            if (!b64) {
+              return new Response(JSON.stringify({ error: "No image returned" }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+              });
+            }
+
+            const dataUrl = `data:image/png;base64,${b64}`;
+            const meta = {
+              kind: "image",
+              prompt: imageRequest.prompt,
+              aspectRatio: imageRequest.aspectRatio,
+              quality: "standard",
+              style: "none",
+              images: [dataUrl],
+            };
+            const assistantContent =
+              "```image-generation\n" +
+              JSON.stringify(meta) +
+              "\n```\n" +
+              `![${imageRequest.prompt}](${dataUrl})`;
+            const nowIso = new Date().toISOString();
+
+            const encoder = new TextEncoder();
+            const finalChatId = chatId;
+            const imageStream = new ReadableStream({
+              start(controller) {
+                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                controller.enqueue(encoder.encode(assistantContent));
+                controller.close();
+
+                void (async () => {
+                  try {
+                    await supabase.from("messages").insert([
+                      { chat_id: finalChatId, user_id: userId, role: "user", content: storedUserText },
+                      { chat_id: finalChatId, user_id: userId, role: "assistant", content: assistantContent },
+                    ]);
+                    await supabase.from("chats").update({ updated_at: nowIso, kind: "image" }).eq("id", finalChatId);
+                    await supabase.from("daily_usage").upsert(
+                      { user_id: userId, usage_date: today, message_count: count + 1, updated_at: nowIso },
+                      { onConflict: "user_id,usage_date" },
+                    );
+                  } catch {
+                    // best-effort persistence
+                  }
+                })();
+              },
+            });
+
+            return new Response(imageStream, {
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+              },
+            });
           }
 
           // Fetch history + kick off web-search decision in parallel.
