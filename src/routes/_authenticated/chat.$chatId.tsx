@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
+import { parseImageMessage, generateImages } from "@/lib/image-gen";
+import { ImageResultCard } from "@/components/ImageResultCard";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
