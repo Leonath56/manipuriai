@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
-import { Composer, ImageGeneratingAnimation } from "./chat.index";
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "./chat.index";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -200,7 +200,7 @@ function ChatView() {
                   {generatingImage ? (
                     <ImageGeneratingAnimation />
                   ) : streaming ? (
-                    <ChatMarkdown content={streaming} />
+                    <StreamingAssistantContent content={streaming} />
                   ) : (
                     <div className="flex items-center gap-1 pt-3">
                       <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
