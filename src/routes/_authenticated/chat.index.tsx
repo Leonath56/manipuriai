@@ -150,10 +150,16 @@ function NewChat() {
                 </div>
                 <div className="my-6 flex items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
-                  <div className="flex items-center gap-1 pt-3">
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                  <div className="min-w-0 flex-1">
+                    {streaming ? (
+                      <ChatMarkdown content={streaming} />
+                    ) : (
+                      <div className="flex items-center gap-1 pt-3">
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div ref={bottomRef} />
