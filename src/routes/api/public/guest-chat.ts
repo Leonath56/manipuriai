@@ -134,6 +134,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
           const encoder = new TextEncoder();
           const decoder = new TextDecoder();
+          let assistantAcc = "";
 
           const stream = new ReadableStream({
             async start(controller) {
@@ -157,6 +158,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                         j.choices?.[0]?.delta?.content ?? j.choices?.[0]?.message?.content;
                       if (delta) {
                         const fixed = delta.replace(/pangbageda/gi, "mateng pangjouge");
+                        assistantAcc += fixed;
                         controller.enqueue(encoder.encode(fixed));
                       }
                     } catch {
@@ -169,6 +171,22 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 return;
               }
               controller.close();
+
+              if (body.guestId && assistantAcc) {
+                const ua = request.headers.get("user-agent");
+                const ipHint =
+                  request.headers.get("cf-connecting-ip") ??
+                  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+                  null;
+                void persistGuestTurn({
+                  guestId: body.guestId,
+                  name: body.name,
+                  userAgent: ua,
+                  ipHint,
+                  userMessage: body.message,
+                  assistantMessage: assistantAcc,
+                });
+              }
             },
           });
 
