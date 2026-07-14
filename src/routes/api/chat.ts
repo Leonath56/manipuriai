@@ -255,14 +255,11 @@ export const Route = createFileRoute("/api/chat")({
             if (!chat) return new Response("Chat not found", { status: 404 });
           }
 
-          // save user msg + fetch history + kick off web-search decision in parallel
-          const [, historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
-            supabase.from("messages").insert({
-              chat_id: chatId,
-              user_id: userId,
-              role: "user",
-              content: storedUserText,
-            }),
+          // Fetch history + kick off web-search decision in parallel.
+          // NOTE: The user message is intentionally NOT inserted here — it gets
+          // saved together with the assistant reply AFTER streaming completes,
+          // so the model call fires without waiting on a DB round-trip.
+          const [historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
@@ -287,6 +284,7 @@ export const Route = createFileRoute("/api/chat")({
           const history = (historyRes.data ?? []).slice().reverse();
           const memory = (memoryRes.data ?? null) as UserMemory | null;
           const recentChats = recentChatsRes.data ?? [];
+
 
           const languageHint =
             body.language === "mni"
