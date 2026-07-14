@@ -323,6 +323,17 @@ export function Composer({
               type="button"
               size="icon"
               variant="ghost"
+              onClick={() => navigate({ to: "/image" })}
+              aria-label="Create image"
+              title="Create image with AI"
+              className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            >
+              <Sparkles className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
               onClick={() => navigate({ to: "/voice" })}
               aria-label="Voice mode"
               title="Voice mode"
