@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
+import { generateImages, looksLikeImagePrompt, extractImagePrompt } from "@/lib/image-gen";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -68,6 +69,24 @@ function NewChat() {
     setPending({ text: stored, images: sentImages });
     setStreaming("");
     try {
+      // Auto-detect image generation intent (no images attached, text prompt)
+      if (text && sentImages.length === 0 && looksLikeImagePrompt(text)) {
+        const cleanPrompt = extractImagePrompt(text);
+        // Detect aspect ratio from JSON body if present
+        const arMatch = text.match(/"aspect_ratio"\s*:\s*"(1:1|16:9|9:16)"/);
+        const result = await generateImages({
+          chatId: null,
+          prompt: cleanPrompt,
+          aspectRatio: (arMatch?.[1] as "1:1" | "16:9" | "9:16") ?? "1:1",
+          quality: "standard",
+          count: 1,
+          style: "realistic",
+        });
+        qc.invalidateQueries({ queryKey: ["chats"] });
+        navigate({ to: "/chat/$chatId", params: { chatId: result.chatId } });
+        return;
+      }
+
       let newChatId: string | null = null;
       let acc = "";
       await streamChat({
