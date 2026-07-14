@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   name: z.string().trim().min(1).max(60),
