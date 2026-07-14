@@ -108,6 +108,7 @@ function TryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          guestId: getOrCreateGuestId(),
           history: historyForApi,
           message: text,
           language: "auto",
