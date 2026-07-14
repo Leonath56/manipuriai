@@ -209,8 +209,82 @@ function AdminPage() {
             )}
           </div>
         </Card>
+
+        <Card className="p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2"><UserPlus className="h-4 w-4" /> Free trial (guest) sessions</h2>
+              <p className="text-xs text-muted-foreground">Names and chat history of users who used the 3-message free trial without signing up.</p>
+            </div>
+            <Badge variant="secondary">{guestsQ.data?.sessions.length ?? 0}</Badge>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">Msgs</th>
+                  <th className="py-2 pr-3">Started</th>
+                  <th className="py-2 pr-3">Last active</th>
+                  <th className="py-2 pr-3">Device</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(guestsQ.data?.sessions ?? []).map((g) => (
+                  <tr key={g.id} className="border-t border-border/40">
+                    <td className="py-2 pr-3">
+                      <button
+                        className="font-medium text-primary underline-offset-2 hover:underline"
+                        onClick={() => setViewGuestId(g.id)}
+                      >
+                        {g.name}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">{g.message_count}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(g.created_at).toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(g.updated_at).toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground max-w-[240px] truncate" title={g.user_agent ?? ""}>{g.user_agent ?? "—"}</td>
+                  </tr>
+                ))}
+                {guestsQ.isLoading && <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Loading…</td></tr>}
+                {!guestsQ.isLoading && (guestsQ.data?.sessions ?? []).length === 0 && (
+                  <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No trial sessions yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
         </div>
       </div>
+
+      <Dialog open={!!viewGuestId} onOpenChange={(o) => { if (!o) setViewGuestId(null); }}>
+        <DialogContent className="max-w-3xl p-0 sm:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="border-b border-border/40 px-4 py-3">
+            <DialogTitle className="text-base">
+              {guestMsgsQ.data?.session
+                ? `${guestMsgsQ.data.session.name} — trial chat (${guestMsgsQ.data.session.message_count} msgs)`
+                : "Trial chat"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto p-4 space-y-3 h-[70vh]">
+            {guestMsgsQ.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
+            {(guestMsgsQ.data?.messages ?? []).map((m) => (
+              <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  <div className="mb-1 text-[10px] opacity-70">
+                    {m.role === "user" ? guestMsgsQ.data?.session?.name ?? "Guest" : "AI"} · {new Date(m.created_at).toLocaleString()}
+                  </div>
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            {!guestMsgsQ.isLoading && (guestMsgsQ.data?.messages ?? []).length === 0 && (
+              <div className="text-sm text-muted-foreground">No messages.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={!!viewUserId} onOpenChange={(o) => { if (!o) { setViewUserId(null); setSelectedChatId(null); } }}>
         <DialogContent className="max-w-5xl p-0 sm:max-h-[85vh] overflow-hidden">
