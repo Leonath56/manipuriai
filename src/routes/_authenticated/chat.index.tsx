@@ -44,13 +44,14 @@ function NewChat() {
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
+  const [streaming, setStreaming] = useState("");
   const navigate = useNavigate();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending, streaming]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +65,7 @@ function NewChat() {
     setInput("");
     setImages([]);
     setPending({ text: stored, images: sentImages });
+    setStreaming("");
     try {
       let newChatId: string | null = null;
       let acc = "";
@@ -75,32 +77,29 @@ function NewChat() {
         mode,
         onMeta: (m) => {
           newChatId = m.chatId;
-          qc.setQueryData(["messages", m.chatId], [
-            { id: "u-1", role: "user", content: stored },
-          ]);
-          navigate({ to: "/chat/$chatId", params: { chatId: m.chatId } });
         },
         onChunk: (delta) => {
           acc += delta;
-          if (newChatId) {
-            qc.setQueryData<Array<{ id: string; role: string; content: string }>>(
-              ["messages", newChatId],
-              [
-                { id: "u-1", role: "user", content: stored },
-                { id: "a-1", role: "assistant", content: acc },
-              ],
-            );
-          }
+          setStreaming(acc);
         },
       });
-      qc.invalidateQueries({ queryKey: ["chats"] });
-      if (newChatId) qc.invalidateQueries({ queryKey: ["messages", newChatId] });
+      if (newChatId) {
+        // Seed cache so the destination route renders instantly without refetch flicker.
+        qc.setQueryData(["messages", newChatId], [
+          { id: "u-1", role: "user", content: stored, created_at: new Date().toISOString() },
+          { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
+        ]);
+        qc.invalidateQueries({ queryKey: ["chats"] });
+        navigate({ to: "/chat/$chatId", params: { chatId: newChatId } });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setPending(null);
+      setStreaming("");
       setSending(false);
     }
   };
+
 
   const suggestions = [
     { title: "Solve homework from a photo", prompt: "Solve the math problem in this image step by step." },
