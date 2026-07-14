@@ -55,8 +55,47 @@ export const Route = createFileRoute("/api/generate-image")({
           if (userErr || !userRes.user) return new Response("Unauthorized", { status: 401 });
           const userId = userRes.user.id;
 
+          // Translate/expand the prompt to a rich, descriptive English prompt.
+          // This fixes two problems:
+              //  1. Manipuri/Meiteilon prompts were being sent to the image model raw,
+              //     which the model couldn't understand → produced generic scenery.
+              //  2. Vague English prompts ("a monkey with banana") get expanded with
+              //     concrete visual detail so the model doesn't drift.
+          let translatedPrompt = body.prompt;
+          try {
+            const tr = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                messages: [
+                  {
+                    role: "system",
+                    content:
+                      "You convert any user request (which may be in Manipuri/Meiteilon romanized, Meitei Mayek, or English) into ONE concise English image-generation prompt. " +
+                      "Rules: (1) Output ONLY the final English prompt, no quotes, no preface, no explanation. " +
+                      "(2) Preserve every concrete subject, object, action, count, color, and setting the user mentioned — do not substitute. " +
+                      "(3) Add helpful visual detail (composition, lighting, environment) but never change the subject. " +
+                      "(4) Keep it under 80 words.",
+                  },
+                  { role: "user", content: body.prompt },
+                ],
+              }),
+            });
+            if (tr.ok) {
+              const tj = await tr.json();
+              const out: string | undefined = tj?.choices?.[0]?.message?.content;
+              if (out && out.trim()) translatedPrompt = out.trim().replace(/^["']|["']$/g, "");
+            }
+          } catch {
+            // fall back to raw prompt
+          }
+
           // Enriched prompt
-          const enriched = body.prompt + (STYLE_SUFFIX[body.style] ?? "");
+          const enriched = translatedPrompt + (STYLE_SUFFIX[body.style] ?? "");
           const size = sizeFor(body.aspectRatio);
           const quality = body.quality === "hd" ? "high" : "medium";
 
