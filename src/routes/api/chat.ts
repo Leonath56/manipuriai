@@ -511,10 +511,9 @@ export const Route = createFileRoute("/api/chat")({
                   // best-effort
                 }
               })();
-
-              controller.close();
             },
           });
+
 
           return new Response(stream, {
             headers: {
