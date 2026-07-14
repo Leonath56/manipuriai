@@ -32,7 +32,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     queryFn: async (): Promise<ChatRow[]> => {
       const { data, error } = await supabase
         .from("chats")
-        .select("id, title, updated_at, pinned")
+        .select("id, title, updated_at, pinned, kind")
         .order("pinned", { ascending: false })
         .order("updated_at", { ascending: false });
       if (error) throw error;
