@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
+import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -57,6 +58,11 @@ const IndexRoute = IndexRouteImport.update({
 const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
   id: '/api/transcribe',
   path: '/api/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGenerateImageRoute = ApiGenerateImageRouteImport.update({
+  id: '/api/generate-image',
+  path: '/api/generate-image',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -145,6 +153,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/_authenticated/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -163,6 +172,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
@@ -179,6 +189,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
@@ -196,6 +207,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/_authenticated/chat/$chatId'
     | '/api/public/guest-chat'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TryRoute: typeof TryRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
 }
@@ -263,6 +276,13 @@ declare module '@tanstack/react-router' {
       path: '/api/transcribe'
       fullPath: '/api/transcribe'
       preLoaderRoute: typeof ApiTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-image': {
+      id: '/api/generate-image'
+      path: '/api/generate-image'
+      fullPath: '/api/generate-image'
+      preLoaderRoute: typeof ApiGenerateImageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -353,6 +373,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TryRoute: TryRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiGenerateImageRoute: ApiGenerateImageRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
 }
