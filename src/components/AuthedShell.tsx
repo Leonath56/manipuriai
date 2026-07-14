@@ -93,10 +93,15 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         </Link>
       </div>
 
-      <div className="px-3">
+      <div className="space-y-1.5 px-3">
         <Link to="/chat" onClick={onClose}>
           <Button variant="outline" className="w-full justify-start gap-2">
             <Plus className="h-4 w-4" /> New chat
+          </Button>
+        </Link>
+        <Link to="/image" onClick={onClose}>
+          <Button variant="outline" className="w-full justify-start gap-2">
+            <Sparkles className="h-4 w-4" /> Create image
           </Button>
         </Link>
       </div>
