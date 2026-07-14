@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
-import { parseImageMessage, generateImages } from "@/lib/image-gen";
+import { parseImageMessage, generateImages, looksLikeImagePrompt, extractImagePrompt } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
@@ -110,6 +110,32 @@ function ChatView() {
       ...(old ?? []),
       { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
     ]);
+
+    // Auto-detect image intent — generate inline in the current chat
+    if (text && sentImages.length === 0 && looksLikeImagePrompt(text)) {
+      setSending(true);
+      try {
+        const cleanPrompt = extractImagePrompt(text);
+        const arMatch = text.match(/"aspect_ratio"\s*:\s*"(1:1|16:9|9:16)"/);
+        await generateImages({
+          chatId,
+          prompt: cleanPrompt,
+          aspectRatio: (arMatch?.[1] as "1:1" | "16:9" | "9:16") ?? "1:1",
+          quality: "standard",
+          count: 1,
+          style: "none",
+        });
+        await qc.invalidateQueries({ queryKey: ["messages", chatId] });
+        await qc.invalidateQueries({ queryKey: ["chats"] });
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Image generation failed");
+      } finally {
+        setSending(false);
+        inputRef.current?.focus();
+      }
+      return;
+    }
+
     await runSend(text, sentImages);
   };
 

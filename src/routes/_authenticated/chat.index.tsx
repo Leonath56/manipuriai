@@ -80,7 +80,7 @@ function NewChat() {
           aspectRatio: (arMatch?.[1] as "1:1" | "16:9" | "9:16") ?? "1:1",
           quality: "standard",
           count: 1,
-          style: "realistic",
+          style: "none",
         });
         qc.invalidateQueries({ queryKey: ["chats"] });
         navigate({ to: "/chat/$chatId", params: { chatId: result.chatId } });
