@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
+import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -44,13 +45,14 @@ function NewChat() {
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
   const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
+  const [streaming, setStreaming] = useState("");
   const navigate = useNavigate();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending, streaming]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +66,7 @@ function NewChat() {
     setInput("");
     setImages([]);
     setPending({ text: stored, images: sentImages });
+    setStreaming("");
     try {
       let newChatId: string | null = null;
       let acc = "";
@@ -75,32 +78,29 @@ function NewChat() {
         mode,
         onMeta: (m) => {
           newChatId = m.chatId;
-          qc.setQueryData(["messages", m.chatId], [
-            { id: "u-1", role: "user", content: stored },
-          ]);
-          navigate({ to: "/chat/$chatId", params: { chatId: m.chatId } });
         },
         onChunk: (delta) => {
           acc += delta;
-          if (newChatId) {
-            qc.setQueryData<Array<{ id: string; role: string; content: string }>>(
-              ["messages", newChatId],
-              [
-                { id: "u-1", role: "user", content: stored },
-                { id: "a-1", role: "assistant", content: acc },
-              ],
-            );
-          }
+          setStreaming(acc);
         },
       });
-      qc.invalidateQueries({ queryKey: ["chats"] });
-      if (newChatId) qc.invalidateQueries({ queryKey: ["messages", newChatId] });
+      if (newChatId) {
+        // Seed cache so the destination route renders instantly without refetch flicker.
+        qc.setQueryData(["messages", newChatId], [
+          { id: "u-1", role: "user", content: stored, created_at: new Date().toISOString() },
+          { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
+        ]);
+        qc.invalidateQueries({ queryKey: ["chats"] });
+        navigate({ to: "/chat/$chatId", params: { chatId: newChatId } });
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setPending(null);
+      setStreaming("");
       setSending(false);
     }
   };
+
 
   const suggestions = [
     { title: "Solve homework from a photo", prompt: "Solve the math problem in this image step by step." },
@@ -151,10 +151,16 @@ function NewChat() {
                 </div>
                 <div className="my-6 flex items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
-                  <div className="flex items-center gap-1 pt-3">
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                    <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                  <div className="min-w-0 flex-1">
+                    {streaming ? (
+                      <ChatMarkdown content={streaming} />
+                    ) : (
+                      <div className="flex items-center gap-1 pt-3">
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div ref={bottomRef} />
