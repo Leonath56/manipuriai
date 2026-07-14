@@ -180,8 +180,8 @@ export const Route = createFileRoute("/api/chat")({
         try {
           const SUPABASE_URL = process.env.SUPABASE_URL!;
           const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY;
-          if (!LOVABLE_API_KEY) return new Response("AI not configured", { status: 500 });
+          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
+          if (!LOVABLE_API_KEY) return new Response("AI not configured (set LOVABLE_API_KEY or GEMINI_API_KEY)", { status: 500 });
 
           const auth = request.headers.get("authorization");
           if (!auth) return new Response("Unauthorized", { status: 401 });
@@ -266,11 +266,17 @@ export const Route = createFileRoute("/api/chat")({
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
           if (imageRequest) {
-            const imageRes = await fetch("https://ai.gateway.lovable.dev/v1/images/generations", {
+            const lovable = lovableOnlyEndpoint();
+            if (!lovable) {
+              return new Response(JSON.stringify({ error: "Image generation requires LOVABLE_API_KEY on this deployment." }), {
+                status: 501, headers: { "Content-Type": "application/json" },
+              });
+            }
+            const imageRes = await fetch(`${lovable.baseUrl}/images/generations`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                Authorization: `Bearer ${lovable.apiKey}`,
               },
               body: JSON.stringify({
                 model: "openai/gpt-image-2",
