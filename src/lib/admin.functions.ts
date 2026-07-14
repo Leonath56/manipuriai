@@ -159,3 +159,39 @@ export const getAdminUserConversations = createServerFn({ method: "GET" })
       messages: messages ?? [],
     };
   });
+
+export const listGuestTrialSessions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("guest_sessions")
+      .select("id, guest_id, name, message_count, user_agent, created_at, updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error(error.message);
+    return { sessions: data ?? [] };
+  });
+
+export const getGuestTrialMessages = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { sessionId: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: session }, { data: messages }] = await Promise.all([
+      supabaseAdmin
+        .from("guest_sessions")
+        .select("id, guest_id, name, message_count, user_agent, created_at, updated_at")
+        .eq("id", data.sessionId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("guest_messages")
+        .select("id, role, content, created_at")
+        .eq("guest_session_id", data.sessionId)
+        .order("created_at", { ascending: true })
+        .limit(500),
+    ]);
+    return { session: session ?? null, messages: messages ?? [] };
+  });

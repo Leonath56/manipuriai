@@ -13,6 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 const GUEST_LIMIT = 3;
 const NAME_KEY = "manipuri_guest_name";
 const COUNT_KEY = "manipuri_guest_count";
+const GUEST_ID_KEY = "manipuri_guest_id";
+
+function getOrCreateGuestId(): string {
+  if (typeof window === "undefined") return "";
+  let id = localStorage.getItem(GUEST_ID_KEY);
+  if (!id) {
+    id = (crypto.randomUUID?.() ?? `g_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+    localStorage.setItem(GUEST_ID_KEY, id);
+  }
+  return id;
+}
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -97,6 +108,7 @@ function TryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          guestId: getOrCreateGuestId(),
           history: historyForApi,
           message: text,
           language: "auto",

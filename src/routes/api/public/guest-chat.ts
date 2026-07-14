@@ -3,6 +3,7 @@ import { z } from "zod";
 
 const BodySchema = z.object({
   name: z.string().trim().min(1).max(60),
+  guestId: z.string().trim().min(4).max(80).optional(),
   history: z
     .array(
       z.object({
@@ -15,6 +16,58 @@ const BodySchema = z.object({
   message: z.string().trim().min(1).max(2000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
 });
+
+async function persistGuestTurn(opts: {
+  guestId: string;
+  name: string;
+  userAgent: string | null;
+  ipHint: string | null;
+  userMessage: string;
+  assistantMessage: string;
+}) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("guest_sessions")
+      .select("id, message_count")
+      .eq("guest_id", opts.guestId)
+      .maybeSingle();
+
+    let sessionId: string;
+    if (existing) {
+      sessionId = existing.id;
+      await supabaseAdmin
+        .from("guest_sessions")
+        .update({
+          name: opts.name,
+          message_count: (existing.message_count ?? 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", sessionId);
+    } else {
+      const { data: created, error } = await supabaseAdmin
+        .from("guest_sessions")
+        .insert({
+          guest_id: opts.guestId,
+          name: opts.name,
+          message_count: 1,
+          user_agent: opts.userAgent,
+          ip_hint: opts.ipHint,
+        })
+        .select("id")
+        .single();
+      if (error || !created) return;
+      sessionId = created.id;
+    }
+
+    await supabaseAdmin.from("guest_messages").insert([
+      { guest_session_id: sessionId, role: "user", content: opts.userMessage },
+      { guest_session_id: sessionId, role: "assistant", content: opts.assistantMessage },
+    ]);
+  } catch {
+    // best-effort; never fail the reply because of logging
+  }
+}
 
 const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native-level speaker of Manipuri / Meiteilon.
 
@@ -81,6 +134,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
           const encoder = new TextEncoder();
           const decoder = new TextDecoder();
+          let assistantAcc = "";
 
           const stream = new ReadableStream({
             async start(controller) {
@@ -104,6 +158,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                         j.choices?.[0]?.delta?.content ?? j.choices?.[0]?.message?.content;
                       if (delta) {
                         const fixed = delta.replace(/pangbageda/gi, "mateng pangjouge");
+                        assistantAcc += fixed;
                         controller.enqueue(encoder.encode(fixed));
                       }
                     } catch {
@@ -116,6 +171,22 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 return;
               }
               controller.close();
+
+              if (body.guestId && assistantAcc) {
+                const ua = request.headers.get("user-agent");
+                const ipHint =
+                  request.headers.get("cf-connecting-ip") ??
+                  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+                  null;
+                void persistGuestTurn({
+                  guestId: body.guestId,
+                  name: body.name,
+                  userAgent: ua,
+                  ipHint,
+                  userMessage: body.message,
+                  assistantMessage: assistantAcc,
+                });
+              }
             },
           });
 
