@@ -16,9 +16,11 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
+import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/voice'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedImageRouteImport } from './routes/_authenticated/image'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
@@ -59,6 +61,11 @@ const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
   path: '/api/transcribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateImageRoute = ApiGenerateImageRouteImport.update({
+  id: '/api/generate-image',
+  path: '/api/generate-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -72,6 +79,11 @@ const AuthenticatedVoiceRoute = AuthenticatedVoiceRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedImageRoute = AuthenticatedImageRouteImport.update({
+  id: '/image',
+  path: '/image',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -108,9 +120,11 @@ export interface FileRoutesByFullPath {
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/image': typeof AuthenticatedImageRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -124,9 +138,11 @@ export interface FileRoutesByTo {
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/image': typeof AuthenticatedImageRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -142,9 +158,11 @@ export interface FileRoutesById {
   '/try': typeof TryRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/image': typeof AuthenticatedImageRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/voice': typeof AuthenticatedVoiceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/_authenticated/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
@@ -160,9 +178,11 @@ export interface FileRouteTypes {
     | '/try'
     | '/admin'
     | '/dashboard'
+    | '/image'
     | '/profile'
     | '/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
@@ -176,9 +196,11 @@ export interface FileRouteTypes {
     | '/try'
     | '/admin'
     | '/dashboard'
+    | '/image'
     | '/profile'
     | '/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
@@ -193,9 +215,11 @@ export interface FileRouteTypes {
     | '/try'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/image'
     | '/_authenticated/profile'
     | '/_authenticated/voice'
     | '/api/chat'
+    | '/api/generate-image'
     | '/api/transcribe'
     | '/_authenticated/chat/$chatId'
     | '/api/public/guest-chat'
@@ -210,6 +234,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   TryRoute: typeof TryRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
 }
@@ -265,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTranscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-image': {
+      id: '/api/generate-image'
+      path: '/api/generate-image'
+      fullPath: '/api/generate-image'
+      preLoaderRoute: typeof ApiGenerateImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -284,6 +316,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/image': {
+      id: '/_authenticated/image'
+      path: '/image'
+      fullPath: '/image'
+      preLoaderRoute: typeof AuthenticatedImageRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -327,6 +366,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImageRoute: typeof AuthenticatedImageRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
@@ -336,6 +376,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedImageRoute: AuthenticatedImageRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedVoiceRoute: AuthenticatedVoiceRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
@@ -353,6 +394,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   TryRoute: TryRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiGenerateImageRoute: ApiGenerateImageRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
 }

@@ -10,14 +10,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield } from "lucide-react";
+import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield, ImageIcon, Sparkles } from "lucide-react";
 import { isAdmin as isAdminFn } from "@/lib/admin.functions";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
 import { toast } from "sonner";
 
-type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean };
+type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean; kind?: string };
 
 export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   const qc = useQueryClient();
@@ -32,7 +32,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     queryFn: async (): Promise<ChatRow[]> => {
       const { data, error } = await supabase
         .from("chats")
-        .select("id, title, updated_at, pinned")
+        .select("id, title, updated_at, pinned, kind")
         .order("pinned", { ascending: false })
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -93,10 +93,15 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         </Link>
       </div>
 
-      <div className="px-3">
+      <div className="space-y-1.5 px-3">
         <Link to="/chat" onClick={onClose}>
           <Button variant="outline" className="w-full justify-start gap-2">
             <Plus className="h-4 w-4" /> New chat
+          </Button>
+        </Link>
+        <Link to="/image" onClick={onClose}>
+          <Button variant="outline" className="w-full justify-start gap-2">
+            <Sparkles className="h-4 w-4" /> Create image
           </Button>
         </Link>
       </div>
@@ -136,7 +141,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                   </form>
                 ) : (
                   <Link to="/chat/$chatId" params={{ chatId: c.id }} onClick={onClose} className="flex flex-1 items-center gap-2 truncate px-2 py-2 text-sm">
-                    {c.pinned ? <Pin className="h-3.5 w-3.5 shrink-0 text-primary" /> : <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />}
+                    {c.pinned ? (
+                      <Pin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    ) : c.kind === "image" ? (
+                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
                     <span className="truncate">{c.title}</span>
                   </Link>
                 )}

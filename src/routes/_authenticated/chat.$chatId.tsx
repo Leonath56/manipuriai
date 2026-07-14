@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
+import { parseImageMessage, generateImages } from "@/lib/image-gen";
+import { ImageResultCard } from "@/components/ImageResultCard";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -393,9 +395,33 @@ function MessageRow({
             ) : (
               <UserContent content={message.content} />
             )
-          ) : (
-            <ChatMarkdown content={message.content} />
-          )}
+          ) : (() => {
+            const imgMeta = parseImageMessage(message.content);
+            if (imgMeta) {
+              return (
+                <ImageResultCard
+                  prompt={imgMeta.prompt}
+                  images={imgMeta.images}
+                  onRegenerate={async () => {
+                    try {
+                      await generateImages({
+                        chatId,
+                        prompt: imgMeta.prompt,
+                        aspectRatio: imgMeta.aspectRatio,
+                        quality: imgMeta.quality,
+                        count: imgMeta.images.length,
+                        style: imgMeta.style,
+                      });
+                      window.location.reload();
+                    } catch (e) {
+                      toast.error(e instanceof Error ? e.message : "Regeneration failed");
+                    }
+                  }}
+                />
+              );
+            }
+            return <ChatMarkdown content={message.content} />;
+          })()}
         </div>
         {!editing && (
           <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>

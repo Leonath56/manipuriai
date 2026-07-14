@@ -5,7 +5,7 @@ import { AuthedShell } from "@/components/AuthedShell";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines } from "lucide-react";
+import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQueryClient } from "@tanstack/react-query";
@@ -319,6 +319,17 @@ export function Composer({
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={() => navigate({ to: "/image" })}
+              aria-label="Create image"
+              title="Create image with AI"
+              className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            >
+              <Sparkles className="h-5 w-5" />
+            </Button>
             <Button
               type="button"
               size="icon"
