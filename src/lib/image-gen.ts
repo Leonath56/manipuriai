@@ -55,7 +55,17 @@ export function parseImageMessage(content: string): ImageMessageMeta | null {
 // Regex-based heuristic to detect image-generation intent from natural language.
 const IMAGE_INTENT = /\b(generate|create|make|draw|paint|render|design|show me|imagine|picture|image|photo|artwork|illustration|logo)\s+(a|an|the|me|some|of)?\s*(image|picture|photo|illustration|drawing|painting|artwork|logo|render)\b/i;
 const IMAGE_START = /^\s*(image|picture|photo|draw|paint|render|generate image|create image|make image)\s*[:\-]/i;
+const DALLE_JSON = /\b(dalle|text2im|image_generation|image_url)\b/i;
 
 export function looksLikeImagePrompt(text: string): boolean {
-  return IMAGE_INTENT.test(text) || IMAGE_START.test(text);
+  return IMAGE_INTENT.test(text) || IMAGE_START.test(text) || DALLE_JSON.test(text);
+}
+
+// Extract a natural-language prompt from a dalle-style JSON action, else return trimmed text.
+export function extractImagePrompt(text: string): string {
+  const m = text.match(/"prompt"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (m) {
+    try { return JSON.parse(`"${m[1]}"`); } catch { return m[1]; }
+  }
+  return text.trim();
 }
