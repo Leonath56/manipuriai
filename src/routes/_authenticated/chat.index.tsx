@@ -1,25 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-// re-export usage in Composer
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Send, Loader2, Zap, Brain, ImagePlus, X, AudioLines, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
-import { generateImages, parseImageMessage, parseImageRequest } from "@/lib/image-gen";
-import { ChatMarkdown } from "@/components/ChatMarkdown";
-import { ImageResultCard } from "@/components/ImageResultCard";
+import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, readImagesAsDataUrls } from "@/components/chat-shared";
+
+export { readImagesAsDataUrls };
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   head: () => ({ meta: [{ title: "New chat — Manipuri AI" }] }),
   component: NewChat,
 });
-
-const MAX_IMAGES = 4;
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // 6 MB per image
 
 export async function readImagesAsDataUrls(files: FileList | File[]): Promise<string[]> {
   const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
