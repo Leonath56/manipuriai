@@ -92,14 +92,17 @@ async function decideWebSearch(
 }
 
 
-async function firecrawlSearch(query: string, limit = 5): Promise<string | null> {
+async function firecrawlSearch(query: string, limit = 5, timeoutMs = 3500): Promise<string | null> {
   const key = process.env.FIRECRAWL_API_KEY;
   if (!key) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const r = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ query, limit }),
+      signal: ctrl.signal,
     });
     if (!r.ok) return null;
     const j = await r.json();
@@ -113,8 +116,11 @@ async function firecrawlSearch(query: string, limit = 5): Promise<string | null>
     return lines.join("\n\n");
   } catch {
     return null;
+  } finally {
+    clearTimeout(t);
   }
 }
+
 
 type UserMemory = {
   name: string | null;
