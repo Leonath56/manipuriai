@@ -368,19 +368,29 @@ export const Route = createFileRoute("/api/chat")({
             });
           }
 
-          // Fetch history + kick off web-search decision in parallel.
+          // Fetch history + run web-search decision AND firecrawl fetch in parallel with DB reads.
           // NOTE: The user message is intentionally NOT inserted here — it gets
           // saved together with the assistant reply AFTER streaming completes,
           // so the model call fires without waiting on a DB round-trip.
-          const [historyRes, searchQuery, memoryRes, recentChatsRes] = await Promise.all([
+          const webPromise: Promise<{ query: string; results: string } | null> = hasImages
+            ? Promise.resolve(null)
+            : (async () => {
+                const q = await decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think");
+                if (!q) return null;
+                const fcTimeout = body.mode === "think" ? 3500 : 2500;
+                const results = await firecrawlSearch(q, body.mode === "think" ? 8 : 5, fcTimeout);
+                if (!results) return null;
+                return { query: q, results };
+              })();
+
+          const [historyRes, webInfo, memoryRes, recentChatsRes] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
               .limit(12),
-            hasImages ? Promise.resolve(null) : decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think"),
-
+            webPromise,
             supabase
               .from("user_memory")
               .select("name, language, occupation, interests, favorite_topics, notes")
@@ -408,13 +418,10 @@ export const Route = createFileRoute("/api/chat")({
                   ? "\n\n# LANGUAGE OVERRIDE (HIGHEST PRIORITY)\nYou MUST reply entirely in fluent, natural English ONLY. This overrides every earlier default and every Meiteilon/romanization rule in this prompt.\n- Do NOT use any Manipuri/Meiteilon words, phrases, greetings, or fillers (no 'Khurumjari', 'Nungaithengbra', 'mateng pangjouge', 'Ei', etc.).\n- Do NOT use Meitei Mayek or Bengali script.\n- Identity reply (in English): 'I am Manipuri AI version 1. I was built by Loitam Leonath.'\n- Keep code, URLs, math, numbers, and proper nouns as-is.\n- Start your very next reply in English immediately."
                   : "";
 
-          let webContext = "";
-          if (searchQuery) {
-            const results = await firecrawlSearch(searchQuery, body.mode === "think" ? 8 : 5);
-            if (results) {
-              webContext = `\n\n# WEB CONTEXT (live search: "${searchQuery}", ${today})\n${results}`;
-            }
-          }
+          const webContext = webInfo
+            ? `\n\n# WEB CONTEXT (live search: "${webInfo.query}", ${today})\n${webInfo.results}`
+            : "";
+
 
           // Drop the just-inserted current user message from history if present,
           // then append it explicitly at the end so the model always sees the
