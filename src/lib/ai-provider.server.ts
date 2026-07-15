@@ -48,14 +48,14 @@ export function chatCompletionsEndpoint(modelId: string): {
 function mapToGeminiModel(id: string): string {
   const clean = id.replace(/^google\//, "");
   const table: Record<string, string> = {
-    "gemini-3-flash-preview": "gemini-2.5-flash",
-    "gemini-3.1-pro-preview": "gemini-2.5-pro",
-    "gemini-3.1-flash-lite": "gemini-2.5-flash-lite",
-    "gemini-2.5-pro": "gemini-2.5-pro",
-    "gemini-2.5-flash": "gemini-2.5-flash",
-    "gemini-2.5-flash-lite": "gemini-2.5-flash-lite",
+    "gemini-3-flash-preview": "gemini-flash-latest",
+    "gemini-3.1-pro-preview": "gemini-pro-latest",
+    "gemini-3.1-flash-lite": "gemini-flash-lite-latest",
+    "gemini-2.5-pro": "gemini-pro-latest",
+    "gemini-2.5-flash": "gemini-flash-latest",
+    "gemini-2.5-flash-lite": "gemini-flash-lite-latest",
   };
-  return table[clean] ?? "gemini-2.5-flash";
+  return table[clean] ?? "gemini-flash-latest";
 }
 
 /**
