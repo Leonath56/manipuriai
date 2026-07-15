@@ -79,9 +79,12 @@ function ChatView() {
         signal: controller.signal,
         onChunk: (delta) => setStreaming((s) => s + delta),
       });
-      setStreaming("");
+      // Refetch first so the saved message is in the list, THEN clear the
+      // streaming preview — otherwise there's a visible blink/flash between
+      // the stream ending and the DB message rendering.
       await qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
+      setStreaming("");
     } catch (err) {
       const name = (err as { name?: string })?.name;
       if (name === "AbortError") {
