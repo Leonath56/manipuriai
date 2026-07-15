@@ -13,12 +13,12 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const selfHosted = process.env.SELF_HOSTED === "1";
 
 export default defineConfig({
+  nitro: selfHosted ? { preset: "node-server" } : undefined,
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
+    // nitro/vite builds from this.
     server: {
       entry: "server",
-      ...(selfHosted ? { preset: "node-server" } : {}),
     },
   },
 });
