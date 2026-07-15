@@ -232,6 +232,28 @@ function VoiceMode() {
       if (stoppedRef.current || myTurn !== turnIdRef.current) return;
       // Ensure no prior audio is still around (defensive against overlap)
       stopSpeaking();
+
+      // Server returned no audio (credits exhausted / rate limit / no key) —
+      // fall back to the browser's built-in speech synthesis so the app keeps working.
+      if (!audio.audio || !audio.mime) {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(speak);
+          utter.rate = 0.95;
+          utter.pitch = gender === "male" ? 0.9 : 1.1;
+          utter.onend = () => {
+            if (myTurn !== turnIdRef.current) return;
+            setStatus("idle");
+            if (!stoppedRef.current) startListening();
+          };
+          utter.onerror = utter.onend;
+          window.speechSynthesis.speak(utter);
+        } else {
+          setStatus("idle");
+          if (!stoppedRef.current) startListening();
+        }
+        return;
+      }
+
       const bytes = Uint8Array.from(atob(audio.audio), (c) => c.charCodeAt(0));
       const b = new Blob([bytes], { type: audio.mime });
       const url = URL.createObjectURL(b);

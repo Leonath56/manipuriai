@@ -327,8 +327,24 @@ function MessageRow({
     setTtsState("loading");
     try {
       const clean = message.content.replace(/```[\s\S]*?```/g, "").replace(/[*_#`>]/g, "").trim();
-      const { audio, mime } = await tts({ data: { text: clean } });
-      const url = `data:${mime};base64,${audio}`;
+      const result = await tts({ data: { text: clean } });
+      if (!result.audio || !result.mime) {
+        // Server-side TTS unavailable (credits exhausted / rate-limited / no key) —
+        // fall back to the browser's built-in speech synthesis.
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          const utter = new SpeechSynthesisUtterance(clean);
+          utter.rate = 0.95;
+          utter.onend = () => setTtsState("idle");
+          utter.onerror = () => { setTtsState("idle"); toast.error("Playback failed"); };
+          window.speechSynthesis.speak(utter);
+          setTtsState("playing");
+        } else {
+          setTtsState("idle");
+          toast.error("Read-aloud unavailable on this device");
+        }
+        return;
+      }
+      const url = `data:${result.mime};base64,${result.audio}`;
       const el = new Audio(url);
       audioRef.current = el;
       el.onended = () => setTtsState("idle");
