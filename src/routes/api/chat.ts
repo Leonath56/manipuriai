@@ -67,13 +67,9 @@ async function decideWebSearch(
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 2000);
   try {
-    const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
-    const r = await fetch(ep.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${ep.apiKey}` },
-      signal: ctrl.signal,
-      body: JSON.stringify({
-        model: ep.model,
+    const r = await fetchChatCompletion(
+      "google/gemini-2.5-flash-lite",
+      {
         messages: [
           {
             role: "system",
@@ -83,8 +79,10 @@ async function decideWebSearch(
           },
           { role: "user", content: query },
         ],
-      }),
-    });
+      },
+      { signal: ctrl.signal },
+    );
+
     if (!r.ok) return null;
     const j = await r.json();
     const out: string = (j.choices?.[0]?.message?.content ?? "").trim();
