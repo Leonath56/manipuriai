@@ -63,11 +63,14 @@ async function decideWebSearch(
   force: boolean,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 2000);
   try {
     const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
     const r = await fetch(ep.url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${ep.apiKey}` },
+      signal: ctrl.signal,
       body: JSON.stringify({
         model: ep.model,
         messages: [
@@ -88,6 +91,8 @@ async function decideWebSearch(
     return out.replace(/^["']|["']$/g, "").slice(0, 200);
   } catch {
     return null;
+  } finally {
+    clearTimeout(t);
   }
 }
 
