@@ -531,14 +531,8 @@ export const Route = createFileRoute("/api/chat")({
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await fetch(chatEp.url, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${chatEp.apiKey}`,
-                    },
-                    body: JSON.stringify({ model: chatEp.model, messages }),
-                  });
+                  const r = await fetchChatCompletion(modelId, { messages });
+
                   if (r.ok) {
                     const j = await r.json();
                     const content: string = j.choices?.[0]?.message?.content ?? "";
