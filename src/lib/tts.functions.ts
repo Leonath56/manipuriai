@@ -9,11 +9,11 @@ export const synthesizeSpeech = createServerFn({ method: "POST" })
     }).parse(data)
   )
   .handler(async ({ data }) => {
-    // TTS (gpt-4o-mini-tts) is only available through Lovable AI Gateway.
-    // Self-hosted deployments without LOVABLE_API_KEY should either keep the key
-    // or fall back to the browser's built-in speechSynthesis on the client.
     const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("TTS requires LOVABLE_API_KEY on this deployment.");
+    if (!apiKey) {
+      // No key on this deployment — tell the client to use its browser speechSynthesis.
+      return { audio: null, mime: null, fallback: true as const, reason: "no_api_key" };
+    }
 
     const voice = data.gender === "male" ? "onyx" : data.gender === "female" ? "shimmer" : "alloy";
 
@@ -38,10 +38,16 @@ export const synthesizeSpeech = createServerFn({ method: "POST" })
 
     if (!res.ok) {
       const err = await res.text().catch(() => "");
+      // Credit/billing/rate-limit failures — degrade gracefully so the client
+      // can fall back to browser speechSynthesis instead of crashing.
+      if (res.status === 402 || res.status === 429 || res.status >= 500) {
+        const reason = res.status === 402 ? "credits_exhausted" : res.status === 429 ? "rate_limited" : "upstream_error";
+        return { audio: null, mime: null, fallback: true as const, reason };
+      }
       throw new Error(`TTS failed: ${res.status} ${err}`);
     }
 
     const buf = await res.arrayBuffer();
     const base64 = Buffer.from(buf).toString("base64");
-    return { audio: base64, mime: "audio/mpeg" };
+    return { audio: base64, mime: "audio/mpeg", fallback: false as const };
   });
