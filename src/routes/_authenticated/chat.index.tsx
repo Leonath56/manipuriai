@@ -5,33 +5,13 @@ import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, readImagesAsDataUrls } from "@/components/chat-shared";
-
-export { readImagesAsDataUrls };
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   head: () => ({ meta: [{ title: "New chat — Manipuri AI" }] }),
   component: NewChat,
 });
 
-export async function readImagesAsDataUrls(files: FileList | File[]): Promise<string[]> {
-  const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
-  const out: string[] = [];
-  for (const f of arr) {
-    if (f.size > MAX_IMAGE_BYTES) {
-      toast.error(`${f.name} is too large (max 6 MB)`);
-      continue;
-    }
-    const url = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result ?? ""));
-      r.onerror = () => reject(r.error);
-      r.readAsDataURL(f);
-    });
-    out.push(url);
-  }
-  return out;
-}
 
 function NewChat() {
   const [input, setInput] = useState("");
