@@ -459,16 +459,9 @@ export const Route = createFileRoute("/api/chat")({
           ];
 
           const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
-          const chatEp = chatCompletionsEndpoint(modelId);
 
-          const upstream = await fetch(chatEp.url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${chatEp.apiKey}`,
-            },
-            body: JSON.stringify({ model: chatEp.model, messages, stream: true }),
-          });
+          const upstream = await fetchChatCompletion(modelId, { messages, stream: true });
+
 
           if (!upstream.ok || !upstream.body) {
             const t = await upstream.text();
