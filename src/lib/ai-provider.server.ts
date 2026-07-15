@@ -18,30 +18,84 @@ export function getChatProvider(): AiProvider {
   return process.env.GEMINI_API_KEY ? "gemini" : "lovable";
 }
 
+type Endpoint = { url: string; apiKey: string; model: string; provider: AiProvider };
+
+function geminiEndpoint(modelId: string): Endpoint {
+  return {
+    url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    apiKey: process.env.GEMINI_API_KEY!,
+    model: mapToGeminiModel(modelId),
+    provider: "gemini",
+  };
+}
+
+function lovableEndpoint(modelId: string): Endpoint {
+  return {
+    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
+    apiKey: process.env.LOVABLE_API_KEY!,
+    model: modelId,
+    provider: "lovable",
+  };
+}
+
 /**
  * Returns { url, apiKey, model } ready for a chat completions POST.
  * `modelId` is the Lovable-style id used everywhere in the codebase
  * (e.g. "google/gemini-2.5-flash"); this function rewrites it for the
  * selected provider.
  */
-export function chatCompletionsEndpoint(modelId: string): {
-  url: string;
-  apiKey: string;
-  model: string;
-} {
-  const provider = getChatProvider();
-  if (provider === "gemini") {
-    return {
-      url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-      apiKey: process.env.GEMINI_API_KEY!,
-      model: mapToGeminiModel(modelId),
-    };
+export function chatCompletionsEndpoint(modelId: string): Endpoint {
+  return getChatProvider() === "gemini" ? geminiEndpoint(modelId) : lovableEndpoint(modelId);
+}
+
+/**
+ * Fetch a chat completion with automatic fallback to the other provider on
+ * 429 (rate limit) or 5xx from the primary. If GEMINI_API_KEY is set, we try
+ * Gemini first, then Lovable AI Gateway when Gemini rate-limits or errors.
+ * This keeps chats working when the free Gemini quota is exhausted.
+ *
+ * `payload` is the OpenAI-style body minus `model` (we inject the right one
+ * per provider). Returns the raw Response; caller handles streaming or JSON.
+ */
+export async function fetchChatCompletion(
+  modelId: string,
+  payload: Record<string, unknown>,
+  init?: { signal?: AbortSignal },
+): Promise<Response> {
+  const primary = chatCompletionsEndpoint(modelId);
+  const canFallback =
+    primary.provider === "gemini" && !!process.env.LOVABLE_API_KEY;
+
+  const doFetch = (ep: Endpoint) =>
+    fetch(ep.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ep.apiKey}`,
+      },
+      signal: init?.signal,
+      body: JSON.stringify({ ...payload, model: ep.model }),
+    });
+
+  let res: Response;
+  try {
+    res = await doFetch(primary);
+  } catch (err) {
+    if (!canFallback) throw err;
+    return doFetch(lovableEndpoint(modelId));
   }
-  return {
-    url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-    apiKey: process.env.LOVABLE_API_KEY!,
-    model: modelId,
-  };
+
+  // Retry on rate-limit or transient upstream errors from Gemini.
+  const shouldFallback =
+    canFallback && (res.status === 429 || res.status >= 500);
+  if (shouldFallback) {
+    try {
+      // Drain body so the connection is freed.
+      await res.body?.cancel().catch(() => {});
+    } catch { /* ignore */ }
+    return doFetch(lovableEndpoint(modelId));
+  }
+  return res;
 }
 
 /** Map Lovable/OpenRouter-style ids to Google's bare Gemini ids. */
@@ -67,3 +121,4 @@ export function lovableOnlyEndpoint(): { baseUrl: string; apiKey: string } | nul
   if (!key) return null;
   return { baseUrl: "https://ai.gateway.lovable.dev/v1", apiKey: key };
 }
+
