@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { AuthedShell } from "@/components/AuthedShell";
-import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "./chat.index";
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
