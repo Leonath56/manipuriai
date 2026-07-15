@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
-import { chatCompletionsEndpoint, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
+import { chatCompletionsEndpoint, fetchChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
