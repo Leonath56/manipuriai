@@ -63,11 +63,14 @@ async function decideWebSearch(
   force: boolean,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 2000);
   try {
     const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
     const r = await fetch(ep.url, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${ep.apiKey}` },
+      signal: ctrl.signal,
       body: JSON.stringify({
         model: ep.model,
         messages: [
@@ -88,18 +91,23 @@ async function decideWebSearch(
     return out.replace(/^["']|["']$/g, "").slice(0, 200);
   } catch {
     return null;
+  } finally {
+    clearTimeout(t);
   }
 }
 
 
-async function firecrawlSearch(query: string, limit = 5): Promise<string | null> {
+async function firecrawlSearch(query: string, limit = 5, timeoutMs = 3500): Promise<string | null> {
   const key = process.env.FIRECRAWL_API_KEY;
   if (!key) return null;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
     const r = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
       body: JSON.stringify({ query, limit }),
+      signal: ctrl.signal,
     });
     if (!r.ok) return null;
     const j = await r.json();
@@ -113,8 +121,11 @@ async function firecrawlSearch(query: string, limit = 5): Promise<string | null>
     return lines.join("\n\n");
   } catch {
     return null;
+  } finally {
+    clearTimeout(t);
   }
 }
+
 
 type UserMemory = {
   name: string | null;
