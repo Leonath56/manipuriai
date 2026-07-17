@@ -189,8 +189,8 @@ function ChatView() {
   const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
 
   return (
-    <AuthedShell>
-      <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col">
+
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
