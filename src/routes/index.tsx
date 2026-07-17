@@ -64,6 +64,12 @@ function Landing() {
         </nav>
       </header>
 
+      <div className="relative mx-auto max-w-6xl px-6 pt-4 text-center">
+        <p className="font-display text-base md:text-lg font-semibold tracking-tight text-foreground/90">
+          ManipuriAI na Adombu Taramna Okchari 🙏
+        </p>
+      </div>
+
       <main className="relative mx-auto max-w-6xl px-6 pb-24 pt-14 md:pt-20">
         <section className="mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-foreground/90 pill-shimmer">
