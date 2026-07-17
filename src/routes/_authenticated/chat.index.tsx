@@ -78,6 +78,7 @@ function NewChat() {
       }
 
       let acc = "";
+      let receivedChatId: string | null = null;
       await streamChat({
         chatId: null,
         message: text,
@@ -85,24 +86,18 @@ function NewChat() {
         language: lang,
         mode,
         onMeta: (m) => {
-          // The moment the server tells us the new chatId, navigate to the
-          // destination route. Streaming continues in the background and
-          // both routes read from the same shared store, so there is no
-          // flicker or lost partial reply.
+          // Remember the chatId but DON'T navigate mid-stream — swapping
+          // routes while tokens are still arriving causes a visible blink
+          // and interrupts the word-by-word reveal. Navigate once done.
+          receivedChatId = m.chatId;
           updateActiveStream({ chatId: m.chatId });
-          if (!navigated) {
-            navigated = true;
-            navigate({ to: "/chat/$chatId", params: { chatId: m.chatId } });
-          }
         },
         onChunk: (delta) => {
           acc += delta;
           appendStreamingText(delta);
         },
       });
-      // Stream complete — seed cache so the destination renders instantly.
-      const { getActiveStream } = await import("@/lib/active-stream");
-      const finalChatId = getActiveStream()?.chatId ?? null;
+      const finalChatId = receivedChatId;
       if (finalChatId) {
         qc.setQueryData(["messages", finalChatId], [
           { id: "u-1", role: "user", content: stored, created_at: new Date().toISOString() },
@@ -110,8 +105,11 @@ function NewChat() {
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
         qc.invalidateQueries({ queryKey: ["messages", finalChatId] });
+        updateActiveStream({ done: true });
+        navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
+      } else {
+        updateActiveStream({ done: true });
       }
-      updateActiveStream({ done: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
       setActiveStream(null);
