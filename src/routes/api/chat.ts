@@ -368,9 +368,13 @@ export const Route = createFileRoute("/api/chat")({
           const webPromise: Promise<{ query: string; results: string } | null> = hasImages
             ? Promise.resolve(null)
             : (async () => {
+                // Fast path: in instant mode, only run the (LLM) search-decision
+                // call when the message obviously mentions fresh-info keywords.
+                // This shaves ~500–2000ms off time-to-first-token for normal chat.
+                if (body.mode === "instant" && !mayNeedWebSearch(body.message)) return null;
                 const q = await decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think");
                 if (!q) return null;
-                const fcTimeout = body.mode === "think" ? 3500 : 2500;
+                const fcTimeout = body.mode === "think" ? 3500 : 2200;
                 const results = await firecrawlSearch(q, body.mode === "think" ? 8 : 5, fcTimeout);
                 if (!results) return null;
                 return { query: q, results };
