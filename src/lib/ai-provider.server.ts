@@ -68,7 +68,10 @@ export async function fetchChatCompletion(
 ): Promise<Response> {
   const primary = chatCompletionsEndpoint(modelId);
   const canFallback =
-    primary.provider === "gemini" && !!process.env.LOVABLE_API_KEY;
+    (primary.provider === "gemini" && !!process.env.LOVABLE_API_KEY) ||
+    (primary.provider === "lovable" && !!process.env.GEMINI_API_KEY);
+  const fallbackEndpoint = (): Endpoint =>
+    primary.provider === "lovable" ? geminiEndpoint(modelId) : lovableEndpoint(modelId);
 
   const doFetch = (ep: Endpoint) =>
     fetch(ep.url, {
