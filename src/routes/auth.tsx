@@ -37,9 +37,14 @@ function AuthPage() {
   const [remember, setRemember] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/chat" });
-    });
+    (async () => {
+      let { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        const r = await supabase.auth.refreshSession();
+        data = r.data;
+      }
+      if (data.session) navigate({ to: "/chat", replace: true });
+    })().catch(() => {});
   }, [navigate]);
 
   const handleGoogle = async () => {

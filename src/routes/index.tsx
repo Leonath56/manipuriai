@@ -30,10 +30,15 @@ function Landing() {
   const [checking, setChecking] = useState(() => hasPersistedSession());
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/chat", replace: true });
+    (async () => {
+      let { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        const r = await supabase.auth.refreshSession();
+        data = r.data;
+      }
+      if (data.session) navigate({ to: "/chat", replace: true });
       else setChecking(false);
-    }).catch(() => setChecking(false));
+    })().catch(() => setChecking(false));
   }, [navigate]);
 
   if (checking) {
