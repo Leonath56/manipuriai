@@ -19,6 +19,10 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
+function isPersistedMessageId(id: string) {
+  return !id.startsWith("u-") && !id.startsWith("a-") && !id.startsWith("opt-");
+}
+
 export const Route = createFileRoute("/_authenticated/chat/$chatId")({
   head: () => ({ meta: [{ title: "Chat — Manipuri AI" }] }),
   component: ChatView,
@@ -63,9 +67,9 @@ function ChatView() {
     },
   });
 
-  // Once the DB/cache has the completed turn, wait briefly before dropping the
-  // store. Without this grace period, refetches can overwrite optimistic rows
-  // and make the answer disappear for a moment.
+  // Once the database has the completed turn, wait briefly before dropping the
+  // store. Optimistic cache rows are intentionally ignored here; clearing from
+  // those fake rows is what made long answers disappear until refresh.
   useEffect(() => {
     if (!activeForChat?.done) return;
     const timer = window.setTimeout(() => {
@@ -77,11 +81,19 @@ function ChatView() {
           break;
         }
       }
-      const hasPersistedReply = activeTurnStart >= 0 && rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant");
+      const hasPersistedReply =
+        activeTurnStart >= 0 &&
+        isPersistedMessageId(rows[activeTurnStart].id) &&
+        rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant" && isPersistedMessageId(m.id));
       if (hasPersistedReply) setActiveStream(null);
     }, 1800);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
+
+  useEffect(() => {
+    if (!activeForChat?.done) return;
+    void qc.invalidateQueries({ queryKey: ["messages", chatId] });
+  }, [activeForChat?.done, chatId, qc]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -133,6 +145,7 @@ function ChatView() {
         ];
       });
       updateActiveStream({ done: true, streaming: result.reply });
+      void qc.invalidateQueries({ queryKey: ["messages", chatId] });
       await qc.invalidateQueries({ queryKey: ["chats"] });
       setStreaming("");
     } catch (err) {
