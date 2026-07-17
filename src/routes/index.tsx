@@ -100,10 +100,11 @@ function Landing() {
       <main className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-10 md:pt-16">
         <section className="grid gap-14 md:grid-cols-12 md:gap-10">
           {/* Left: headline */}
-          <div className="md:col-span-7">
+          <div className="md:col-span-7 flex flex-col items-center text-center">
             <div className="flex items-center gap-3">
               <span className="h-px w-8 bg-white/20" />
               <span className="eyebrow">Meiteilon · English · Meitei Mayek</span>
+              <span className="h-px w-8 bg-white/20" />
             </div>
 
             <h1
@@ -120,7 +121,7 @@ function Landing() {
               <span className="text-foreground/90"> fluently, respectfully</span>, with markdown, code and cultural nuance.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-4">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
               <Link to="/try" aria-label="Start chatting now" className="group">
                 <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg">
                   <MessageSquare className="h-5 w-5" strokeWidth={2.25} />
@@ -135,7 +136,7 @@ function Landing() {
               </Link>
             </div>
 
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> No card needed
               </span>
@@ -147,6 +148,7 @@ function Landing() {
               </span>
             </div>
           </div>
+
 
           {/* Right: mock chat preview */}
           <div id="preview" className="md:col-span-5">
