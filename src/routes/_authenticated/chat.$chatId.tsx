@@ -151,14 +151,14 @@ function ChatView() {
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
     setInput("");
     setImages([]);
-    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
-      ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
-    ]);
 
     // Auto-detect image intent — generate inline in the current chat
     const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     if (imageRequest) {
+      qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
+        ...(old ?? []),
+        { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
+      ]);
       setSending(true);
       setGeneratingImage(true);
       try {
