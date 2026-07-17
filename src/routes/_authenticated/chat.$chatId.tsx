@@ -100,7 +100,14 @@ function ChatView() {
   }, [chatId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Only auto-scroll if the user is already near the bottom — otherwise
+    // respect their scroll position so they can freely scroll up/down.
+    const scroller = document.scrollingElement || document.documentElement;
+    const distanceFromBottom =
+      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    if (distanceFromBottom < 160) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
 
 
