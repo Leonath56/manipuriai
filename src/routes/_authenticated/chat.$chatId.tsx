@@ -70,9 +70,15 @@ function ChatView() {
     if (!activeForChat?.done) return;
     const timer = window.setTimeout(() => {
       const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
-      const hasUser = rows.some((m) => m.role === "user" && m.content === activeForChat.userText);
-      const hasAssistant = rows.some((m) => m.role === "assistant" && m.content === activeForChat.streaming);
-      if (hasUser && hasAssistant) setActiveStream(null);
+      let activeTurnStart = -1;
+      for (let i = rows.length - 1; i >= 0; i -= 1) {
+        if (rows[i].role === "user" && rows[i].content === activeForChat.userText) {
+          activeTurnStart = i;
+          break;
+        }
+      }
+      const hasPersistedReply = activeTurnStart >= 0 && rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant");
+      if (hasPersistedReply) setActiveStream(null);
     }, 1800);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
@@ -231,8 +237,19 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
+  let activeTurnStart = -1;
+  if (activeForChat) {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "user" && messages[i].content === activeForChat.userText) {
+        activeTurnStart = i;
+        break;
+      }
+    }
+  }
   const renderedMessages = activeForChat
     ? messages.filter((m) => {
+        const idx = messages.indexOf(m);
+        if (activeTurnStart >= 0 && idx >= activeTurnStart) return false;
         if (m.role === "user" && m.content === activeForChat.userText) return false;
         if (m.role === "assistant" && m.content === activeForChat.streaming) return false;
         return true;
@@ -275,7 +292,7 @@ function ChatView() {
                 </div>
               </div>
             )}
-            {sending && !inflight && (
+            {sending && !activeForChat && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
                 <div className="min-w-0 flex-1">
