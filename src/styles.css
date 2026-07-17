@@ -162,9 +162,8 @@ iframe[src*="lovable.dev/badge"] {
 @utility aurora-bg {
   position: relative;
   background:
-    radial-gradient(1000px 600px at 12% 8%, oklch(0.55 0.18 280 / 0.35), transparent 60%),
-    radial-gradient(900px 500px at 88% 18%, oklch(0.62 0.16 200 / 0.30), transparent 60%),
-    radial-gradient(1100px 700px at 50% 95%, oklch(0.60 0.20 330 / 0.28), transparent 65%),
+    radial-gradient(900px 520px at 82% -10%, oklch(0.68 0.13 75 / 0.18), transparent 60%),
+    radial-gradient(700px 500px at 8% 10%, oklch(0.55 0.10 40 / 0.14), transparent 65%),
     var(--color-background);
 }
 @utility aurora-orb {
@@ -177,19 +176,30 @@ iframe[src*="lovable.dev/badge"] {
 
 @utility grid-veil {
   background-image:
-    linear-gradient(oklch(1 0 0 / 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 0.05) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+    linear-gradient(oklch(1 0 0 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 78%);
+}
+
+/* Gold accent shared across landing */
+:root {
+  --gold: oklch(0.82 0.13 82);
+  --gold-soft: oklch(0.88 0.09 82);
+  --gold-deep: oklch(0.62 0.13 70);
 }
 
 @utility hero-title {
-  background: linear-gradient(120deg,
-    oklch(0.98 0 0) 0%,
-    oklch(0.85 0.14 300) 40%,
-    oklch(0.80 0.16 200) 70%,
-    oklch(0.98 0 0) 100%);
-  background-size: 100% auto;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: oklch(0.97 0 0);
+}
+@utility hero-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  background: linear-gradient(100deg, var(--gold-soft), var(--gold), var(--gold-deep));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -199,20 +209,51 @@ iframe[src*="lovable.dev/badge"] {
 }
 
 @utility welcome-rainbow {
-  background: linear-gradient(90deg,
-    oklch(0.92 0.09 85),
-    oklch(0.85 0.13 65),
-    oklch(0.78 0.14 45),
-    oklch(0.92 0.09 85));
+  font-family: var(--font-serif);
+  font-style: italic;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold), var(--gold-deep), var(--gold-soft));
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: welcome-rainbow 6s linear infinite;
+  animation: welcome-rainbow 8s linear infinite;
 }
 @keyframes welcome-rainbow {
   to { background-position: 300% center; }
 }
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 11px;
+  font-weight: 500;
+  color: oklch(0.72 0.02 90);
+}
+
+@utility divider-hair {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.18), transparent);
+}
+
+@utility chat-card {
+  background: linear-gradient(180deg, oklch(0.24 0 0), oklch(0.20 0 0));
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 20px;
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.05) inset,
+    0 30px 80px -30px oklch(0 0 0 / 0.8),
+    0 12px 40px -12px oklch(0.62 0.13 70 / 0.15);
+}
+@utility msg-user {
+  background: oklch(0.31 0 0);
+  border: 1px solid oklch(1 0 0 / 0.06);
+}
+@utility msg-ai {
+  background: linear-gradient(180deg, oklch(0.22 0 0), oklch(0.19 0 0));
+  border: 1px solid oklch(0.82 0.13 82 / 0.18);
+}
+
 
 @utility cta-mega {
   position: relative;
