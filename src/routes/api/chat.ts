@@ -425,14 +425,16 @@ export const Route = createFileRoute("/api/chat")({
           // latest question as the final turn (fixes "replies with previous answer").
           // Also strip embedded image markdown (data URLs) from prior user turns
           // so we don't resend huge base64 blobs on every request.
+          // Cap each history turn to ~600 chars to bound input tokens.
           const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").trim();
+          const trim = (s: string, n = 600) => (s.length > n ? s.slice(0, n) + "…" : s);
           const priorHistory = history
             .filter((m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText))
-            .map((m) => (m.role === "user" ? { ...m, content: stripImgs(m.content) } : m));
+            .map((m) => ({ ...m, content: trim(m.role === "user" ? stripImgs(m.content) : m.content) }));
           const userInfo =
             displayName || userAge
-              ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
-              : `\n\n# USER PROFILE\n- The user's name is unknown. Do NOT invent a name. NEVER call the user "Khullak" or any generic placeholder.`;
+              ? `\n\nUSER: name=${displayName || "?"}${userAge ? `, age=${userAge}` : ""}. Address by name naturally. Never call user "Khullak"/generic placeholder.`
+              : `\n\nUSER: name unknown. Never invent a name or call user "Khullak".`;
           const memoryBlock = (() => {
             const bits: string[] = [];
             if (memory?.name) bits.push(`- Preferred name: ${memory.name}`);
