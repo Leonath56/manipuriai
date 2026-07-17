@@ -40,18 +40,16 @@ function PlansPage() {
   const [loading, setLoading] = useState<Plan | null>(null);
   const [currentPlan, setCurrentPlan] = useState<Plan | null>(null);
 
-  useState(() => {
-    // no-op placeholder
-  });
-
-  // Fetch current plan on mount
-  if (typeof window !== "undefined" && currentPlan === null) {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!data.session) { setCurrentPlan("free"); return; }
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) { if (!cancelled) setCurrentPlan("free"); return; }
       const { data: p } = await supabase.from("profiles").select("plan").maybeSingle();
-      setCurrentPlan(((p?.plan as Plan | undefined) ?? "free"));
-    });
-  }
+      if (!cancelled) setCurrentPlan(((p?.plan as Plan | undefined) ?? "free"));
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleUpgrade = async (plan: Plan) => {
     if (plan === "free") {
