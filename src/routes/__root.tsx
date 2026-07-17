@@ -113,7 +113,7 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   const pathname = router.state.location.pathname;
-  const hideReport = pathname.startsWith("/chat");
+  const hideReport = pathname.startsWith("/chat") || pathname.startsWith("/try");
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
