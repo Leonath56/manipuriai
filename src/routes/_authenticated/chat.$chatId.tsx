@@ -203,7 +203,13 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
+  const canRegenerate = !sending && !inflight && messages.some((m) => m.role === "assistant");
+  // Show the carryover turn only until the DB rows for it have loaded, so
+  // the same reply doesn't appear twice.
+  const carryoverStillNeeded =
+    pendingCarryover &&
+    !messages.some((m) => m.role === "assistant" && m.content === pendingCarryover.streaming);
+  const showCarryover = inflight ?? (carryoverStillNeeded ? pendingCarryover : null);
 
   return (
     <div className="flex h-full flex-col">
@@ -213,7 +219,33 @@ function ChatView() {
             {messages.map((m) => (
               <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
-            {sending && (
+            {showCarryover && (
+              <div className="animate-fade-in">
+                <div className="my-6 flex flex-row-reverse items-start gap-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
+                    <p className="whitespace-pre-wrap text-sm">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                  </div>
+                </div>
+                <div className="my-6 flex items-start gap-3">
+                  <Avatar assistant />
+                  <div className="min-w-0 flex-1">
+                    {showCarryover.generatingImage ? (
+                      <ImageGeneratingAnimation />
+                    ) : showCarryover.streaming ? (
+                      <StreamingAssistantContent content={showCarryover.streaming} />
+                    ) : (
+                      <div className="flex items-center gap-1 pt-3">
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {sending && !inflight && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
                 <div className="min-w-0 flex-1">
@@ -232,6 +264,7 @@ function ChatView() {
               </div>
             )}
             <div ref={bottomRef} />
+
 
             <div className="mt-4 flex justify-center">
               {sending ? (
