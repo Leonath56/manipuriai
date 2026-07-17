@@ -152,9 +152,16 @@ function PlansPage() {
             const info = PLAN_LIMITS[p];
             const featured = p === "pro";
             const isLoading = loading === p;
+            const isCurrent = currentPlan === p;
+            const planRank: Record<Plan, number> = { free: 0, pro: 1, max: 2 };
+            const isDowngrade = currentPlan !== null && planRank[p] < planRank[currentPlan];
             return (
-              <Card key={p} className={`relative p-6 ${featured ? "ring-2 ring-primary shadow-glow" : "shadow-soft"}`}>
-                {featured && (
+              <Card key={p} className={`relative p-6 ${isCurrent ? "ring-2 ring-primary shadow-glow" : featured ? "ring-2 ring-primary shadow-glow" : "shadow-soft"}`}>
+                {isCurrent ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
+                    Current plan
+                  </span>
+                ) : featured && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
                     Most popular
                   </span>
@@ -173,15 +180,21 @@ function PlansPage() {
                 </ul>
                 <Button
                   className="mt-6 w-full"
-                  variant={featured ? "default" : "outline"}
-                  disabled={isLoading}
+                  variant={isCurrent ? "outline" : featured ? "default" : "outline"}
+                  disabled={isLoading || isCurrent || isDowngrade || currentPlan === null}
                   onClick={() => handleUpgrade(p)}
                 >
-                  {p === "free"
+                  {isCurrent
                     ? "Current plan"
-                    : isLoading
+                    : currentPlan === null
                       ? "Loading…"
-                      : `Pay ${info.price} with Razorpay`}
+                      : isDowngrade
+                        ? "Included in your plan"
+                        : p === "free"
+                          ? "Current plan"
+                          : isLoading
+                            ? "Loading…"
+                            : `Pay ${info.price} with Razorpay`}
                 </Button>
               </Card>
             );
