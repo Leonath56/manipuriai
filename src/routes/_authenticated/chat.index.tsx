@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { AuthedShell } from "@/components/AuthedShell";
+
 import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
@@ -104,8 +104,8 @@ function NewChat() {
   ];
 
   return (
-    <AuthedShell>
-      <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col">
+
         <div className="flex-1 overflow-y-auto">
           <div className={`mx-auto ${pending ? "" : "flex min-h-full justify-center"} max-w-2xl flex-col px-4 py-10`}>
             {!pending && (
@@ -172,7 +172,7 @@ function NewChat() {
           lang={lang} setLang={setLang} mode={mode} setMode={setMode}
         />
       </div>
-    </AuthedShell>
   );
 }
+
 

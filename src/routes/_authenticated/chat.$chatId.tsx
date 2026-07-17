@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { AuthedShell } from "@/components/AuthedShell";
+
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -189,8 +189,8 @@ function ChatView() {
   const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
 
   return (
-    <AuthedShell>
-      <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col">
+
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
             {messages.map((m) => (
@@ -233,9 +233,9 @@ function ChatView() {
         </div>
         <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
-    </AuthedShell>
   );
 }
+
 
 function Avatar({ assistant }: { assistant?: boolean }) {
   if (assistant) {
