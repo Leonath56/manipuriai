@@ -44,10 +44,11 @@ function ChatView() {
   const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
   const active = useActiveStream();
-  // If a stream is currently in flight FOR THIS chat (started on /chat and
-  // navigated here mid-stream), we mirror its state so the UI never blanks.
-  const inflight = active && active.chatId === chatId && !active.done ? active : null;
-  const pendingCarryover = active && active.chatId === chatId && active.done ? active : null;
+  // Keep the active stream authoritative for this chat until the database rows
+  // have had time to settle. This prevents long replies from clearing during
+  // route changes or refetches.
+  const activeForChat = active && active.chatId === chatId ? active : null;
+  const inflight = activeForChat && !activeForChat.done ? activeForChat : null;
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -62,15 +63,25 @@ function ChatView() {
     },
   });
 
-  // Once the DB has both the user message AND the assistant reply for this
-  // finished stream, drop the store so it doesn't render a duplicate turn.
+  // Once the DB/cache has the completed turn, wait briefly before dropping the
+  // store. Without this grace period, refetches can overwrite optimistic rows
+  // and make the answer disappear for a moment.
   useEffect(() => {
-    if (!pendingCarryover) return;
-    const rows = messagesQ.data ?? [];
-    const hasUser = rows.some((m) => m.role === "user" && m.content === pendingCarryover.userText);
-    const hasAssistant = rows.some((m) => m.role === "assistant");
-    if (hasUser && hasAssistant) setActiveStream(null);
-  }, [pendingCarryover, messagesQ.data]);
+    if (!activeForChat?.done) return;
+    const timer = window.setTimeout(() => {
+      const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
+      let activeTurnStart = -1;
+      for (let i = rows.length - 1; i >= 0; i -= 1) {
+        if (rows[i].role === "user" && rows[i].content === activeForChat.userText) {
+          activeTurnStart = i;
+          break;
+        }
+      }
+      const hasPersistedReply = activeTurnStart >= 0 && rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant");
+      if (hasPersistedReply) setActiveStream(null);
+    }, 1800);
+    return () => window.clearTimeout(timer);
+  }, [activeForChat, chatId, messagesQ.data, qc]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -124,7 +135,6 @@ function ChatView() {
       updateActiveStream({ done: true, streaming: result.reply });
       await qc.invalidateQueries({ queryKey: ["chats"] });
       setStreaming("");
-      setActiveStream(null);
     } catch (err) {
       const name = (err as { name?: string })?.name;
       if (name === "AbortError") {
@@ -227,24 +237,37 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  const canRegenerate = !sending && !inflight && messages.some((m) => m.role === "assistant");
-  // Show the carryover turn only until the DB rows for it have loaded, so
-  // the same reply doesn't appear twice.
-  const carryoverStillNeeded =
-    pendingCarryover &&
-    !messages.some((m) => m.role === "assistant" && m.content === pendingCarryover.streaming);
-  const showCarryover = inflight ?? (carryoverStillNeeded ? pendingCarryover : null);
+  let activeTurnStart = -1;
+  if (activeForChat) {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].role === "user" && messages[i].content === activeForChat.userText) {
+        activeTurnStart = i;
+        break;
+      }
+    }
+  }
+  const renderedMessages = activeForChat
+    ? messages.filter((m) => {
+        const idx = messages.indexOf(m);
+        if (activeTurnStart >= 0 && idx >= activeTurnStart) return false;
+        if (m.role === "user" && m.content === activeForChat.userText) return false;
+        if (m.role === "assistant" && m.content === activeForChat.streaming) return false;
+        return true;
+      })
+    : messages;
+  const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
+  const showCarryover = activeForChat;
 
   return (
     <div className="flex h-full flex-col">
 
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-2xl px-4 py-6">
-            {messages.map((m) => (
+            {renderedMessages.map((m) => (
               <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
             {showCarryover && (
-              <div className="animate-fade-in">
+              <div>
                 <div className="my-6 flex flex-row-reverse items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
@@ -269,7 +292,7 @@ function ChatView() {
                 </div>
               </div>
             )}
-            {sending && !inflight && (
+            {sending && !activeForChat && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
                 <div className="min-w-0 flex-1">
@@ -485,7 +508,7 @@ function MessageRow({
   };
 
   return (
-    <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse msg-pop" : "animate-fade-in"}`}>
+    <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       <Avatar assistant={!isUser} />
       <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
         <div className={isUser ? "inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground" : ""}>

@@ -161,7 +161,7 @@ function NewChat() {
             )}
 
             {pendingHere && (
-              <div className="animate-fade-in">
+              <div>
                 <div className="my-6 flex flex-row-reverse items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
