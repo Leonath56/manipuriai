@@ -1,9 +1,10 @@
 export type Plan = "free" | "pro" | "max";
 
-export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; price: string; model: string; features: string[] }> = {
+export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; price: string; priceInPaise: number; model: string; features: string[] }> = {
   free: {
     label: "Free",
-    price: "$0",
+    price: "₹0",
+    priceInPaise: 0,
     dailyMessages: 20,
     model: "google/gemini-2.5-pro",
     features: [
@@ -15,29 +16,31 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
   },
   pro: {
     label: "Pro",
-    price: "$9",
+    price: "₹99",
+    priceInPaise: 9900,
     dailyMessages: 500,
     model: "google/gemini-2.5-pro",
     features: [
       "500 messages per day",
       "Faster responses",
-      "Longer chat history",
+      "Voice mode",
+      "AI image generation",
       "Priority processing",
-      "File upload (coming soon)",
     ],
   },
   max: {
     label: "Max",
-    price: "$29",
+    price: "₹399",
+    priceInPaise: 39900,
     dailyMessages: 10000,
     model: "google/gemini-2.5-pro",
     features: [
       "Effectively unlimited messages",
       "Fastest responses",
       "Premium AI model",
+      "Voice mode & AI images",
       "Unlimited chat history",
       "Early access to new features",
-      "Priority support",
     ],
   },
 };
