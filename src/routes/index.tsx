@@ -152,51 +152,7 @@ function Landing() {
           </div>
 
 
-          {/* Right: mock chat preview */}
-          <div id="preview" className="w-full max-w-xl mx-auto">
 
-            <div className="chat-card p-5 md:p-6">
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <div className="flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-semibold" style={{ background: "linear-gradient(135deg, var(--gold-soft), var(--gold-deep))", color: "oklch(0.16 0.02 60)" }}>ꯃ</span>
-                  <span className="text-xs font-medium text-foreground/90">Manipuri AI</span>
-                  <span className="ml-1 rounded-full border border-white/10 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-muted-foreground">live</span>
-                </div>
-                <div className="flex gap-1">
-                  <span className="h-2 w-2 rounded-full bg-white/15" />
-                  <span className="h-2 w-2 rounded-full bg-white/15" />
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--gold)" }} />
-                </div>
-              </div>
-
-              <div className="mt-5 space-y-4">
-                <div className="ml-auto max-w-[85%] rounded-2xl rounded-tr-md msg-user px-4 py-2.5 text-sm">
-                  Nangna Manipur gi puwari nungshi ba kari?
-                </div>
-                <div className="mr-auto max-w-[92%] rounded-2xl rounded-tl-md msg-ai px-4 py-3 text-sm leading-relaxed">
-                  <span className="mb-1 block text-[10px] uppercase tracking-widest" style={{ color: "var(--gold)" }}>Meiteilon</span>
-                  Manipur gi puwarida <span className="italic">Kangleipak</span> haiba mafamdagi houraga, Ningthouja, Angom, Luwang, Khuman, Moirang amasung Chenglei — saphu lai-narol taret asi loinana leipaki. Kanglei Ipak gi wari asi <span style={{ color: "var(--gold-soft)" }}>2000+</span> chahi henna aduga...
-                  <span className="ml-1 inline-block h-3 w-2 translate-y-0.5 animate-pulse" style={{ background: "var(--gold)" }} />
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-2">
-                <input
-                  disabled
-                  placeholder="Type in Manipuri or English…"
-                  className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/70"
-                />
-                <button className="grid h-7 w-7 place-items-center rounded-full" style={{ background: "var(--gold)", color: "oklch(0.16 0.02 60)" }}>
-                  <Send className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              Live sample — actual replies stream token-by-token.
-            </p>
-
-          </div>
         </section>
 
         {/* Divider */}
