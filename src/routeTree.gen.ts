@@ -22,6 +22,7 @@ import { Route as AuthenticatedVoiceRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedImageRouteImport } from './routes/_authenticated/image'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as ApiPublicGuestChatRouteImport } from './routes/api/public/guest-chat'
@@ -91,15 +92,20 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedChatRoute,
 } as any)
 const ApiPublicGuestChatRoute = ApiPublicGuestChatRouteImport.update({
   id: '/api/public/guest-chat',
@@ -107,9 +113,9 @@ const ApiPublicGuestChatRoute = ApiPublicGuestChatRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedChatChatIdRoute = AuthenticatedChatChatIdRouteImport.update({
-  id: '/chat/$chatId',
-  path: '/chat/$chatId',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/$chatId',
+  path: '/$chatId',
+  getParentRoute: () => AuthenticatedChatRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/chat': typeof AuthenticatedChatRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/image': typeof AuthenticatedImageRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -157,6 +164,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/try': typeof TryRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/image': typeof AuthenticatedImageRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -177,6 +185,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/try'
     | '/admin'
+    | '/chat'
     | '/dashboard'
     | '/image'
     | '/profile'
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/try'
     | '/_authenticated/admin'
+    | '/_authenticated/chat'
     | '/_authenticated/dashboard'
     | '/_authenticated/image'
     | '/_authenticated/profile'
@@ -332,6 +342,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -341,10 +358,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/chat/': {
       id: '/_authenticated/chat/'
-      path: '/chat'
+      path: '/'
       fullPath: '/chat/'
       preLoaderRoute: typeof AuthenticatedChatIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedChatRoute
     }
     '/api/public/guest-chat': {
       id: '/api/public/guest-chat'
@@ -355,32 +372,43 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/chat/$chatId': {
       id: '/_authenticated/chat/$chatId'
-      path: '/chat/$chatId'
+      path: '/$chatId'
       fullPath: '/chat/$chatId'
       preLoaderRoute: typeof AuthenticatedChatChatIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedChatRoute
     }
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedImageRoute: typeof AuthenticatedImageRoute
-  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRoute
+interface AuthenticatedChatRouteChildren {
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
   AuthenticatedChatIndexRoute: typeof AuthenticatedChatIndexRoute
 }
 
+const AuthenticatedChatRouteChildren: AuthenticatedChatRouteChildren = {
+  AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
+  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
+}
+
+const AuthenticatedChatRouteWithChildren =
+  AuthenticatedChatRoute._addFileChildren(AuthenticatedChatRouteChildren)
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedChatRoute: typeof AuthenticatedChatRouteWithChildren
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedImageRoute: typeof AuthenticatedImageRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedVoiceRoute: typeof AuthenticatedVoiceRoute
+}
+
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedChatRoute: AuthenticatedChatRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedImageRoute: AuthenticatedImageRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedVoiceRoute: AuthenticatedVoiceRoute,
-  AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
-  AuthenticatedChatIndexRoute: AuthenticatedChatIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -401,13 +429,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

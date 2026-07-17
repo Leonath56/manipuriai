@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
-import { AuthedShell } from "@/components/AuthedShell";
+
 import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
