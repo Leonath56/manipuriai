@@ -152,7 +152,8 @@ function Landing() {
 
 
           {/* Right: mock chat preview */}
-          <div id="preview" className="md:col-span-5">
+          <div id="preview" className="w-full max-w-xl mx-auto">
+
             <div className="chat-card p-5 md:p-6">
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div className="flex items-center gap-2">
