@@ -89,18 +89,16 @@ export async function fetchChatCompletion(
     res = await doFetch(primary);
   } catch (err) {
     if (!canFallback) throw err;
-    return doFetch(lovableEndpoint(modelId));
+    return doFetch(fallbackEndpoint());
   }
 
-  // Retry on rate-limit or transient upstream errors from Gemini.
   const shouldFallback =
     canFallback && (res.status === 429 || res.status >= 500);
   if (shouldFallback) {
     try {
-      // Drain body so the connection is freed.
       await res.body?.cancel().catch(() => {});
     } catch { /* ignore */ }
-    return doFetch(lovableEndpoint(modelId));
+    return doFetch(fallbackEndpoint());
   }
   return res;
 }
