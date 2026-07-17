@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
+const GUEST_FREE_LIMIT = 3;
+
 const BodySchema = z.object({
   name: z.string().trim().min(1).max(60),
-  guestId: z.string().trim().min(4).max(80).optional(),
+  guestId: z.string().trim().min(4).max(80),
   history: z
     .array(
       z.object({
@@ -95,6 +97,45 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
           const body = BodySchema.parse(await request.json());
 
+          // Server-enforced free-trial limit. Do NOT trust any client counter.
+          const ua = request.headers.get("user-agent");
+          const ipHint =
+            request.headers.get("cf-connecting-ip") ??
+            request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+            null;
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // Check by guestId
+          const { data: existingSession } = await supabaseAdmin
+            .from("guest_sessions")
+            .select("id, message_count")
+            .eq("guest_id", body.guestId)
+            .maybeSingle();
+
+          let usedByGuest = existingSession?.message_count ?? 0;
+
+          // Also cap by IP to prevent guestId rotation abuse
+          let usedByIp = 0;
+          if (ipHint) {
+            const { data: ipRows } = await supabaseAdmin
+              .from("guest_sessions")
+              .select("message_count")
+              .eq("ip_hint", ipHint);
+            usedByIp = (ipRows ?? []).reduce((s, r) => s + (r.message_count ?? 0), 0);
+          }
+
+          const usedMax = Math.max(usedByGuest, usedByIp);
+          if (usedMax >= GUEST_FREE_LIMIT) {
+            return new Response(
+              JSON.stringify({
+                error: "Free trial limit reached. Please sign up to continue.",
+                limit: GUEST_FREE_LIMIT,
+              }),
+              { status: 429, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
           const languageHint =
             body.language === "mni"
               ? "\n\n# LANGUAGE OVERRIDE\nReply in Meiteilon romanized in Latin letters ONLY."
@@ -174,12 +215,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               }
               controller.close();
 
-              if (body.guestId && assistantAcc) {
-                const ua = request.headers.get("user-agent");
-                const ipHint =
-                  request.headers.get("cf-connecting-ip") ??
-                  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-                  null;
+              if (assistantAcc) {
                 void persistGuestTurn({
                   guestId: body.guestId,
                   name: body.name,
