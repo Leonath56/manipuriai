@@ -65,8 +65,8 @@ function Landing() {
       </header>
 
       <div className="relative mx-auto max-w-6xl px-6 pt-4 text-center">
-        <p className="font-display text-base md:text-lg font-semibold tracking-tight text-foreground/90">
-          ManipuriAI na Adombu Taramna Okchari 🙏
+        <p className="text-base md:text-lg leading-relaxed text-foreground/90">
+          Manipuri AI na Adombu Taramna Okchari 🙏
         </p>
       </div>
 
