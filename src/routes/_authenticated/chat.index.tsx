@@ -58,7 +58,7 @@ function NewChat() {
       generatingImage: Boolean(imageRequest),
       done: false,
     });
-    let navigated = false;
+    
     try {
       // Auto-detect image generation intent (no images attached, text prompt)
       if (imageRequest) {
