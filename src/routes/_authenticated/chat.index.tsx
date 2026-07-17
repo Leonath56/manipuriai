@@ -172,7 +172,7 @@ function NewChat() {
           lang={lang} setLang={setLang} mode={mode} setMode={setMode}
         />
       </div>
-    </AuthedShell>
   );
 }
+
 
