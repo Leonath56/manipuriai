@@ -195,7 +195,7 @@ function Landing() {
                 <span className="eyebrow">Why us</span>
               </div>
               <h3 className="mt-4 text-2xl leading-tight md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
-                The first AI that treats Meiteilon as a <span className="italic" style={{ color: "var(--gold)" }}>first-class language</span> — not a translation afterthought.
+                An AI that treats Meiteilon as a <span className="italic" style={{ color: "var(--gold)" }}>first-class language</span> — not a translation afterthought.
               </h3>
             </div>
             <Stat k="3" label="Scripts supported" sub="Latin · Bengali · Meitei Mayek" />
