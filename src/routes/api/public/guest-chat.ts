@@ -215,12 +215,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               }
               controller.close();
 
-              if (body.guestId && assistantAcc) {
-                const ua = request.headers.get("user-agent");
-                const ipHint =
-                  request.headers.get("cf-connecting-ip") ??
-                  request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-                  null;
+              if (assistantAcc) {
                 void persistGuestTurn({
                   guestId: body.guestId,
                   name: body.name,
