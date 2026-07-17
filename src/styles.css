@@ -197,6 +197,24 @@ iframe[src*="lovable.dev/badge"] {
   to { background-position: 220% center; }
 }
 
+@utility welcome-rainbow {
+  background: linear-gradient(90deg,
+    oklch(0.80 0.18 30),
+    oklch(0.82 0.19 90),
+    oklch(0.80 0.20 160),
+    oklch(0.78 0.19 230),
+    oklch(0.80 0.22 300),
+    oklch(0.80 0.18 30));
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: welcome-rainbow 6s linear infinite;
+}
+@keyframes welcome-rainbow {
+  to { background-position: 300% center; }
+}
+
 @utility cta-mega {
   position: relative;
   isolation: isolate;
