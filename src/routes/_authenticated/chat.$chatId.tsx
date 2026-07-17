@@ -267,10 +267,12 @@ function ChatView() {
 
 
             <div className="mt-4 flex justify-center">
-              {sending ? (
-                <Button variant="outline" size="sm" onClick={stop} className="gap-1.5">
-                  <StopCircle className="h-3.5 w-3.5" /> Stop generating
-                </Button>
+              {sending || inflight ? (
+                sending ? (
+                  <Button variant="outline" size="sm" onClick={stop} className="gap-1.5">
+                    <StopCircle className="h-3.5 w-3.5" /> Stop generating
+                  </Button>
+                ) : null
               ) : (
                 canRegenerate && (
                   <Button variant="outline" size="sm" onClick={regenerate} className="gap-1.5">
