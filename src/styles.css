@@ -199,12 +199,10 @@ iframe[src*="lovable.dev/badge"] {
 
 @utility welcome-rainbow {
   background: linear-gradient(90deg,
-    oklch(0.80 0.18 30),
-    oklch(0.82 0.19 90),
-    oklch(0.80 0.20 160),
-    oklch(0.78 0.19 230),
-    oklch(0.80 0.22 300),
-    oklch(0.80 0.18 30));
+    oklch(0.72 0.18 300),
+    oklch(0.70 0.17 210),
+    oklch(0.75 0.19 330),
+    oklch(0.72 0.18 300));
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
