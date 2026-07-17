@@ -123,7 +123,6 @@ function ChatView() {
       });
       updateActiveStream({ done: true, streaming: result.reply });
       await qc.invalidateQueries({ queryKey: ["chats"] });
-      void qc.invalidateQueries({ queryKey: ["messages", chatId] });
       setStreaming("");
       setActiveStream(null);
     } catch (err) {
