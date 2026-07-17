@@ -36,6 +36,7 @@ function cleanForTts(s: string): string {
 
 function VoiceMode() {
   const navigate = useNavigate();
+  const { data: plan, isLoading: planLoading } = usePlan();
   const tts = useServerFn(synthesizeSpeech);
 
   const [status, setStatus] = useState<Status>("idle");
