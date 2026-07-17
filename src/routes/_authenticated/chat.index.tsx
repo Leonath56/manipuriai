@@ -101,10 +101,8 @@ function NewChat() {
         },
       });
       // Stream complete — seed cache so the destination renders instantly.
-      const finalStream = { ...(pendingHere ?? { chatId: null } as { chatId: string | null }) };
-      // Read latest chatId from store, not React state (which may be stale here).
-      const current = (await import("@/lib/active-stream")).getActiveStream();
-      const finalChatId = current?.chatId ?? finalStream.chatId ?? null;
+      const { getActiveStream } = await import("@/lib/active-stream");
+      const finalChatId = getActiveStream()?.chatId ?? null;
       if (finalChatId) {
         qc.setQueryData(["messages", finalChatId], [
           { id: "u-1", role: "user", content: stored, created_at: new Date().toISOString() },
