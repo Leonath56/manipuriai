@@ -15,7 +15,11 @@
 export type AiProvider = "lovable" | "gemini";
 
 export function getChatProvider(): AiProvider {
-  return process.env.GEMINI_API_KEY ? "gemini" : "lovable";
+  // Prefer Lovable AI Gateway whenever a key is present (user has credits).
+  // Fall back to a direct Gemini key only when Lovable is not configured.
+  if (process.env.LOVABLE_API_KEY) return "lovable";
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  return "lovable";
 }
 
 type Endpoint = { url: string; apiKey: string; model: string; provider: AiProvider };
@@ -64,7 +68,10 @@ export async function fetchChatCompletion(
 ): Promise<Response> {
   const primary = chatCompletionsEndpoint(modelId);
   const canFallback =
-    primary.provider === "gemini" && !!process.env.LOVABLE_API_KEY;
+    (primary.provider === "gemini" && !!process.env.LOVABLE_API_KEY) ||
+    (primary.provider === "lovable" && !!process.env.GEMINI_API_KEY);
+  const fallbackEndpoint = (): Endpoint =>
+    primary.provider === "lovable" ? geminiEndpoint(modelId) : lovableEndpoint(modelId);
 
   const doFetch = (ep: Endpoint) =>
     fetch(ep.url, {
@@ -82,18 +89,16 @@ export async function fetchChatCompletion(
     res = await doFetch(primary);
   } catch (err) {
     if (!canFallback) throw err;
-    return doFetch(lovableEndpoint(modelId));
+    return doFetch(fallbackEndpoint());
   }
 
-  // Retry on rate-limit or transient upstream errors from Gemini.
   const shouldFallback =
     canFallback && (res.status === 429 || res.status >= 500);
   if (shouldFallback) {
     try {
-      // Drain body so the connection is freed.
       await res.body?.cancel().catch(() => {});
     } catch { /* ignore */ }
-    return doFetch(lovableEndpoint(modelId));
+    return doFetch(fallbackEndpoint());
   }
   return res;
 }

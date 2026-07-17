@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Loader2, ImageIcon, Sparkles, MessageSquare } from "lucide-react";
 import { generateImages, type ImageGenParams } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
+import { PaidFeatureGate } from "@/components/PaidFeatureGate";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -98,6 +99,10 @@ function ImagePage() {
 
   return (
     <AuthedShell>
+      <PaidFeatureGate
+        feature="Image generation"
+        description="Generate stunning AI images with Manipuri AI. Upgrade to Pro or Max to unlock unlimited image creation."
+      >
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-8">
@@ -261,6 +266,7 @@ function ImagePage() {
           </form>
         </div>
       </div>
+      </PaidFeatureGate>
     </AuthedShell>
   );
 }

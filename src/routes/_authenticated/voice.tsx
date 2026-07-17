@@ -1,14 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, Lock, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 import { preprocessAudio } from "@/lib/audio-preprocess";
 import { toast } from "sonner";
+import { usePlan } from "@/components/PaidFeatureGate";
 
 export const Route = createFileRoute("/_authenticated/voice")({
   head: () => ({ meta: [{ title: "Voice — Manipuri AI" }] }),
@@ -35,6 +36,7 @@ function cleanForTts(s: string): string {
 
 function VoiceMode() {
   const navigate = useNavigate();
+  const { data: plan, isLoading: planLoading } = usePlan();
   const tts = useServerFn(synthesizeSpeech);
 
   const [status, setStatus] = useState<Status>("idle");
@@ -336,6 +338,32 @@ function VoiceMode() {
     "Tap to start";
 
   const scale = 1 + (status === "listening" ? level * 0.6 : status === "speaking" ? 0.15 : 0);
+
+  if (!planLoading && plan !== "pro" && plan !== "max") {
+    return (
+      <div className="fixed inset-0 z-50 grid place-items-center bg-gradient-to-b from-neutral-950 to-black p-6 text-white">
+        <div className="max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-primary/20 text-primary">
+            <Lock className="h-6 w-6" />
+          </div>
+          <h1 className="mb-2 font-display text-2xl font-bold">Voice Mode is a Pro feature</h1>
+          <p className="mb-6 text-sm text-white/70">
+            Talk to Manipuri AI hands-free in Manipuri and English. Upgrade to Pro or Max to unlock Voice Mode.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link to="/plans">
+              <Button className="w-full gap-2">
+                <Sparkles className="h-4 w-4" /> Upgrade to Pro
+              </Button>
+            </Link>
+            <Button variant="ghost" className="w-full text-white/70 hover:bg-white/10 hover:text-white" onClick={() => navigate({ to: "/chat" })}>
+              Back to chat
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-b from-neutral-950 to-black text-white">

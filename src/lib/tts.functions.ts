@@ -1,14 +1,27 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const synthesizeSpeech = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
     z.object({
       text: z.string().min(1).max(4000),
       gender: z.enum(["male", "female"]).optional(),
     }).parse(data)
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    // Paid-only: TTS is Pro/Max. Free plan falls back to browser speechSynthesis.
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const plan = (profile?.plan as string | undefined) ?? "free";
+    if (plan !== "pro" && plan !== "max") {
+      return { audio: null, mime: null, fallback: true as const, reason: "free_plan" };
+    }
+
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) {
       // No key on this deployment — tell the client to use its browser speechSynthesis.

@@ -56,6 +56,20 @@ export const Route = createFileRoute("/api/generate-image")({
           if (userErr || !userRes.user) return new Response("Unauthorized", { status: 401 });
           const userId = userRes.user.id;
 
+          // Paid feature: image generation is Pro/Max only.
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("plan")
+            .eq("id", userId)
+            .maybeSingle();
+          const plan = (profile?.plan as string | undefined) ?? "free";
+          if (plan !== "pro" && plan !== "max") {
+            return new Response(
+              JSON.stringify({ error: "Image generation is a Pro feature. Upgrade your plan to unlock it." }),
+              { status: 402, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
           // Translate/expand the prompt to a rich, descriptive English prompt.
           // This fixes two problems:
               //  1. Manipuri/Meiteilon prompts were being sent to the image model raw,
