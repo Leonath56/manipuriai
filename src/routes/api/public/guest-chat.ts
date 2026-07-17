@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { chatCompletionsEndpoint } from "@/lib/ai-provider.server";
 
+const GUEST_FREE_LIMIT = 3;
+
 const BodySchema = z.object({
   name: z.string().trim().min(1).max(60),
-  guestId: z.string().trim().min(4).max(80).optional(),
+  guestId: z.string().trim().min(4).max(80),
   history: z
     .array(
       z.object({
