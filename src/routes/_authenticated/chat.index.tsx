@@ -105,7 +105,6 @@ function NewChat() {
           { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
-        qc.invalidateQueries({ queryKey: ["messages", finalChatId] });
         updateActiveStream({ done: true });
         navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
       } else {
