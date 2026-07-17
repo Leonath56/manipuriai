@@ -1,14 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, Lock, Sparkles } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 import { preprocessAudio } from "@/lib/audio-preprocess";
 import { toast } from "sonner";
+import { usePlan } from "@/components/PaidFeatureGate";
 
 export const Route = createFileRoute("/_authenticated/voice")({
   head: () => ({ meta: [{ title: "Voice — Manipuri AI" }] }),
