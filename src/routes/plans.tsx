@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/plans")({
   head: () => ({ meta: [{ title: "Plans & pricing — Manipuri AI" }, { name: "description", content: "Choose the Manipuri AI plan that fits you: Free, Pro, or Max." }] }),
