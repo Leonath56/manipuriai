@@ -89,7 +89,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
           <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
           Manipuri AI
-          <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1</span>
+          <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
         </Link>
       </div>
 
