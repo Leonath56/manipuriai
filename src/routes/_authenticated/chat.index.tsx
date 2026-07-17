@@ -30,10 +30,11 @@ function NewChat() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const active = useActiveStream();
-  // Only show the pending preview on this route when the stream has not
-  // yet been assigned a chatId. Once it has, we navigate away and the
-  // destination route renders the same stream from the same store.
-  const pendingHere = active && active.chatId === null ? active : null;
+  // Keep the pending preview visible on /chat for the entire stream. The
+  // server sends chatId almost immediately, but we intentionally navigate only
+  // after the reply finishes; hiding this when chatId arrives made long replies
+  // disappear until refresh.
+  const pendingHere = active;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pendingHere?.streaming, pendingHere?.generatingImage]);
@@ -104,7 +105,6 @@ function NewChat() {
           { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
-        qc.invalidateQueries({ queryKey: ["messages", finalChatId] });
         updateActiveStream({ done: true });
         navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
       } else {

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 import { parseImageMessage, generateImages, parseImageRequest } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
-import { setActiveStream, useActiveStream } from "@/lib/active-stream";
+import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStream } from "@/lib/active-stream";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -84,24 +84,47 @@ function ChatView() {
   const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
     setStreaming("");
+    const imgTags = imgs.map((u) => `![image](${u})`).join("\n");
+    const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
+    setActiveStream({
+      chatId,
+      userText: stored,
+      userImages: imgs,
+      streaming: "",
+      generatingImage: false,
+      done: false,
+    });
     const controller = new AbortController();
     abortRef.current = controller;
     try {
-      await streamChat({
+      const result = await streamChat({
         chatId,
         message: text,
         images: imgs,
         language: lang,
         mode,
         signal: controller.signal,
-        onChunk: (delta) => setStreaming((s) => s + delta),
+        onChunk: (delta) => {
+          setStreaming((s) => s + delta);
+          appendStreamingText(delta);
+        },
       });
-      // Refetch first so the saved message is in the list, THEN clear the
-      // streaming preview — otherwise there's a visible blink/flash between
-      // the stream ending and the DB message rendering.
-      await qc.invalidateQueries({ queryKey: ["messages", chatId] });
+      const now = new Date().toISOString();
+      qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
+        const rows = old ?? [];
+        const withoutOptimisticUser = rows.filter((m) => !(m.id.startsWith("opt-") && m.role === "user" && m.content === stored));
+        return [
+          ...withoutOptimisticUser,
+          ...(withoutOptimisticUser.some((m) => m.role === "user" && m.content === stored)
+            ? []
+            : [{ id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now }]),
+          { id: `a-${Date.now()}`, role: "assistant" as const, content: result.reply, created_at: now },
+        ];
+      });
+      updateActiveStream({ done: true, streaming: result.reply });
       await qc.invalidateQueries({ queryKey: ["chats"] });
       setStreaming("");
+      setActiveStream(null);
     } catch (err) {
       const name = (err as { name?: string })?.name;
       if (name === "AbortError") {
@@ -111,6 +134,7 @@ function ChatView() {
         toast.error(err instanceof Error ? err.message : "Failed to send");
       }
       setStreaming("");
+      setActiveStream(null);
     } finally {
       abortRef.current = null;
       setSending(false);
@@ -127,14 +151,14 @@ function ChatView() {
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
     setInput("");
     setImages([]);
-    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
-      ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
-    ]);
 
     // Auto-detect image intent — generate inline in the current chat
     const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     if (imageRequest) {
+      qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
+        ...(old ?? []),
+        { id: `opt-${Date.now()}`, role: "user", content: stored, created_at: new Date().toISOString() },
+      ]);
       setSending(true);
       setGeneratingImage(true);
       try {

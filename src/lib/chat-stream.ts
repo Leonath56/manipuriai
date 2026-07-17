@@ -42,13 +42,17 @@ export async function streamChat({ chatId, message, language, mode, images, sour
   const decoder = new TextDecoder();
   let full = "";
   let pending = "";
-  let metaHandled = false;
+  let waitingForMeta = true;
+  let metaBuffer = "";
   let streamDone = false;
+  let readError: unknown = null;
 
-  // Smooth reveal: even if the server hands us a big burst of tokens in one
-  // network chunk, drip them out to the UI so it reads word-by-word.
-  // Rate adapts to backlog so we never fall far behind the model.
+  // Smooth reveal: show text word-by-word/token-by-token as soon as it arrives.
+  // If the network hands us a large burst, keep the message visible and quickly
+  // drain the queue instead of dumping the full answer at once or blinking away.
   let rafId: number | null = null;
+  let resolveDrain: (() => void) | null = null;
+  const drained = new Promise<void>((resolve) => { resolveDrain = resolve; });
   const raf: (cb: () => void) => number =
     typeof requestAnimationFrame === "function"
       ? (cb) => requestAnimationFrame(cb)
@@ -58,20 +62,39 @@ export async function streamChat({ chatId, message, language, mode, images, sour
       ? (id) => cancelAnimationFrame(id)
       : (id) => clearTimeout(id);
 
+  const takeRevealChunk = () => {
+    if (!pending) return "";
+    const backlog = pending.length;
+    const targetWords = backlog > 1600 ? 10 : backlog > 700 ? 6 : backlog > 220 ? 3 : 1;
+    let idx = 0;
+    let words = 0;
+    while (idx < pending.length && words < targetWords) {
+      while (idx < pending.length && /\s/.test(pending[idx])) idx++;
+      while (idx < pending.length && !/\s/.test(pending[idx])) idx++;
+      words++;
+      while (idx < pending.length && /\s/.test(pending[idx])) idx++;
+    }
+    if (idx === 0) idx = Math.min(pending.length, 12);
+    if (!streamDone && idx === pending.length && backlog < 24 && !/\s/.test(pending)) {
+      idx = pending.length;
+    }
+    const chunk = pending.slice(0, idx);
+    pending = pending.slice(idx);
+    return chunk;
+  };
+
   const tick = () => {
     rafId = null;
     if (pending.length === 0) {
-      if (streamDone) return;
+      if (streamDone) {
+        resolveDrain?.();
+        resolveDrain = null;
+        return;
+      }
       rafId = raf(tick);
       return;
     }
-    // ~180 chars/sec when caught up; scales up with backlog so long responses
-    // don't lag behind the network stream.
-    const base = 3;
-    const catchUp = Math.ceil(pending.length / 12);
-    const take = Math.min(pending.length, Math.max(base, catchUp));
-    const chunk = pending.slice(0, take);
-    pending = pending.slice(take);
+    const chunk = takeRevealChunk();
     onChunk(chunk);
     rafId = raf(tick);
   };
@@ -82,33 +105,48 @@ export async function streamChat({ chatId, message, language, mode, images, sour
       const { done: rDone, value } = await reader.read();
       if (rDone) break;
       let chunk = decoder.decode(value, { stream: true });
-      if (!metaHandled && chunk.startsWith("__META__")) {
-        const nl = chunk.indexOf("\n");
-        if (nl !== -1) {
-          const metaLine = chunk.slice(8, nl);
+      if (waitingForMeta) {
+        metaBuffer += chunk;
+        if ("__META__".startsWith(metaBuffer) && metaBuffer.length < "__META__".length) {
+          continue;
+        }
+        if (metaBuffer.startsWith("__META__")) {
+          const nl = metaBuffer.indexOf("\n");
+          if (nl === -1) continue;
+          const metaLine = metaBuffer.slice(8, nl);
           try {
             const meta = JSON.parse(metaLine);
             onMeta?.(meta);
           } catch { /* ignore */ }
-          chunk = chunk.slice(nl + 1);
-          metaHandled = true;
+          chunk = metaBuffer.slice(nl + 1);
+          metaBuffer = "";
+          waitingForMeta = false;
+        } else {
+          chunk = metaBuffer;
+          metaBuffer = "";
+          waitingForMeta = false;
         }
       }
+      // Heartbeats keep the connection alive but should not replace the typing
+      // dots with an invisible/blank assistant message.
+      chunk = chunk.replace(/\u200B/g, "");
       if (chunk) {
         full += chunk;
         pending += chunk;
         ensureTick();
       }
     }
+  } catch (err) {
+    readError = err;
   } finally {
     streamDone = true;
   }
 
-  // Flush anything still queued so the caller sees the final text.
-  if (rafId !== null) { cancelRaf(rafId); rafId = null; }
-  if (pending.length) {
-    onChunk(pending);
-    pending = "";
+  if (readError) {
+    if (rafId !== null) { cancelRaf(rafId); rafId = null; }
+    throw readError;
   }
+  ensureTick();
+  await drained;
   return { reply: full };
 }
