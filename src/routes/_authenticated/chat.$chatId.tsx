@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 import { parseImageMessage, generateImages, parseImageRequest } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
+import { setActiveStream, useActiveStream } from "@/lib/active-stream";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
