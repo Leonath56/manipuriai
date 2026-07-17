@@ -171,12 +171,7 @@ iframe[src*="lovable.dev/badge"] {
   border-radius: 9999px;
   filter: blur(70px);
   opacity: 0.55;
-  animation: orb-float 14s ease-in-out infinite;
   pointer-events: none;
-}
-@keyframes orb-float {
-  0%, 100% { transform: translate3d(0,0,0) scale(1); }
-  50%      { transform: translate3d(30px,-40px,0) scale(1.15); }
 }
 
 @utility grid-veil {
