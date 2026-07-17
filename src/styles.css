@@ -249,7 +249,7 @@ iframe[src*="lovable.dev/badge"] {
 }
 
 @utility float-y {
-  /* motion removed */
+  animation: none;
 }
 @keyframes float-y {
   0%, 100% { transform: translateY(0); }

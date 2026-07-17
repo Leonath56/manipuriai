@@ -56,7 +56,7 @@ function Landing() {
       <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
           <span className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground text-lg leading-none font-semibold shadow-soft" aria-hidden="true">ꯃ</span>
-          <span>Manipuri AI <sup className="ml-0.5 text-[10px] font-semibold text-muted-foreground">v1</sup></span>
+          <span>Manipuri AI <sup className="ml-0.5 text-[10px] font-semibold text-muted-foreground">v1.1</sup></span>
         </Link>
         <nav className="flex items-center gap-2">
           <Link to="/auth"><Button variant="ghost">Sign in</Button></Link>
