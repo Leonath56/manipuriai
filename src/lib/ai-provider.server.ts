@@ -15,7 +15,11 @@
 export type AiProvider = "lovable" | "gemini";
 
 export function getChatProvider(): AiProvider {
-  return process.env.GEMINI_API_KEY ? "gemini" : "lovable";
+  // Prefer Lovable AI Gateway whenever a key is present (user has credits).
+  // Fall back to a direct Gemini key only when Lovable is not configured.
+  if (process.env.LOVABLE_API_KEY) return "lovable";
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  return "lovable";
 }
 
 type Endpoint = { url: string; apiKey: string; model: string; provider: AiProvider };
