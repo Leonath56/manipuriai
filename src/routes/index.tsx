@@ -74,6 +74,7 @@ function Landing() {
 
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
             <a href="#capabilities" className="transition-colors hover:text-foreground">Capabilities</a>
+
             <a href="#preview" className="transition-colors hover:text-foreground">Preview</a>
             <a href="#trust" className="transition-colors hover:text-foreground">Why us</a>
           </nav>
