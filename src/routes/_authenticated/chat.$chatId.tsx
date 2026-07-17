@@ -43,6 +43,11 @@ function ChatView() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
+  const active = useActiveStream();
+  // If a stream is currently in flight FOR THIS chat (started on /chat and
+  // navigated here mid-stream), we mirror its state so the UI never blanks.
+  const inflight = active && active.chatId === chatId && !active.done ? active : null;
+  const pendingCarryover = active && active.chatId === chatId && active.done ? active : null;
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -57,13 +62,24 @@ function ChatView() {
     },
   });
 
+  // Once the DB has both the user message AND the assistant reply for this
+  // finished stream, drop the store so it doesn't render a duplicate turn.
+  useEffect(() => {
+    if (!pendingCarryover) return;
+    const rows = messagesQ.data ?? [];
+    const hasUser = rows.some((m) => m.role === "user" && m.content === pendingCarryover.userText);
+    const hasAssistant = rows.some((m) => m.role === "assistant");
+    if (hasUser && hasAssistant) setActiveStream(null);
+  }, [pendingCarryover, messagesQ.data]);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, [chatId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQ.data, streaming, generatingImage]);
+  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
+
 
   const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
