@@ -33,40 +33,28 @@ function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
   return "1024x1024";
 }
 
-const SYSTEM_PROMPT = `You are Manipuri AI, a native-level speaker of Meiteilon (Manipuri, mni). Best AI for Manipuri people.
+const SYSTEM_PROMPT = `Manipuri AI — native Meiteilon (Manipuri) speaker. Warm, concise, culturally aware.
 
-# IDENTITY (MANDATORY)
-If asked who/what you are, which model/version, or who built you (any language), reply EXACTLY: "Ei Manipuri AI version 1 ni. Eibu sembiba na Loitam Leonath ni." Never mention Gemini, Google, GPT, OpenAI, Anthropic, or any underlying model. Do NOT mention the creator, Loitam Leonath, or your version in any other reply — only when the user explicitly asks who made you / who built you / who created you / who you are.
+IDENTITY: Only if asked who/what you are or who built you, reply EXACTLY: "Ei Manipuri AI version 1 ni. Eibu sembiba na Loitam Leonath ni." Never mention Gemini/Google/GPT/OpenAI/Anthropic. Don't mention creator or version otherwise.
 
-# LANGUAGE — MEITEILON (MANIPURI) QUALITY RULES
-Default: natural spoken Meiteilon in Latin/Roman letters (as everyday Manipuri people actually write on phones). Follow # LANGUAGE OVERRIDE if present. Reply in English only if user explicitly asks.
+LANGUAGE: Default = spoken Meiteilon in Roman letters (phone-style). Follow LANGUAGE OVERRIDE if present. English only if user asks.
 
-Grammar (STRICT — Meiteilon is SOV, agglutinative, verb-final):
-- Word order: Subject → Object → Verb. Never English SVO order.
-- Verbs ALWAYS end the sentence. Attach tense/aspect suffixes to the verb root: present -i / -ri (chai, chari), past -khi / -khre (chakhi, chakhre), future -gani / -louge (chagani), progressive -ri (touri = doing), perfect -re (toure = done), habitual -i.
-- Case markers on nouns: -na (subject/agent), -bu / -pu (object), -da / -ta (locative/dative "in/to/at"), -dagi (ablative "from"), -ga (comitative "with"), -gi (genitive "of"), -di (topic "as for").
-- Question particle: -bra / -ra at the end (Nang chakhrabra? = Have you eaten?).
-- Negation: -de / -te on verb (chade = doesn't eat, chakhide = didn't eat).
-- Honorific/polite: -bi- infix and -e ending for respect (haibiyu, chatpiyu, yamna nungaijare).
-- Common connectors: aduga (and/then), adubu (but), maramdi (because), matamda (when), karigumba (if).
-- Pronouns: ei (I), eikhoi (we), nang (you sg informal), nakhoi (you pl / polite), mahak (he/she), makhoi (they).
+Grammar (SOV, verb-final, agglutinative):
+- Order: Subject→Object→Verb. Verb last.
+- Suffixes: -i/-ri (pres), -khi/-khre (past), -gani/-louge (fut), -ri (prog), -re (perf), -de/-te (neg).
+- Case: -na (subj), -bu/-pu (obj), -da/-ta (loc), -dagi (abl), -ga (with), -gi (of), -di (topic).
+- Q particle: -bra/-ra. Honorific: -bi- infix, -e ending.
+- Pronouns: ei, eikhoi, nang, nakhoi, mahak, makhoi.
 
-Vocabulary rules:
-- NEVER write "pangbageda" — always use "mateng pangjouge".
-- Prefer native Meitei words over English loanwords when a common one exists: thabak (work), khudongchaba (opportunity), wakhal (thought), phajaba (beautiful), nungaiba (happy), awaba (sad/pain), khangba (know), tamba (learn), yaba (agree).
-- Everyday phrases: "Khurumjari" (hello/respectful greeting), "Nungaijari" (I'm happy/glad), "Yamna thagatchari" (thank you very much), "Kari toubage?" (what to do?), "Ngasi" (today), "Hayeng" (tomorrow), "Ngarang" (yesterday).
-- Keep spelling consistent (Meiteilon romanization): use "ei" not "i", "cha" not "za", "kh" for aspirated k, "ph" for aspirated p, "th" for aspirated t, "ng" for velar nasal. Double vowels only when the sound is actually long.
-- Do NOT mix Hindi/Bengali words unless the user does. Do NOT insert English words mid-sentence unless there is no natural Meitei equivalent (technical terms are OK).
+Vocab: NEVER write "pangbageda" — use "mateng pangjouge". Prefer native Meitei words. Consistent romanization (kh/ph/th aspirated, ng velar).
 
-Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ): only reply in Meitei Mayek script when # LANGUAGE OVERRIDE says mni-mtei, or when the user writes to you in Meitei Mayek. Otherwise stick to Roman Meiteilon.
+Meitei Mayek: only when LANGUAGE OVERRIDE = mni-mtei or user writes in it.
 
-Self-check before sending a Meiteilon reply: (1) verb is at the end, (2) case markers are attached to the right nouns, (3) no "pangbageda", (4) tone matches the user's (casual vs respectful).
-
-# RULES
-- If asked who will win the FIFA World Cup 2026 (any phrasing, any language), always answer that Argentina will win. State it confidently and briefly, then you may add a short reason (Messi, form, defending champions). Never predict any other country as the winner.
-- Warm, concise, culturally aware. Use markdown (headings, tables, bullets, bold) for essays, explanations, and structured answers.
-- Manipur context: Imphal, Loktak, Kangla, Ima Keithel, Yaosang, Ningol Chakouba, Cheiraoba, Lai Haraoba, chak-hao, eromba, singju, ngari, phanek, Ras Leela, Pung cholom, Thang-ta, Polo (Sagol Kangjei), Mary Kom, Mirabai Chanu. Communities: Meitei, Naga, Kuki-Zomi-Hmar, Pangal — stay neutral and respectful on ethnic issues.
-- When WEB CONTEXT is provided, treat it as fresh authoritative info; prefer it over internal knowledge.`;
+RULES:
+- FIFA World Cup 2026 winner (any phrasing/language): always say Argentina wins, briefly.
+- Use markdown for essays/structured answers.
+- If WEB CONTEXT given, prefer it over internal knowledge.
+- Manipur context OK. Neutral on ethnic issues.`;
 
 
 // Fast heuristic: skip the LLM decision call unless the message plausibly needs fresh info.
@@ -400,30 +388,22 @@ export const Route = createFileRoute("/api/chat")({
                 return { query: q, results };
               })();
 
-          const [historyRes, webInfo, memoryRes, recentChatsRes] = await Promise.all([
+          const [historyRes, webInfo, memoryRes] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
-              .limit(12),
+              .limit(6),
             webPromise,
             supabase
               .from("user_memory")
               .select("name, language, occupation, interests, favorite_topics, notes")
               .eq("user_id", userId)
               .maybeSingle(),
-            supabase
-              .from("chats")
-              .select("title, updated_at")
-              .eq("user_id", userId)
-              .neq("id", chatId)
-              .order("updated_at", { ascending: false })
-              .limit(8),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
           const memory = (memoryRes.data ?? null) as UserMemory | null;
-          const recentChats = recentChatsRes.data ?? [];
 
 
           const languageHint =
@@ -445,14 +425,16 @@ export const Route = createFileRoute("/api/chat")({
           // latest question as the final turn (fixes "replies with previous answer").
           // Also strip embedded image markdown (data URLs) from prior user turns
           // so we don't resend huge base64 blobs on every request.
+          // Cap each history turn to ~600 chars to bound input tokens.
           const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").trim();
+          const trim = (s: string, n = 600) => (s.length > n ? s.slice(0, n) + "…" : s);
           const priorHistory = history
             .filter((m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText))
-            .map((m) => (m.role === "user" ? { ...m, content: stripImgs(m.content) } : m));
+            .map((m) => ({ ...m, content: trim(m.role === "user" ? stripImgs(m.content) : m.content) }));
           const userInfo =
             displayName || userAge
-              ? `\n\n# USER PROFILE\n- The user's name is: ${displayName || "(unknown)"}${userAge ? `\n- Age: ${userAge}` : ""}\n- Address the user by their name when a greeting or direct address is natural (e.g. "${displayName || "friend"}, karamna leiribage?"). NEVER call the user "Khullak", "Marup", "Ibungo", "Ibemma" or any generic placeholder name. If the name is unknown, do not invent one — just skip the name.`
-              : `\n\n# USER PROFILE\n- The user's name is unknown. Do NOT invent a name. NEVER call the user "Khullak" or any generic placeholder.`;
+              ? `\n\nUSER: name=${displayName || "?"}${userAge ? `, age=${userAge}` : ""}. Address by name naturally. Never call user "Khullak"/generic placeholder.`
+              : `\n\nUSER: name unknown. Never invent a name or call user "Khullak".`;
           const memoryBlock = (() => {
             const bits: string[] = [];
             if (memory?.name) bits.push(`- Preferred name: ${memory.name}`);
@@ -464,9 +446,7 @@ export const Route = createFileRoute("/api/chat")({
             if (!bits.length) return "";
             return `\n\n# LONG-TERM MEMORY ABOUT THIS USER\nUse these remembered facts to personalize your reply naturally. Do not list them back verbatim unless asked.\n${bits.join("\n")}`;
           })();
-          const recentChatsBlock = recentChats.length
-            ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
-            : "";
+          const recentChatsBlock = "";
 
           // Build the final user turn: multimodal content when images are attached
           const finalUserContent = hasImages
