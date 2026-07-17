@@ -67,7 +67,7 @@ function Landing() {
       <main className="relative mx-auto max-w-6xl px-6 pb-24 pt-14 md:pt-20">
         <section className="mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-medium text-foreground/90 pill-shimmer">
-            <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.75_0.20_300)] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[oklch(0.75_0.20_300)]" />
             Meiteilon · English · One AI
           </span>
 
