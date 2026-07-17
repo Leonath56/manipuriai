@@ -193,11 +193,10 @@ iframe[src*="lovable.dev/badge"] {
     oklch(0.85 0.14 300) 40%,
     oklch(0.80 0.16 200) 70%,
     oklch(0.98 0 0) 100%);
-  background-size: 220% auto;
+  background-size: 100% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: hero-shine 6s linear infinite;
 }
 @keyframes hero-shine {
   to { background-position: 220% center; }
