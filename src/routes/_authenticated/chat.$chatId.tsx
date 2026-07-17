@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { synthesizeSpeech } from "@/lib/tts.functions";
 import { parseImageMessage, generateImages, parseImageRequest } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
+import { setActiveStream, useActiveStream } from "@/lib/active-stream";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -42,6 +43,11 @@ function ChatView() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
+  const active = useActiveStream();
+  // If a stream is currently in flight FOR THIS chat (started on /chat and
+  // navigated here mid-stream), we mirror its state so the UI never blanks.
+  const inflight = active && active.chatId === chatId && !active.done ? active : null;
+  const pendingCarryover = active && active.chatId === chatId && active.done ? active : null;
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -56,13 +62,24 @@ function ChatView() {
     },
   });
 
+  // Once the DB has both the user message AND the assistant reply for this
+  // finished stream, drop the store so it doesn't render a duplicate turn.
+  useEffect(() => {
+    if (!pendingCarryover) return;
+    const rows = messagesQ.data ?? [];
+    const hasUser = rows.some((m) => m.role === "user" && m.content === pendingCarryover.userText);
+    const hasAssistant = rows.some((m) => m.role === "assistant");
+    if (hasUser && hasAssistant) setActiveStream(null);
+  }, [pendingCarryover, messagesQ.data]);
+
   useEffect(() => {
     inputRef.current?.focus();
   }, [chatId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesQ.data, streaming, generatingImage]);
+  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
+
 
   const runSend = async (text: string, imgs: string[] = []) => {
     setSending(true);
@@ -186,7 +203,13 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  const canRegenerate = !sending && messages.some((m) => m.role === "assistant");
+  const canRegenerate = !sending && !inflight && messages.some((m) => m.role === "assistant");
+  // Show the carryover turn only until the DB rows for it have loaded, so
+  // the same reply doesn't appear twice.
+  const carryoverStillNeeded =
+    pendingCarryover &&
+    !messages.some((m) => m.role === "assistant" && m.content === pendingCarryover.streaming);
+  const showCarryover = inflight ?? (carryoverStillNeeded ? pendingCarryover : null);
 
   return (
     <div className="flex h-full flex-col">
@@ -196,7 +219,33 @@ function ChatView() {
             {messages.map((m) => (
               <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
-            {sending && (
+            {showCarryover && (
+              <div className="animate-fade-in">
+                <div className="my-6 flex flex-row-reverse items-start gap-3">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
+                    <p className="whitespace-pre-wrap text-sm">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                  </div>
+                </div>
+                <div className="my-6 flex items-start gap-3">
+                  <Avatar assistant />
+                  <div className="min-w-0 flex-1">
+                    {showCarryover.generatingImage ? (
+                      <ImageGeneratingAnimation />
+                    ) : showCarryover.streaming ? (
+                      <StreamingAssistantContent content={showCarryover.streaming} />
+                    ) : (
+                      <div className="flex items-center gap-1 pt-3">
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
+                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            {sending && !inflight && (
               <div className="my-6 flex items-start gap-3">
                 <Avatar assistant />
                 <div className="min-w-0 flex-1">
@@ -216,11 +265,14 @@ function ChatView() {
             )}
             <div ref={bottomRef} />
 
+
             <div className="mt-4 flex justify-center">
-              {sending ? (
-                <Button variant="outline" size="sm" onClick={stop} className="gap-1.5">
-                  <StopCircle className="h-3.5 w-3.5" /> Stop generating
-                </Button>
+              {sending || inflight ? (
+                sending ? (
+                  <Button variant="outline" size="sm" onClick={stop} className="gap-1.5">
+                    <StopCircle className="h-3.5 w-3.5" /> Stop generating
+                  </Button>
+                ) : null
               ) : (
                 canRegenerate && (
                   <Button variant="outline" size="sm" onClick={regenerate} className="gap-1.5">
@@ -231,7 +283,7 @@ function ChatView() {
             </div>
           </div>
         </div>
-        <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
+        <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending || Boolean(inflight)} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
   );
 }
