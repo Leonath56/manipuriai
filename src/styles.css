@@ -229,14 +229,7 @@ iframe[src*="lovable.dev/badge"] {
   animation: none;
 }
 .cta-mega::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(110deg, transparent 30%, oklch(1 0 0 / 0.45) 50%, transparent 70%);
-  transform: translateX(-120%);
-  animation: none;
-  pointer-events: none;
+  content: none;
 }
 @keyframes cta-gradient {
   0%, 100% { background-position: 0% 50%; }
