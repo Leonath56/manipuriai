@@ -6,6 +6,12 @@ import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
+import {
+  appendStreamingText,
+  setActiveStream,
+  updateActiveStream,
+  useActiveStream,
+} from "@/lib/active-stream";
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   head: () => ({ meta: [{ title: "New chat — Manipuri AI" }] }),
@@ -19,16 +25,18 @@ function NewChat() {
   const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
   const [mode, setMode] = useState<"instant" | "think">("instant");
   const [sending, setSending] = useState(false);
-  const [generatingImage, setGeneratingImage] = useState(false);
-  const [pending, setPending] = useState<{ text: string; images: string[] } | null>(null);
-  const [streaming, setStreaming] = useState("");
   const navigate = useNavigate();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const active = useActiveStream();
+  // Only show the pending preview on this route when the stream has not
+  // yet been assigned a chatId. Once it has, we navigate away and the
+  // destination route renders the same stream from the same store.
+  const pendingHere = active && active.chatId === null ? active : null;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pending, streaming, generatingImage]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pendingHere?.streaming, pendingHere?.generatingImage]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,9 +50,15 @@ function NewChat() {
     // Instantly reflect the message in the UI and clear the composer.
     setInput("");
     setImages([]);
-    setPending({ text: stored, images: sentImages });
-    setStreaming("");
-    setGeneratingImage(Boolean(imageRequest));
+    setActiveStream({
+      chatId: null,
+      userText: stored,
+      userImages: sentImages,
+      streaming: "",
+      generatingImage: Boolean(imageRequest),
+      done: false,
+    });
+    let navigated = false;
     try {
       // Auto-detect image generation intent (no images attached, text prompt)
       if (imageRequest) {
@@ -57,11 +71,12 @@ function NewChat() {
           style: "none",
         });
         qc.invalidateQueries({ queryKey: ["chats"] });
+        updateActiveStream({ chatId: result.chatId, done: true });
         navigate({ to: "/chat/$chatId", params: { chatId: result.chatId } });
+        // Destination will clear activeStream once its messages query loads.
         return;
       }
 
-      let newChatId: string | null = null;
       let acc = "";
       await streamChat({
         chatId: null,
@@ -70,30 +85,44 @@ function NewChat() {
         language: lang,
         mode,
         onMeta: (m) => {
-          newChatId = m.chatId;
+          // The moment the server tells us the new chatId, navigate to the
+          // destination route. Streaming continues in the background and
+          // both routes read from the same shared store, so there is no
+          // flicker or lost partial reply.
+          updateActiveStream({ chatId: m.chatId });
+          if (!navigated) {
+            navigated = true;
+            navigate({ to: "/chat/$chatId", params: { chatId: m.chatId } });
+          }
         },
         onChunk: (delta) => {
           acc += delta;
-          setStreaming(acc);
+          appendStreamingText(delta);
         },
       });
-      if (newChatId) {
-        // Seed cache so the destination route renders instantly without refetch flicker.
-        qc.setQueryData(["messages", newChatId], [
+      // Stream complete — seed cache so the destination renders instantly.
+      const finalStream = { ...(pendingHere ?? { chatId: null } as { chatId: string | null }) };
+      // Read latest chatId from store, not React state (which may be stale here).
+      const current = (await import("@/lib/active-stream")).getActiveStream();
+      const finalChatId = current?.chatId ?? finalStream.chatId ?? null;
+      if (finalChatId) {
+        qc.setQueryData(["messages", finalChatId], [
           { id: "u-1", role: "user", content: stored, created_at: new Date().toISOString() },
           { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
-        navigate({ to: "/chat/$chatId", params: { chatId: newChatId } });
+        qc.invalidateQueries({ queryKey: ["messages", finalChatId] });
       }
+      updateActiveStream({ done: true });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong");
-      setPending(null);
-      setStreaming("");
-      setGeneratingImage(false);
+      setActiveStream(null);
+    } finally {
       setSending(false);
     }
   };
+
+
 
 
   const suggestions = [
