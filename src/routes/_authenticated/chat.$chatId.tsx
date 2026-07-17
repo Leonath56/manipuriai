@@ -283,7 +283,7 @@ function ChatView() {
             </div>
           </div>
         </div>
-        <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
+        <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending || Boolean(inflight)} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
   );
 }
