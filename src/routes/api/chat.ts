@@ -444,9 +444,7 @@ export const Route = createFileRoute("/api/chat")({
             if (!bits.length) return "";
             return `\n\n# LONG-TERM MEMORY ABOUT THIS USER\nUse these remembered facts to personalize your reply naturally. Do not list them back verbatim unless asked.\n${bits.join("\n")}`;
           })();
-          const recentChatsBlock = recentChats.length
-            ? `\n\n# RECENT PAST CONVERSATIONS (titles only, newest first)\n${recentChats.map((c) => `- ${c.title}`).join("\n")}\nYou may reference these if the user asks "what did we talk about" or for continuity.`
-            : "";
+          const recentChatsBlock = "";
 
           // Build the final user turn: multimodal content when images are attached
           const finalUserContent = hasImages
