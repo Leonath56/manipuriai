@@ -98,9 +98,10 @@ function Landing() {
 
       {/* Hero */}
       <main className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-10 md:pt-16">
-        <section className="grid gap-14 md:grid-cols-12 md:gap-10">
+        <section className="flex flex-col items-center gap-14">
           {/* Left: headline */}
-          <div className="md:col-span-7 flex flex-col items-center text-center">
+          <div className="w-full max-w-3xl flex flex-col items-center text-center">
+
             <div className="flex items-center gap-3">
               <span className="h-px w-8 bg-white/20" />
               <span className="eyebrow">Meiteilon · English · Meitei Mayek</span>
@@ -151,7 +152,8 @@ function Landing() {
 
 
           {/* Right: mock chat preview */}
-          <div id="preview" className="md:col-span-5">
+          <div id="preview" className="w-full max-w-xl mx-auto">
+
             <div className="chat-card p-5 md:p-6">
               <div className="flex items-center justify-between border-b border-white/5 pb-3">
                 <div className="flex items-center gap-2">
@@ -189,9 +191,10 @@ function Landing() {
               </div>
             </div>
 
-            <p className="mt-3 pl-1 text-xs text-muted-foreground">
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               Live sample — actual replies stream token-by-token.
             </p>
+
           </div>
         </section>
 
