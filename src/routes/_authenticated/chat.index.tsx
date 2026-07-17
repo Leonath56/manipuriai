@@ -34,7 +34,7 @@ function NewChat() {
   // server sends chatId almost immediately, but we intentionally navigate only
   // after the reply finishes; hiding this when chatId arrives made long replies
   // disappear until refresh.
-  const pendingHere = active && !active.done ? active : null;
+  const pendingHere = active;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pendingHere?.streaming, pendingHere?.generatingImage]);
