@@ -64,8 +64,8 @@ function Landing() {
         </nav>
       </header>
 
-      <div className="relative mx-auto max-w-6xl px-6 pt-4 text-center">
-        <p className="font-sans text-base md:text-lg leading-relaxed text-foreground/90">
+      <div className="relative mx-auto max-w-6xl px-6 pt-6 text-center">
+        <p className="font-display text-xl md:text-3xl font-medium tracking-tight leading-snug text-foreground">
           Manipuri AI na Adombu Taramna Okchari 🙏
         </p>
       </div>
