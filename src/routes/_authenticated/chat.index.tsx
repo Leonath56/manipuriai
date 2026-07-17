@@ -37,7 +37,14 @@ function NewChat() {
   const pendingHere = active;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [pendingHere?.streaming, pendingHere?.generatingImage]);
+  useEffect(() => {
+    const scroller = document.scrollingElement || document.documentElement;
+    const distanceFromBottom =
+      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    if (distanceFromBottom < 160) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [pendingHere?.streaming, pendingHere?.generatingImage]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
