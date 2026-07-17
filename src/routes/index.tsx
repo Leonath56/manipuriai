@@ -191,9 +191,10 @@ function Landing() {
               </div>
             </div>
 
-            <p className="mt-3 pl-1 text-xs text-muted-foreground">
+            <p className="mt-3 text-center text-xs text-muted-foreground">
               Live sample — actual replies stream token-by-token.
             </p>
+
           </div>
         </section>
 
