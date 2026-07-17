@@ -99,6 +99,10 @@ function ImagePage() {
 
   return (
     <AuthedShell>
+      <PaidFeatureGate
+        feature="Image generation"
+        description="Generate stunning AI images with Manipuri AI. Upgrade to Pro or Max to unlock unlimited image creation."
+      >
       <div className="flex h-full flex-col">
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-3xl px-4 py-8">
