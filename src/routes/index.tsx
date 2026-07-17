@@ -122,7 +122,7 @@ function Landing() {
               <span className="text-foreground/90"> fluently, respectfully</span>, with markdown, code and cultural nuance.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+            <div className="mt-9 flex flex-col items-center gap-4">
               <Link to="/try" aria-label="Start chatting now" className="group">
                 <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg">
                   <MessageSquare className="h-5 w-5" strokeWidth={2.25} />
@@ -136,6 +136,7 @@ function Landing() {
                 Sign in to save your chats →
               </Link>
             </div>
+
 
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-2">
