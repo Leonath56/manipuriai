@@ -107,6 +107,9 @@ export async function streamChat({ chatId, message, language, mode, images, sour
       let chunk = decoder.decode(value, { stream: true });
       if (waitingForMeta) {
         metaBuffer += chunk;
+        if ("__META__".startsWith(metaBuffer) && metaBuffer.length < "__META__".length) {
+          continue;
+        }
         if (metaBuffer.startsWith("__META__")) {
           const nl = metaBuffer.indexOf("\n");
           if (nl === -1) continue;
