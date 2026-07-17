@@ -383,17 +383,23 @@ export const Route = createFileRoute("/api/chat")({
           const webPromise: Promise<{ query: string; results: string } | null> = hasImages
             ? Promise.resolve(null)
             : (async () => {
-                // Fast path: in instant mode, only run the (LLM) search-decision
-                // call when the message obviously mentions fresh-info keywords.
-                // This shaves ~500–2000ms off time-to-first-token for normal chat.
-                if (body.mode === "instant" && !mayNeedWebSearch(body.message)) return null;
-                const q = await decideWebSearch(body.message, LOVABLE_API_KEY, body.mode === "think");
+                const keywordHit = mayNeedWebSearch(body.message);
+                // Instant mode: only search when the keyword regex fires, and
+                // skip the extra LLM "decide + rewrite query" call — use the
+                // user's raw message as the query. Saves ~500–1500ms.
+                if (body.mode === "instant") {
+                  if (!keywordHit) return null;
+                  const q = body.message.slice(0, 160);
+                  const results = await firecrawlSearch(q, 5, 2200);
+                  return results ? { query: q, results } : null;
+                }
+                // Think mode: keep the smart query rewrite for better recall.
+                const q = await decideWebSearch(body.message, LOVABLE_API_KEY, true);
                 if (!q) return null;
-                const fcTimeout = body.mode === "think" ? 3500 : 2200;
-                const results = await firecrawlSearch(q, body.mode === "think" ? 8 : 5, fcTimeout);
-                if (!results) return null;
-                return { query: q, results };
+                const results = await firecrawlSearch(q, 8, 3500);
+                return results ? { query: q, results } : null;
               })();
+
 
           const [historyRes, webInfo, memoryRes] = await Promise.all([
             supabase
@@ -470,39 +476,47 @@ export const Route = createFileRoute("/api/chat")({
 
           const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
 
-          const upstream = await fetchChatCompletion(modelId, { messages, stream: true });
-
-
-          if (!upstream.ok || !upstream.body) {
-            const t = await upstream.text();
-            const status = upstream.status === 429 ? 429 : upstream.status === 402 ? 402 : 500;
-            return new Response(
-              JSON.stringify({ error: t.slice(0, 300) || "AI request failed" }),
-              { status, headers: { "Content-Type": "application/json" } },
-            );
-          }
-
           const finalChatId = chatId;
           const encoder = new TextEncoder();
           const decoder = new TextDecoder();
 
           const stream = new ReadableStream({
             async start(controller) {
-              // Send chatId header-frame first
+              // Flush chatId frame IMMEDIATELY so the UI can show the typing
+              // indicator and mount the streaming bubble while we're still
+              // opening the upstream AI connection (saves the full request RTT
+              // off perceived time-to-first-token).
               controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
 
-              // Heartbeat: send a zero-width space every 8s while waiting so the
-              // client fetch/proxy doesn't idle-timeout during deep-thinking pauses.
               let firstChunkSeen = false;
               const heartbeat = setInterval(() => {
                 if (!firstChunkSeen) {
                   try { controller.enqueue(encoder.encode("\u200B")); } catch { /* closed */ }
                 }
-              }, 8000);
+              }, 6000);
+
+              // Open the upstream AI connection AFTER response headers are
+              // already on the wire.
+              let upstream: Response;
+              try {
+                upstream = await fetchChatCompletion(modelId, { messages, stream: true });
+              } catch {
+                clearInterval(heartbeat);
+                controller.enqueue(encoder.encode("AI request failed. Please retry."));
+                controller.close();
+                return;
+              }
+              if (!upstream.ok || !upstream.body) {
+                clearInterval(heartbeat);
+                const t = await upstream.text().catch(() => "");
+                controller.enqueue(encoder.encode(t.slice(0, 300) || "AI request failed"));
+                controller.close();
+                return;
+              }
 
               let buffer = "";
               let full = "";
-              const reader = upstream.body!.getReader();
+              const reader = upstream.body.getReader();
               try {
                 while (true) {
                   const { done, value } = await reader.read();
