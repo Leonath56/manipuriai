@@ -101,9 +101,7 @@ function AuthPage() {
     <div className="min-h-screen gradient-mesh grid place-items-center px-4 py-10">
       <div className="w-full max-w-md">
         <Link to="/" className="mb-6 flex items-center justify-center gap-2 font-display text-xl font-bold">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" />
-          </span>
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-lg leading-none font-semibold shadow-soft" aria-hidden="true">ꯃ</span>
           Manipuri AI
         </Link>
 
