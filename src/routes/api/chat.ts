@@ -440,18 +440,17 @@ export const Route = createFileRoute("/api/chat")({
             .map((m) => ({ ...m, content: trim(m.role === "user" ? stripImgs(m.content) : m.content) }));
           const userInfo =
             displayName || userAge
-              ? `\n\nUSER: name=${displayName || "?"}${userAge ? `, age=${userAge}` : ""}. Address by name naturally. Never call user "Khullak"/generic placeholder.`
-              : `\n\nUSER: name unknown. Never invent a name or call user "Khullak".`;
+              ? `\n\nUSER: ${displayName || "?"}${userAge ? `, ${userAge}y` : ""}. Address by name naturally; never call user "Khullak".`
+              : `\n\nUSER: unknown. Never invent a name.`;
           const memoryBlock = (() => {
             const bits: string[] = [];
-            if (memory?.name) bits.push(`- Preferred name: ${memory.name}`);
-            if (memory?.language) bits.push(`- Preferred language: ${memory.language}`);
-            if (memory?.occupation) bits.push(`- Occupation: ${memory.occupation}`);
-            if (memory?.interests?.length) bits.push(`- Interests: ${memory.interests.join(", ")}`);
-            if (memory?.favorite_topics?.length) bits.push(`- Favorite topics: ${memory.favorite_topics.join(", ")}`);
-            if (memory?.notes?.length) bits.push(`- Other facts:\n  • ${memory.notes.join("\n  • ")}`);
-            if (!bits.length) return "";
-            return `\n\n# LONG-TERM MEMORY ABOUT THIS USER\nUse these remembered facts to personalize your reply naturally. Do not list them back verbatim unless asked.\n${bits.join("\n")}`;
+            if (memory?.name) bits.push(`name=${memory.name}`);
+            if (memory?.language) bits.push(`lang=${memory.language}`);
+            if (memory?.occupation) bits.push(`job=${memory.occupation}`);
+            if (memory?.interests?.length) bits.push(`likes=${memory.interests.slice(0, 6).join(",")}`);
+            if (memory?.favorite_topics?.length) bits.push(`topics=${memory.favorite_topics.slice(0, 6).join(",")}`);
+            if (memory?.notes?.length) bits.push(`notes=${memory.notes.slice(0, 4).join(" | ")}`);
+            return bits.length ? `\n\nMEMORY: ${bits.join("; ")}` : "";
           })();
           const recentChatsBlock = "";
 
