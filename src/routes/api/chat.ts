@@ -401,7 +401,7 @@ export const Route = createFileRoute("/api/chat")({
               .select("role, content")
               .eq("chat_id", chatId)
               .order("created_at", { ascending: false })
-              .limit(6),
+              .limit(4),
             webPromise,
             supabase
               .from("user_memory")
