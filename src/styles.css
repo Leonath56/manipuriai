@@ -279,8 +279,6 @@ iframe[src*="lovable.dev/badge"] {
     oklch(0.75 0.18 300 / 0.18),
     oklch(0.75 0.18 210 / 0.18),
     oklch(1 0 0 / 0.06));
-  background-size: 200% auto;
-  animation: hero-shine 4s linear infinite;
   border: 1px solid oklch(1 0 0 / 0.1);
 }
 
