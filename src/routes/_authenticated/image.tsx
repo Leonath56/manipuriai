@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Send, Loader2, ImageIcon, Sparkles, MessageSquare } from "lucide-react";
 import { generateImages, type ImageGenParams } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
+import { PaidFeatureGate } from "@/components/PaidFeatureGate";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
