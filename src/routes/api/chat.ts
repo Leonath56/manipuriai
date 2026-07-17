@@ -434,7 +434,7 @@ export const Route = createFileRoute("/api/chat")({
           // so we don't resend huge base64 blobs on every request.
           // Cap each history turn to ~600 chars to bound input tokens.
           const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").trim();
-          const trim = (s: string, n = 600) => (s.length > n ? s.slice(0, n) + "…" : s);
+          const trim = (s: string, n = 400) => (s.length > n ? s.slice(0, n) + "…" : s);
           const priorHistory = history
             .filter((m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText))
             .map((m) => ({ ...m, content: trim(m.role === "user" ? stripImgs(m.content) : m.content) }));
