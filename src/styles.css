@@ -16,8 +16,9 @@ iframe[src*="lovable.dev/badge"] {
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Figtree", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
