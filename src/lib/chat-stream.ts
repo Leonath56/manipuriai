@@ -47,58 +47,61 @@ export async function streamChat({ chatId, message, language, mode, images, sour
   let streamDone = false;
   let readError: unknown = null;
 
-  // Smooth reveal: show text word-by-word/token-by-token as soon as it arrives.
-  // If the network hands us a large burst, keep the message visible and quickly
-  // drain the queue instead of dumping the full answer at once or blinking away.
-  let rafId: number | null = null;
+  // Smooth reveal: emit one visible word/token at a time. The network can send
+  // large bursts, but the UI should never dump a paragraph or clear while
+  // waiting for the rest of a long reply.
+  let timerId: ReturnType<typeof setTimeout> | null = null;
   let resolveDrain: (() => void) | null = null;
   const drained = new Promise<void>((resolve) => { resolveDrain = resolve; });
-  const raf: (cb: () => void) => number =
-    typeof requestAnimationFrame === "function"
-      ? (cb) => requestAnimationFrame(cb)
-      : (cb) => setTimeout(cb, 16) as unknown as number;
-  const cancelRaf: (id: number) => void =
-    typeof cancelAnimationFrame === "function"
-      ? (id) => cancelAnimationFrame(id)
-      : (id) => clearTimeout(id);
 
   const takeRevealChunk = () => {
     if (!pending) return "";
-    const backlog = pending.length;
-    const targetWords = backlog > 1600 ? 10 : backlog > 700 ? 6 : backlog > 220 ? 3 : 1;
-    let idx = 0;
-    let words = 0;
-    while (idx < pending.length && words < targetWords) {
-      while (idx < pending.length && /\s/.test(pending[idx])) idx++;
-      while (idx < pending.length && !/\s/.test(pending[idx])) idx++;
-      words++;
-      while (idx < pending.length && /\s/.test(pending[idx])) idx++;
+    const firstWord = pending.match(/^(\s*\S+\s*)/);
+    if (firstWord) {
+      const token = firstWord[1];
+      const hasCompletedWord = /\s$/.test(token) || streamDone || pending.length > 40;
+      if (!hasCompletedWord) return "";
+      pending = pending.slice(token.length);
+      return token;
     }
-    if (idx === 0) idx = Math.min(pending.length, 12);
-    if (!streamDone && idx === pending.length && backlog < 24 && !/\s/.test(pending)) {
-      idx = pending.length;
-    }
-    const chunk = pending.slice(0, idx);
-    pending = pending.slice(idx);
+    if (!streamDone) return "";
+    const chunk = pending;
+    pending = "";
     return chunk;
   };
 
+  const nextDelay = () => {
+    if (pending.length > 2200) return 10;
+    if (pending.length > 900) return 16;
+    if (pending.length > 260) return 24;
+    return 34;
+  };
+
+  const scheduleTick = (delay = nextDelay()) => {
+    if (timerId !== null) return;
+    timerId = setTimeout(tick, delay);
+  };
+
   const tick = () => {
-    rafId = null;
+    timerId = null;
     if (pending.length === 0) {
       if (streamDone) {
         resolveDrain?.();
         resolveDrain = null;
         return;
       }
-      rafId = raf(tick);
+      scheduleTick(24);
       return;
     }
     const chunk = takeRevealChunk();
-    onChunk(chunk);
-    rafId = raf(tick);
+    if (chunk) onChunk(chunk);
+    if (pending.length > 0 || !streamDone) scheduleTick(chunk ? nextDelay() : 18);
+    else {
+      resolveDrain?.();
+      resolveDrain = null;
+    }
   };
-  const ensureTick = () => { if (rafId === null) rafId = raf(tick); };
+  const ensureTick = () => { scheduleTick(0); };
 
   try {
     while (true) {
@@ -143,7 +146,7 @@ export async function streamChat({ chatId, message, language, mode, images, sour
   }
 
   if (readError) {
-    if (rafId !== null) { cancelRaf(rafId); rafId = null; }
+    if (timerId !== null) { clearTimeout(timerId); timerId = null; }
     throw readError;
   }
   ensureTick();
