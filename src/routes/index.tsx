@@ -109,13 +109,13 @@ function Landing() {
             </div>
 
             <h1
-              className="mt-6 text-[46px] leading-[1.02] tracking-tight md:text-[76px]"
-              style={{ fontFamily: "var(--font-serif)", fontWeight: 400 }}
+              className="mt-6 font-sans text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[72px]"
             >
-              <span className="hero-title">The AI that speaks</span>
+              <span className="text-foreground">The AI that speaks</span>
               <br />
-              <span className="hero-italic italic">your language.</span>
+              <span className="text-foreground/70">your language.</span>
             </h1>
+
 
             <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
               Manipuri AI reads what you write in Meiteilon or English and replies in the same language —
