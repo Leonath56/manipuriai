@@ -15,6 +15,9 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlansRouteImport } from './routes/plans'
+import { Route as MeiteilonChatbotRouteImport } from './routes/meiteilon-chatbot'
+import { Route as MeiteiMayekAiRouteImport } from './routes/meitei-mayek-ai'
+import { Route as ManipuriTranslatorRouteImport } from './routes/manipuri-translator'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -59,6 +62,21 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PlansRoute = PlansRouteImport.update({
   id: '/plans',
   path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeiteilonChatbotRoute = MeiteilonChatbotRouteImport.update({
+  id: '/meiteilon-chatbot',
+  path: '/meiteilon-chatbot',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeiteiMayekAiRoute = MeiteiMayekAiRouteImport.update({
+  id: '/meitei-mayek-ai',
+  path: '/meitei-mayek-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManipuriTranslatorRoute = ManipuriTranslatorRouteImport.update({
+  id: '/manipuri-translator',
+  path: '/manipuri-translator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -139,6 +157,9 @@ const AuthenticatedChatChatIdRoute = AuthenticatedChatChatIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -161,6 +182,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -184,6 +208,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -208,6 +235,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/manipuri-translator'
+    | '/meitei-mayek-ai'
+    | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
     | '/reset-password'
@@ -230,6 +260,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/manipuri-translator'
+    | '/meitei-mayek-ai'
+    | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
     | '/reset-password'
@@ -252,6 +285,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/manipuri-translator'
+    | '/meitei-mayek-ai'
+    | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
     | '/reset-password'
@@ -276,6 +312,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ManipuriTranslatorRoute: typeof ManipuriTranslatorRoute
+  MeiteiMayekAiRoute: typeof MeiteiMayekAiRoute
+  MeiteilonChatbotRoute: typeof MeiteilonChatbotRoute
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -330,6 +369,27 @@ declare module '@tanstack/react-router' {
       path: '/plans'
       fullPath: '/plans'
       preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meiteilon-chatbot': {
+      id: '/meiteilon-chatbot'
+      path: '/meiteilon-chatbot'
+      fullPath: '/meiteilon-chatbot'
+      preLoaderRoute: typeof MeiteilonChatbotRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meitei-mayek-ai': {
+      id: '/meitei-mayek-ai'
+      path: '/meitei-mayek-ai'
+      fullPath: '/meitei-mayek-ai'
+      preLoaderRoute: typeof MeiteiMayekAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manipuri-translator': {
+      id: '/manipuri-translator'
+      path: '/manipuri-translator'
+      fullPath: '/manipuri-translator'
+      preLoaderRoute: typeof ManipuriTranslatorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -478,6 +538,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ManipuriTranslatorRoute: ManipuriTranslatorRoute,
+  MeiteiMayekAiRoute: MeiteiMayekAiRoute,
+  MeiteilonChatbotRoute: MeiteilonChatbotRoute,
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,

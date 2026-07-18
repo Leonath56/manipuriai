@@ -7,6 +7,9 @@ Manipuri AI is a bilingual conversational AI built by Loitam Leonath for speaker
 ## Pages
 - [Home](/): Landing page — features, capabilities, sign in / try links
 - [Try Manipuri AI](/try): Free guest chat (no signup, 3 free messages)
+- [Meitei Mayek AI](/meitei-mayek-ai): AI chatbot that reads and writes in ꯃꯤꯇꯩ ꯃꯌꯦꯛ script
+- [Manipuri Translator](/manipuri-translator): English ⇄ Meiteilon AI translator
+- [Meiteilon Chatbot](/meiteilon-chatbot): ChatGPT-style Manipuri assistant with voice & image gen
 - [Sign in](/auth): Email or Google authentication
 - [Plans & Pricing](/plans): Free, Pro (₹99/month), Max (₹399/month)
 

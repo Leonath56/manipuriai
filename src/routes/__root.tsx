@@ -102,6 +102,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/logo.png", type: "image/png", sizes: "512x512" },
       { rel: "apple-touch-icon", href: "/logo.png" },
@@ -153,6 +157,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               description: "AI chatbot fluent in Manipuri (Meiteilon) and English with voice, image generation and Meitei Mayek script support.",
               offers: { "@type": "Offer", price: "0", priceCurrency: "INR" },
               aggregateRating: { "@type": "AggregateRating", ratingValue: "4.9", ratingCount: "128" },
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                { "@type": "Question", name: "What is Manipuri AI?", acceptedAnswer: { "@type": "Answer", text: "Manipuri AI is the first ChatGPT-style AI chatbot that speaks Meiteilon (Manipuri) and English fluently, with support for Latin, Bengali and Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ) scripts." } },
+                { "@type": "Question", name: "Is Manipuri AI free to use?", acceptedAnswer: { "@type": "Answer", text: "Yes. You can try Manipuri AI free without signing up (3 messages), and signed-in free users get 20 messages every day. Pro (₹99/mo) and Max (₹399/mo) unlock unlimited chat, voice mode and AI image generation." } },
+                { "@type": "Question", name: "Does Manipuri AI support Meitei Mayek script?", acceptedAnswer: { "@type": "Answer", text: "Yes. Manipuri AI can read and reply in Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ), Bengali script, romanized Manipuri, and English — it auto-detects your language and replies in the same script." } },
+                { "@type": "Question", name: "Who created Manipuri AI?", acceptedAnswer: { "@type": "Answer", text: "Manipuri AI was created by Loitam Leonath from Manipur, India." } },
+                { "@type": "Question", name: "Can Manipuri AI translate between Manipuri and English?", acceptedAnswer: { "@type": "Answer", text: "Yes, it works as a Manipuri–English translator both ways and preserves Meitei Mayek script when requested." } },
+              ],
             },
           ],
         }),
