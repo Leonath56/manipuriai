@@ -115,6 +115,14 @@ function TryPage() {
         }),
       });
 
+      if (resp.status === 429) {
+        setMessages((m) => m.slice(0, -2));
+        setCount(GUEST_LIMIT);
+        localStorage.setItem(COUNT_KEY, String(GUEST_LIMIT));
+        toast.info("You've used your free trial. Sign up to keep chatting.");
+        return;
+      }
+
       if (!resp.ok || !resp.body) {
         const err = await resp.text();
         throw new Error(err.slice(0, 200) || "Request failed");
