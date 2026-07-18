@@ -244,9 +244,10 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
-            <MessageSquare className="h-4 w-4" />
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+            <Menu className="h-5 w-5" />
           </Button>
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground text-xs leading-none font-semibold" aria-hidden="true">ꯃ</span>
           <span className="font-display font-semibold">Manipuri AI</span>
         </header>
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
