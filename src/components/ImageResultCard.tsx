@@ -56,7 +56,7 @@ export function ImageResultCard({
               className="h-auto w-full cursor-zoom-in object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               onClick={() => setPreview(src)}
             />
-            <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
               <Button
                 type="button"
                 size="icon"
