@@ -119,4 +119,4 @@ export const ImageResultCard = memo(function ImageResultCard({
       </Dialog>
     </div>
   );
-}
+});
