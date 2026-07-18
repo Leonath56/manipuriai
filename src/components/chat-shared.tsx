@@ -169,7 +169,7 @@ export function Composer({
             <div className="mb-2 flex flex-wrap gap-2 px-1 pt-1">
               {images.map((src, i) => (
                 <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-neutral-300 bg-neutral-100">
-                  <img src={src} alt={`attachment ${i + 1}`} className="h-full w-full object-cover" />
+                  <img src={src} alt={`attachment ${i + 1}`} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
