@@ -1,0 +1,15 @@
+# Manipuri AI
+
+> The first ChatGPT-style AI chatbot fluent in Manipuri (Meiteilon) and English, with support for Latin, Bengali, and Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ) scripts.
+
+Manipuri AI is a bilingual conversational AI built by Loitam Leonath for speakers of Meiteilon (the official language of Manipur, India). It auto-detects the user's language and replies in the same script — Latin romanized Manipuri, Bengali script, Meitei Mayek, or English. Features include word-by-word streaming replies, voice mode (STT + TTS), AI image generation, persistent memory, and community-driven language corrections.
+
+## Pages
+- [Home](/): Landing page — features, capabilities, sign in / try links
+- [Try Manipuri AI](/try): Free guest chat (no signup, 3 free messages)
+- [Sign in](/auth): Email or Google authentication
+- [Plans & Pricing](/plans): Free, Pro (₹99/month), Max (₹399/month)
+
+## Optional
+- [Contact developer on Telegram](https://t.me/MrLeona)
+- [Source repository](https://github.com/Leonath56/manipuriai)
