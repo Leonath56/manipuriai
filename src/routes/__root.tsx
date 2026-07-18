@@ -7,12 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
-import { ReportIssue } from "@/components/ReportIssue";
+const ReportIssue = lazy(() => import("@/components/ReportIssue").then((m) => ({ default: m.ReportIssue })));
 import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
@@ -193,7 +193,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      {!hideReport && <ReportIssue />}
+      {!hideReport && <Suspense fallback={null}><ReportIssue /></Suspense>}
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
