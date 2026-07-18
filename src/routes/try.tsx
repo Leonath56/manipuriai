@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
-import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { supabase } from "@/integrations/supabase/client";
+
+const ChatMarkdown = lazy(() =>
+  import("@/components/ChatMarkdown").then((m) => ({ default: m.ChatMarkdown })),
+);
 
 
 const GUEST_LIMIT = 3;
@@ -60,7 +63,17 @@ function TryPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If already signed in, skip trial UI entirely.
+    const savedName = localStorage.getItem(NAME_KEY);
+    const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
+    if (savedName) setName(savedName);
+    setCount(savedCount);
+
+    // Only run the auth check when a persisted Supabase session actually exists.
+    // Guests have none, so skip the network call and render instantly.
+    if (!hasPersistedSession()) {
+      setChecking(false);
+      return;
+    }
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         navigate({ to: "/chat", replace: true });
@@ -68,10 +81,6 @@ function TryPage() {
         setChecking(false);
       }
     }).catch(() => setChecking(false));
-    const savedName = localStorage.getItem(NAME_KEY);
-    const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
-    if (savedName) setName(savedName);
-    setCount(savedCount);
   }, [navigate]);
 
 
@@ -227,7 +236,11 @@ function TryPage() {
                 }
               >
                 {m.role === "assistant" ? (
-                  m.content ? <ChatMarkdown content={m.content} /> : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  m.content ? (
+                    <Suspense fallback={<span className="whitespace-pre-wrap">{m.content}</span>}>
+                      <ChatMarkdown content={m.content} />
+                    </Suspense>
+                  ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 ) : (
                   <span className="whitespace-pre-wrap">{m.content}</span>
                 )}
