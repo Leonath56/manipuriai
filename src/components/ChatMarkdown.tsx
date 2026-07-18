@@ -1,9 +1,9 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Check, Copy } from "lucide-react";
 
-export function ChatMarkdown({ content }: { content: string }) {
+export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: string }) {
   return (
     <div className="prose prose-sm max-w-none prose-headings:font-display prose-p:leading-relaxed prose-pre:bg-transparent prose-pre:p-0">
       <ReactMarkdown
