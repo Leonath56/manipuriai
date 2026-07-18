@@ -101,7 +101,7 @@ export const ImageResultCard = memo(function ImageResultCard({
         <DialogContent className="max-w-5xl border-0 bg-transparent p-0 shadow-none">
           {preview && (
             <div className="flex flex-col items-center gap-3">
-              <img src={preview} alt={prompt} className="max-h-[85vh] w-auto rounded-lg" />
+              <img src={preview} alt={prompt} decoding="async" className="max-h-[85vh] w-auto rounded-lg" />
               <div className="flex gap-2">
                 <Button
                   size="sm"
