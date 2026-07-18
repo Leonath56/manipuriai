@@ -188,8 +188,8 @@ function TryPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border px-4 py-3 flex items-center justify-between">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+      <header className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display font-bold">
           <ArrowLeft className="h-4 w-4" />
           <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base font-semibold" aria-hidden="true">ꯃ</span>
@@ -200,7 +200,7 @@ function TryPage() {
         </div>
       </header>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-2xl space-y-4">
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
@@ -229,8 +229,8 @@ function TryPage() {
         </div>
       </div>
 
-      <div className="border-t border-border p-4">
-        <div className="mx-auto max-w-2xl">
+      <div className="shrink-0 border-t border-border bg-white">
+        <div className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {locked ? (
             <Card className="p-5 text-center bg-secondary/40">
               <Lock className="h-6 w-6 mx-auto mb-2 text-primary" />
@@ -246,7 +246,10 @@ function TryPage() {
               </div>
             </Card>
           ) : (
-            <div className="flex gap-2 items-end">
+            <form
+              onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+              className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400"
+            >
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -256,23 +259,27 @@ function TryPage() {
                     sendMessage();
                   }
                 }}
-                placeholder="Message Manipuri AI..."
+                placeholder="Message Manipuri AI…"
                 rows={1}
-                className="resize-none min-h-[48px] text-base"
+                style={{ fontSize: "16px" }}
+                className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
                 disabled={loading}
               />
-              <Button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                size="icon"
-                className="h-12 w-12 shrink-0"
-              >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-              </Button>
-            </div>
+              <div className="flex items-center justify-end px-1 pt-1">
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={loading || !input.trim()}
+                  className="h-10 w-10 rounded-full bg-black text-white hover:bg-neutral-800"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </Button>
+              </div>
+            </form>
           )}
         </div>
       </div>
+
     </div>
   );
 }
