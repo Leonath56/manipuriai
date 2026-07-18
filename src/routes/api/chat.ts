@@ -225,16 +225,11 @@ export const Route = createFileRoute("/api/chat")({
 
           const body = BodySchema.parse(await request.json());
 
-          // plan + usage in parallel
+          // plan + atomic usage increment in parallel
           const today = new Date().toISOString().slice(0, 10);
-          const [profileRes, usageRes] = await Promise.all([
+          const [profileRes, incRes] = await Promise.all([
             supabase.from("profiles").select("plan, full_name, username, age").eq("id", userId).maybeSingle(),
-            supabase
-              .from("daily_usage")
-              .select("message_count")
-              .eq("user_id", userId)
-              .eq("usage_date", today)
-              .maybeSingle(),
+            supabase.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today }),
           ]);
           const plan: Plan = (profileRes.data?.plan as Plan) ?? "free";
           const displayName =
@@ -243,13 +238,15 @@ export const Route = createFileRoute("/api/chat")({
             "";
           const userAge = profileRes.data?.age as number | null | undefined;
           const limit = PLAN_LIMITS[plan];
-          const count = usageRes.data?.message_count ?? 0;
-          if (count >= limit.dailyMessages) {
+          const newCount = (incRes.data as number | null) ?? 0;
+          if (newCount > limit.dailyMessages) {
             return new Response(
-              JSON.stringify({ error: `Daily limit reached (${limit.dailyMessages} on ${limit.label}).` }),
+              JSON.stringify({ error: `Daily limit reached (${limit.dailyMessages} on ${limit.label}). Upgrade at /plans.` }),
               { status: 429, headers: { "Content-Type": "application/json" } },
             );
           }
+          const count = newCount - 1; // for logs/back-compat below
+
 
           const hasImages = (body.images?.length ?? 0) > 0;
           // Text saved to DB for the user turn — embed images as markdown so
