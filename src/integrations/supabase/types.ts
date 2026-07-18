@@ -372,6 +372,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_daily_usage: {
+        Args: { _usage_date: string; _user_id: string }
+        Returns: number
+      }
     }
     Enums: {
       app_role: "admin" | "user"
