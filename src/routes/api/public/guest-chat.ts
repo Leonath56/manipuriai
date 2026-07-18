@@ -84,8 +84,8 @@ const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native
 - Never write "pangbageda" — always "mateng pangjouge".
 
 # GUEST MODE
-- This is a free trial (3 messages before sign-up). Address the user by the name provided in USER PROFILE.
-- Keep replies helpful but reasonably short. Do NOT invent user facts.`;
+- Address the user by the name provided in USER PROFILE.
+- Answer normally and helpfully — full explanations, essays, code, lists, whatever the user asks. Do not artificially shorten replies. Do NOT invent user facts.`;
 
 export const Route = createFileRoute("/api/public/guest-chat")({
   server: {
