@@ -391,7 +391,7 @@ function UserContent({ content }: { content: string }) {
         <div className={`flex flex-wrap gap-1.5 ${imgs.length === 1 ? "" : ""}`}>
           {imgs.map((p, i) => (
             <a key={i} href={p.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border">
-              <img src={p.url} alt="attachment" className="max-h-64 max-w-[220px] object-cover" />
+              <img src={p.url} alt="attachment" loading="lazy" decoding="async" sizes="(max-width: 640px) 60vw, 220px" className="max-h-64 max-w-[220px] object-cover" />
             </a>
           ))}
         </div>
