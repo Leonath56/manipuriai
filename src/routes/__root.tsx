@@ -123,10 +123,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               url: "https://manipuriai.online",
               logo: {
                 "@type": "ImageObject",
-                url: "https://manipuriai.online/og-image.jpg",
+                url: "https://manipuriai.online/logo.png",
                 width: 512,
                 height: 512,
               },
+
               founder: { "@type": "Person", name: "Loitam Leonath" },
               sameAs: ["https://t.me/MrLeona", "https://github.com/Leonath56/manipuriai"],
             },
