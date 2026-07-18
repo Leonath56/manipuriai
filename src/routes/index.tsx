@@ -228,7 +228,10 @@ function Landing() {
         <div className="mx-auto max-w-7xl px-6 py-10">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Manipuri AI · Built with care for Meiteilon speakers.
+              © {new Date().getFullYear()} Manipuri AI ·{" "}
+              <Link to="/privacy" className="underline-offset-2 hover:underline">Privacy</Link>
+              {" · "}
+              <Link to="/terms" className="underline-offset-2 hover:underline">Terms</Link>
             </div>
             <div className="text-[10px] font-semibold tracking-[0.28em]" style={{ color: "var(--gold)" }}>
               DEVELOPED BY LEONATH
