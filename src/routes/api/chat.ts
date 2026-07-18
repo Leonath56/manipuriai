@@ -582,10 +582,8 @@ export const Route = createFileRoute("/api/chat")({
                   { chat_id: finalChatId, user_id: userId, role: "assistant", content: corrected },
                 ]);
                 await supabase.from("chats").update({ updated_at: new Date().toISOString() }).eq("id", finalChatId);
-                await supabase.from("daily_usage").upsert(
-                  { user_id: userId, usage_date: today, message_count: count + 1, updated_at: new Date().toISOString() },
-                  { onConflict: "user_id,usage_date" },
-                );
+                // daily_usage already incremented atomically at request start
+
               } catch {
                 // best-effort persistence; keep the visible streamed reply intact
               }
