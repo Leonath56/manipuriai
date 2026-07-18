@@ -205,7 +205,18 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium">{profileQ.data?.full_name ?? profileQ.data?.username ?? "Account"}</div>
-                <div className="truncate text-xs capitalize text-muted-foreground">{profileQ.data?.plan ?? "free"} plan</div>
+                {(() => {
+                  const p = profileQ.data?.plan ?? "free";
+                  const premium = p === "pro" || p === "max";
+                  return (
+                    <div
+                      className={`truncate text-xs capitalize ${premium ? "font-semibold" : "text-muted-foreground"}`}
+                      style={premium ? { background: "linear-gradient(90deg,#f5d67a,#c9a84c,#f0d78c)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" } : undefined}
+                    >
+                      {p} plan
+                    </div>
+                  );
+                })()}
               </div>
             </button>
           </DropdownMenuTrigger>
