@@ -239,55 +239,46 @@ function TryPage() {
 
       <div className="shrink-0 border-t border-border bg-white">
         <div className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-          {locked ? (
-            <Card className="p-5 text-center bg-white border border-neutral-200 shadow-soft">
-              <Lock className="h-6 w-6 mx-auto mb-2 text-neutral-900" />
-              <p className="font-semibold text-neutral-900">You've used your {GUEST_LIMIT} free messages, {name}.</p>
-              <p className="text-sm text-neutral-600 mt-1">Create a free account to keep chatting with memory, history, voice mode and more.</p>
-              <div className="mt-4 flex gap-2 justify-center">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  <Button className="bg-neutral-900 text-white hover:bg-neutral-800">Create free account</Button>
-                </Link>
-                <Link to="/auth">
-                  <Button variant="outline" className="border-neutral-300 text-neutral-900">Sign in</Button>
-                </Link>
-              </div>
-            </Card>
-
-          ) : (
-            <form
-              onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
-              className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400"
-            >
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder="Message Manipuri AI…"
-                rows={1}
-                style={{ fontSize: "16px" }}
-                className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
-                disabled={loading}
-              />
-              <div className="flex items-center justify-end px-1 pt-1">
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={loading || !input.trim()}
-                  className="h-10 w-10 rounded-full bg-black text-white hover:bg-neutral-800"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                </Button>
-              </div>
-            </form>
-          )}
+          <form
+            onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
+            className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400"
+          >
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder={locked ? "Sign in to keep chatting…" : "Message Manipuri AI…"}
+              rows={1}
+              style={{ fontSize: "16px" }}
+              className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
+              disabled={loading}
+            />
+            <div className="flex items-center justify-between px-1 pt-1">
+              <span className="text-xs text-neutral-500">
+                {locked ? (
+                  <>Free trial used — <Link to="/auth" search={{ mode: "signup" }} className="font-medium text-neutral-900 underline">sign up</Link> to continue</>
+                ) : (
+                  <>{remaining} / {GUEST_LIMIT} free messages left</>
+                )}
+              </span>
+              <Button
+                type="submit"
+                size="icon"
+                disabled={loading || !input.trim()}
+                className="h-10 w-10 rounded-full bg-black text-white hover:bg-neutral-800"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
+
 
     </div>
   );
