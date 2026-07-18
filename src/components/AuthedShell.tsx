@@ -153,7 +153,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="grid h-7 w-7 shrink-0 place-items-center rounded opacity-0 hover:bg-sidebar-accent group-hover:opacity-100" aria-label="Chat options">
+                    <button className="grid h-8 w-8 shrink-0 place-items-center rounded opacity-100 hover:bg-sidebar-accent md:opacity-0 md:group-hover:opacity-100" aria-label="Chat options">
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </DropdownMenuTrigger>
