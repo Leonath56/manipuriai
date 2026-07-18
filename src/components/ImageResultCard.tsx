@@ -53,6 +53,8 @@ export const ImageResultCard = memo(function ImageResultCard({
               src={src}
               alt={prompt}
               loading="lazy"
+              decoding="async"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 512px"
               className="h-auto w-full cursor-zoom-in object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               onClick={() => setPreview(src)}
             />
