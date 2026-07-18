@@ -232,19 +232,20 @@ function TryPage() {
       <div className="shrink-0 border-t border-border bg-white">
         <div className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {locked ? (
-            <Card className="p-5 text-center bg-secondary/40">
-              <Lock className="h-6 w-6 mx-auto mb-2 text-primary" />
-              <p className="font-semibold">You've used your {GUEST_LIMIT} free messages, {name}.</p>
-              <p className="text-sm text-muted-foreground mt-1">Create a free account to keep chatting with memory, history, voice mode and more.</p>
+            <Card className="p-5 text-center bg-white border border-neutral-200 shadow-soft">
+              <Lock className="h-6 w-6 mx-auto mb-2 text-neutral-900" />
+              <p className="font-semibold text-neutral-900">You've used your {GUEST_LIMIT} free messages, {name}.</p>
+              <p className="text-sm text-neutral-600 mt-1">Create a free account to keep chatting with memory, history, voice mode and more.</p>
               <div className="mt-4 flex gap-2 justify-center">
                 <Link to="/auth" search={{ mode: "signup" }}>
-                  <Button>Create free account</Button>
+                  <Button className="bg-neutral-900 text-white hover:bg-neutral-800">Create free account</Button>
                 </Link>
                 <Link to="/auth">
-                  <Button variant="outline">Sign in</Button>
+                  <Button variant="outline" className="border-neutral-300 text-neutral-900">Sign in</Button>
                 </Link>
               </div>
             </Card>
+
           ) : (
             <form
               onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
