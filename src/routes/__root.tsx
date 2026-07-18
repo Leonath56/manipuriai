@@ -102,6 +102,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/logo.png", type: "image/png", sizes: "512x512" },
       { rel: "apple-touch-icon", href: "/logo.png" },
