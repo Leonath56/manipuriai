@@ -1,13 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
-import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { supabase } from "@/integrations/supabase/client";
+
+const ChatMarkdown = lazy(() =>
+  import("@/components/ChatMarkdown").then((m) => ({ default: m.ChatMarkdown })),
+);
 
 
 const GUEST_LIMIT = 3;
