@@ -26,7 +26,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: s
       </ReactMarkdown>
     </div>
   );
-}
+});
 
 function CodeBlock({ language, children }: { language: string; children: string }) {
   const [copied, setCopied] = useState(false);
