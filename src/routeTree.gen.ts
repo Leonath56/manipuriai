@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TryRouteImport } from './routes/try'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -31,6 +32,11 @@ import { Route as AuthenticatedChatChatIdRouteImport } from './routes/_authentic
 const TryRoute = TryRouteImport.update({
   id: '/try',
   path: '/try',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/try': typeof TryRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -162,6 +170,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/plans': typeof PlansRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/try': typeof TryRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
@@ -183,6 +192,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/try'
     | '/admin'
     | '/chat'
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/try'
     | '/admin'
     | '/dashboard'
@@ -221,6 +232,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/plans'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/try'
     | '/_authenticated/admin'
     | '/_authenticated/chat'
@@ -242,6 +254,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   PlansRoute: typeof PlansRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TryRoute: typeof TryRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateImageRoute: typeof ApiGenerateImageRoute
@@ -256,6 +269,13 @@ declare module '@tanstack/react-router' {
       path: '/try'
       fullPath: '/try'
       preLoaderRoute: typeof TryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -420,6 +440,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   PlansRoute: PlansRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TryRoute: TryRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateImageRoute: ApiGenerateImageRoute,
