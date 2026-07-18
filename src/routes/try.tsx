@@ -60,7 +60,17 @@ function TryPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // If already signed in, skip trial UI entirely.
+    const savedName = localStorage.getItem(NAME_KEY);
+    const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
+    if (savedName) setName(savedName);
+    setCount(savedCount);
+
+    // Only run the auth check when a persisted Supabase session actually exists.
+    // Guests have none, so skip the network call and render instantly.
+    if (!hasPersistedSession()) {
+      setChecking(false);
+      return;
+    }
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         navigate({ to: "/chat", replace: true });
@@ -68,10 +78,6 @@ function TryPage() {
         setChecking(false);
       }
     }).catch(() => setChecking(false));
-    const savedName = localStorage.getItem(NAME_KEY);
-    const savedCount = parseInt(localStorage.getItem(COUNT_KEY) ?? "0", 10) || 0;
-    if (savedName) setName(savedName);
-    setCount(savedCount);
   }, [navigate]);
 
 
