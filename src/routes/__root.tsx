@@ -193,7 +193,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
-      {!hideReport && <ReportIssue />}
+      {!hideReport && <Suspense fallback={null}><ReportIssue /></Suspense>}
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );
