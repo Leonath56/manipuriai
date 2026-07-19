@@ -228,10 +228,11 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 controller.error(err);
                 return;
               }
-              controller.close();
 
               if (assistantAcc) {
-                void persistGuestTurn({
+                // Await so the Worker doesn't terminate the persist promise
+                // when the response stream closes.
+                await persistGuestTurn({
                   guestId: body.guestId,
                   name: body.name,
                   userAgent: ua,
@@ -240,6 +241,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                   assistantMessage: assistantAcc,
                 });
               }
+
+              controller.close();
             },
           });
 
