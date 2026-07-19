@@ -230,11 +230,12 @@ export const Route = createFileRoute("/api/chat")({
 
           const body = BodySchema.parse(await request.json());
 
-          // plan + atomic usage increment in parallel
+          // plan + atomic usage increment in parallel (RPC via service role — restricted from client roles)
           const today = new Date().toISOString().slice(0, 10);
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const [profileRes, incRes] = await Promise.all([
             supabase.from("profiles").select("plan, full_name, username, age").eq("id", userId).maybeSingle(),
-            supabase.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today }),
+            supabaseAdmin.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today }),
           ]);
           const plan: Plan = (profileRes.data?.plan as Plan) ?? "free";
           const displayName =
