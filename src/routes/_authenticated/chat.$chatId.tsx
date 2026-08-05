@@ -24,7 +24,7 @@ function isPersistedMessageId(id: string) {
 }
 
 export const Route = createFileRoute("/_authenticated/chat/$chatId")({
-  head: () => ({ meta: [{ title: "Chat — Manipuri AI" }] }),
+  head: () => ({ meta: [{ title: "Chat — Manipuri AI" }, { name: "description", content: "Continue your Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: ChatView,
 });
 
