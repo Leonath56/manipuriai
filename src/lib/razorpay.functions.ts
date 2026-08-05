@@ -43,7 +43,8 @@ export const createRazorpayOrder = createServerFn({ method: "POST" })
     }
     const order = (await resp.json()) as { id: string; amount: number; currency: string };
 
-    await context.supabase.from("payments").insert({
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("payments").insert({
       user_id: context.userId,
       razorpay_order_id: order.id,
       plan: data.plan,
