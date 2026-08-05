@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Profile — Manipuri AI" }] }),
+  head: () => ({ meta: [{ title: "Profile — Manipuri AI" }, { name: "description", content: "Manage your Manipuri AI profile, preferred language and script, voice settings and account details." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: ProfilePage,
 });
 

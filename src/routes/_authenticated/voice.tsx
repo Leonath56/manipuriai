@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { usePlan } from "@/components/PaidFeatureGate";
 
 export const Route = createFileRoute("/_authenticated/voice")({
-  head: () => ({ meta: [{ title: "Voice — Manipuri AI" }] }),
+  head: () => ({ meta: [{ title: "Voice — Manipuri AI" }, { name: "description", content: "Talk to Manipuri AI out loud in Meiteilon or English with real-time speech recognition and natural voice replies." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: VoiceMode,
 });
 

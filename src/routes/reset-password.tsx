@@ -8,7 +8,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Manipuri AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Reset password — Manipuri AI" },
+      { name: "description", content: "Choose a new password for your Manipuri AI account and get back to chatting in Meiteilon and English." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: ResetPassword,
 });
 
@@ -35,8 +41,8 @@ function ResetPassword() {
         <p className="mt-1 text-sm text-muted-foreground">Enter a new password for your account.</p>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">New password</Label>
-            <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Label htmlFor="new-password" className="text-xs font-medium text-muted-foreground">New password</Label>
+            <Input id="new-password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>Update password</Button>
         </form>

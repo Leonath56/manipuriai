@@ -8,7 +8,7 @@ import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { MessageSquare, Sparkles, CreditCard, ArrowUpRight, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Manipuri AI" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Manipuri AI" }, { name: "description", content: "Your Manipuri AI dashboard: track daily message usage, current plan and recent Meiteilon and English chats." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: Dashboard,
 });
 

@@ -8,7 +8,19 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Manipuri AI — Bilingual AI chat in Meiteilon & English" },
-      { name: "description", content: "The first ChatGPT-style AI that speaks Manipuri (Meiteilon) and English fluently. Free to start." },
+      { name: "description", content: "The first ChatGPT-style AI that speaks Manipuri (Meiteilon) and English fluently — voice, image generation and Meitei Mayek script. Free to start." },
+      { property: "og:title", content: "Manipuri AI — Bilingual AI chat in Meiteilon & English" },
+      { property: "og:description", content: "ChatGPT-style AI fluent in Manipuri (Meiteilon) and English. Voice, images and Meitei Mayek script. Free to start." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://manipuriai.online/" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://manipuriai.online/" },
+      { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online/" },
+      { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online/" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online/" },
     ],
   }),
   component: Landing,

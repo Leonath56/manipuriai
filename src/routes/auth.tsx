@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { cloneElement, isValidElement, useEffect, useId, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -18,7 +18,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — Manipuri AI" }, { name: "description", content: "Sign in or create your Manipuri AI account." }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — Manipuri AI" },
+      { name: "description", content: "Sign in or create a free Manipuri AI account to chat in Meiteilon and English, save your history and unlock voice mode." },
+      { property: "og:title", content: "Sign in to Manipuri AI" },
+      { property: "og:description", content: "Create a free account to chat in Meiteilon and English, save history and unlock voice mode." },
+      { property: "og:url", content: "https://manipuriai.online/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://manipuriai.online/auth" }],
+  }),
   component: AuthPage,
 });
 
@@ -200,10 +209,14 @@ function AuthPage() {
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  const id = useId();
+  const child = isValidElement(children)
+    ? cloneElement(children as React.ReactElement<{ id?: string }>, { id })
+    : children;
   return (
     <div className="space-y-1.5">
-      <Label className="text-xs font-medium text-muted-foreground">{label}</Label>
-      {children}
+      <Label htmlFor={id} className="text-xs font-medium text-muted-foreground">{label}</Label>
+      {child}
     </div>
   );
 }
