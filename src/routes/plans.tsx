@@ -195,7 +195,7 @@ function PlansPage() {
                     Most popular
                   </span>
                 )}
-                <h3 className="font-display text-xl font-bold">{info.label}</h3>
+                <h2 className="font-display text-xl font-bold">{info.label}</h2>
                 <div className="mt-2 flex items-baseline gap-1">
                   <span className="font-display text-4xl font-bold">{info.price}</span>
                   <span className="text-sm text-muted-foreground">/ month</span>
