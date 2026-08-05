@@ -18,7 +18,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — Manipuri AI" }, { name: "description", content: "Sign in or create your Manipuri AI account." }] }),
+  head: () => ({
+    meta: [
+      { title: "Sign in — Manipuri AI" },
+      { name: "description", content: "Sign in or create a free Manipuri AI account to chat in Meiteilon and English, save your history and unlock voice mode." },
+      { property: "og:title", content: "Sign in to Manipuri AI" },
+      { property: "og:description", content: "Create a free account to chat in Meiteilon and English, save history and unlock voice mode." },
+      { property: "og:url", content: "https://manipuriai.online/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://manipuriai.online/auth" }],
+  }),
   component: AuthPage,
 });
 
