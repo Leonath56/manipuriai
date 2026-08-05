@@ -10,7 +10,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/plans")({
-  head: () => ({ meta: [{ title: "Plans & pricing — Manipuri AI" }, { name: "description", content: "Choose the Manipuri AI plan that fits you: Free, Pro, or Max." }] }),
+  head: () => ({
+    meta: [
+      { title: "Plans & pricing — Manipuri AI" },
+      { name: "description", content: "Compare Manipuri AI plans: Free daily chat, Pro at ₹99/month and Max at ₹399/month with unlimited chat, voice mode and AI image generation." },
+      { property: "og:title", content: "Manipuri AI plans — Free, Pro ₹99 and Max ₹399" },
+      { property: "og:description", content: "Unlimited Meiteilon & English chat, voice mode and AI image generation from ₹99/month." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://manipuriai.online/plans" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg" },
+    ],
+    links: [{ rel: "canonical", href: "https://manipuriai.online/plans" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: "Manipuri AI",
+          description: "Bilingual AI chatbot for Manipuri (Meiteilon) and English with voice mode and AI image generation.",
+          brand: { "@type": "Brand", name: "Manipuri AI" },
+          offers: [
+            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "20 messages every day in Meiteilon and English." },
+            { "@type": "Offer", name: "Pro", price: "99", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "Unlimited chat, voice mode and faster replies." },
+            { "@type": "Offer", name: "Max", price: "399", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "Everything in Pro plus AI image generation and priority access." },
+          ],
+        }),
+      },
+    ],
+  }),
   component: PlansPage,
 });
 
