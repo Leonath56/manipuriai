@@ -88,7 +88,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Manipuri AI — Meiteilon & English AI Chatbot" },
       { property: "og:description", content: "The first AI chatbot fluent in Manipuri (Meiteilon) and English. Free, streaming, voice, image gen, Meitei Mayek support." },
       { property: "og:type", content: "website" },
-      { property: "og:locale", content: "en_IN" },
       { property: "og:image", content: "https://manipuriai.online/og-image.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
@@ -102,10 +101,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: "https://manipuriai.online" },
-      { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online" },
-      { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online" },
-      { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online" },
       { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/logo.png", type: "image/png", sizes: "512x512" },
