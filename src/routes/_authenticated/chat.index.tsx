@@ -14,7 +14,7 @@ import {
 } from "@/lib/active-stream";
 
 export const Route = createFileRoute("/_authenticated/chat/")({
-  head: () => ({ meta: [{ title: "New chat — Manipuri AI" }] }),
+  head: () => ({ meta: [{ title: "New chat — Manipuri AI" }, { name: "description", content: "Start a new Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
   component: NewChat,
 });
 
