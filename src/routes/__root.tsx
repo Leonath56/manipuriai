@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Manipuri AI — Meiteilon & English AI Chatbot" },
       { property: "og:description", content: "The first AI chatbot fluent in Manipuri (Meiteilon) and English. Free, streaming, voice, image gen, Meitei Mayek support." },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://manipuriai.online" },
+      { property: "og:locale", content: "en_IN" },
       { property: "og:image", content: "https://manipuriai.online/og-image.jpg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
