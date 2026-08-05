@@ -8,7 +8,13 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Reset password — Manipuri AI" }] }),
+  head: () => ({
+    meta: [
+      { title: "Reset password — Manipuri AI" },
+      { name: "description", content: "Choose a new password for your Manipuri AI account and get back to chatting in Meiteilon and English." },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: ResetPassword,
 });
 
