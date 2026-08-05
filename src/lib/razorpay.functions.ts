@@ -75,6 +75,8 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
     if (!keySecret) throw new Error("Payments are not configured.");
 
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
     const { createHmac, timingSafeEqual } = await import("crypto");
     const expected = createHmac("sha256", keySecret)
       .update(`${data.razorpay_order_id}|${data.razorpay_payment_id}`)
@@ -84,7 +86,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     const b = Buffer.from(data.razorpay_signature);
     const ok = a.length === b.length && timingSafeEqual(a, b);
     if (!ok) {
-      await context.supabase
+      await supabaseAdmin
         .from("payments")
         .update({ status: "signature_failed", razorpay_payment_id: data.razorpay_payment_id, updated_at: new Date().toISOString() })
         .eq("razorpay_order_id", data.razorpay_order_id)
@@ -93,7 +95,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
     }
 
     // Load the order row to determine plan (trust server state, not client)
-    const { data: paymentRow } = await context.supabase
+    const { data: paymentRow } = await supabaseAdmin
       .from("payments")
       .select("plan, status")
       .eq("razorpay_order_id", data.razorpay_order_id)
@@ -104,7 +106,7 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     const plan = paymentRow.plan as Plan;
 
-    await context.supabase
+    await supabaseAdmin
       .from("payments")
       .update({
         status: "paid",
@@ -115,11 +117,12 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .eq("razorpay_order_id", data.razorpay_order_id)
       .eq("user_id", context.userId);
 
-    // Upgrade user's plan
-    await context.supabase
+    // Upgrade user's plan (service role bypasses the plan self-upgrade guard)
+    await supabaseAdmin
       .from("profiles")
       .update({ plan })
       .eq("id", context.userId);
+
 
     return { ok: true, plan };
   });
