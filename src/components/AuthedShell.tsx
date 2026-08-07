@@ -97,9 +97,12 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         </Link>
         <Button variant="ghost" size="icon" onClick={() => {
           const aside = document.querySelector('aside');
+          const toggleBtn = document.getElementById('sidebar-toggle-container');
           if (aside) {
             aside.classList.add('hidden');
             aside.classList.remove('md:block');
+            toggleBtn?.classList.remove('hidden');
+            toggleBtn?.classList.add('md:flex');
           }
         }} aria-label="Minimize sidebar" className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground">
           <Menu className="h-5 w-5" />
@@ -271,15 +274,17 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
           <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="hidden md:flex items-center gap-2">
+          <div id="sidebar-toggle-container" className="hidden items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => {
               const aside = document.querySelector('aside');
+              const toggleBtn = document.getElementById('sidebar-toggle-container');
               if (aside) {
-                const isHidden = aside.classList.contains('hidden');
-                aside.classList.toggle('hidden', !isHidden);
-                aside.classList.toggle('md:block', isHidden);
+                aside.classList.remove('hidden');
+                aside.classList.add('md:block');
+                toggleBtn?.classList.remove('md:flex');
+                toggleBtn?.classList.add('hidden');
               }
-            }} aria-label="Toggle sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            }} aria-label="Open sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
               <Menu className="h-5 w-5" />
             </Button>
           </div>
