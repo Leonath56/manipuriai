@@ -124,6 +124,12 @@ function VoiceMode() {
       streamRef.current = stream;
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
+      
+      // Explicitly mute the tracks if isMicMuted is active
+      if (isMicMuted) {
+        stream.getAudioTracks().forEach(track => { track.enabled = false; });
+      }
+
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 1024;
@@ -409,7 +415,15 @@ function VoiceMode() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setIsMicMuted(!isMicMuted)}
+            onClick={() => {
+              const newState = !isMicMuted;
+              setIsMicMuted(newState);
+              if (streamRef.current) {
+                streamRef.current.getAudioTracks().forEach(track => {
+                  track.enabled = !newState;
+                });
+              }
+            }}
             className={`text-white hover:bg-white/10 ${isMicMuted ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : ""}`}
             aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
             title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
