@@ -54,6 +54,7 @@ function VoiceMode() {
     return localStorage.getItem("voice-muted") === "true";
   });
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isHardwareMuted, setIsHardwareMuted] = useState(false); // New: Track actual track state
   useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
   useEffect(() => { localStorage.setItem("voice-muted", String(isMuted)); }, [isMuted]);
 
@@ -126,7 +127,10 @@ function VoiceMode() {
       audioCtxRef.current = ctx;
       
       // Explicitly mute the tracks if isMicMuted is active
-      stream.getAudioTracks().forEach(track => { track.enabled = !isMicMuted; });
+      stream.getAudioTracks().forEach(track => { 
+        track.enabled = !isMicMuted; 
+        setIsHardwareMuted(!track.enabled);
+      });
 
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
@@ -424,6 +428,7 @@ function VoiceMode() {
               if (streamRef.current) {
                 streamRef.current.getAudioTracks().forEach(track => {
                   track.enabled = !newState;
+                  setIsHardwareMuted(!track.enabled);
                 });
               }
             }}
