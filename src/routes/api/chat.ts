@@ -123,7 +123,7 @@ async function decideWebSearch(
   const t = setTimeout(() => ctrl.abort(), 2000);
   try {
     const r = await fetchChatCompletion(
-      "google/gemini-2.5-flash-lite",
+      "google/gemini-2.0-flash-lite",
       {
         messages: [
           {
@@ -211,7 +211,7 @@ async function extractMemoryUpdate(
   _apiKey: string,
 ): Promise<Partial<UserMemory> | null> {
   try {
-    const r = await fetchChatCompletion("google/gemini-2.5-flash-lite", {
+    const r = await fetchChatCompletion("google/gemini-2.0-flash-lite", {
       response_format: { type: "json_object" },
       messages: [
         {

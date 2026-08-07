@@ -108,11 +108,9 @@ function mapToGeminiModel(id: string): string {
   const clean = id.replace(/^google\//, "");
   const table: Record<string, string> = {
     "gemini-3-flash-preview": "gemini-flash-latest",
-    "gemini-3.1-pro-preview": "gemini-pro-latest",
-    "gemini-3.1-flash-lite": "gemini-flash-lite-latest",
-    "gemini-2.5-pro": "gemini-pro-latest",
-    "gemini-2.5-flash": "gemini-flash-latest",
-    "gemini-2.5-flash-lite": "gemini-flash-lite-latest",
+    "gemini-2.0-pro-exp-02-05": "gemini-2.0-pro-exp-02-05",
+    "gemini-2.0-flash": "gemini-2.0-flash",
+    "gemini-2.0-flash-lite": "gemini-2.0-flash-lite",
   };
   return table[clean] ?? "gemini-flash-latest";
 }
