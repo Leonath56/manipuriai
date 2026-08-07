@@ -67,7 +67,7 @@ export const Route = createFileRoute("/api/transcribe")({
               userText = "Transcribe this audio in the spoken language (Manipuri in romanized Latin, or English). Output only the transcript.";
             }
 
-            const ep = chatCompletionsEndpoint("google/gemini-2.0-flash");
+            const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
             const res = await fetch(ep.url, {
               method: "POST",
               headers: {
