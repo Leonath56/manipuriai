@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { X, Lock, Sparkles, Volume2, VolumeX } from "lucide-react";
+import { X, Lock, Sparkles, Volume2, VolumeX, Mic, MicOff } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
@@ -53,6 +53,7 @@ function VoiceMode() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("voice-muted") === "true";
   });
+  const [isMicMuted, setIsMicMuted] = useState(false);
   useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
   useEffect(() => { localStorage.setItem("voice-muted", String(isMuted)); }, [isMuted]);
 
@@ -140,6 +141,13 @@ function VoiceMode() {
         const blob = new Blob(chunksRef.current, { type: rec.mimeType || "audio/webm" });
         chunksRef.current = [];
         cleanupMic();
+        
+        // If mic is muted, we don't process the audio
+        if (isMicMuted) {
+          if (!stoppedRef.current) startListening();
+          return;
+        }
+
         if (!spokeRef.current || blob.size < 2048) {
           if (!stoppedRef.current) startListening();
           return;
@@ -166,10 +174,10 @@ function VoiceMode() {
         const SPEAK_THRESHOLD = 0.025;
         const SILENCE_MS = 2800;
         const now = performance.now();
-        if (rms > SPEAK_THRESHOLD) {
+        if (rms > SPEAK_THRESHOLD && !isMicMuted) {
           spokeRef.current = true;
           silenceStartRef.current = null;
-        } else if (spokeRef.current) {
+        } else if (spokeRef.current || isMicMuted) {
           if (silenceStartRef.current === null) silenceStartRef.current = now;
           else if (now - silenceStartRef.current > SILENCE_MS) {
             if (recorderRef.current && recorderRef.current.state === "recording") {
@@ -398,6 +406,16 @@ function VoiceMode() {
           </SelectContent>
         </Select>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMicMuted(!isMicMuted)}
+            className={`text-white hover:bg-white/10 ${isMicMuted ? "bg-red-500/20 text-red-400 hover:bg-red-500/30" : ""}`}
+            aria-label={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+            title={isMicMuted ? "Unmute microphone" : "Mute microphone"}
+          >
+            {isMicMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          </Button>
           <Select value={gender} onValueChange={(v) => setGender(v as "male" | "female")}>
             <SelectTrigger className="h-9 w-auto gap-1.5 border-white/20 bg-white/5 px-3 text-xs text-white hover:bg-white/10">
               <span>{gender === "male" ? "♂ Male" : "♀ Female"}</span>
