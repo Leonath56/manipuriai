@@ -54,6 +54,7 @@ function VoiceMode() {
     return localStorage.getItem("voice-muted") === "true";
   });
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isHardwareMuted, setIsHardwareMuted] = useState(false); // New: Track actual track state
   useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
   useEffect(() => { localStorage.setItem("voice-muted", String(isMuted)); }, [isMuted]);
 
@@ -126,7 +127,10 @@ function VoiceMode() {
       audioCtxRef.current = ctx;
       
       // Explicitly mute the tracks if isMicMuted is active
-      stream.getAudioTracks().forEach(track => { track.enabled = !isMicMuted; });
+      stream.getAudioTracks().forEach(track => { 
+        track.enabled = !isMicMuted; 
+        setIsHardwareMuted(!track.enabled);
+      });
 
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
@@ -424,6 +428,7 @@ function VoiceMode() {
               if (streamRef.current) {
                 streamRef.current.getAudioTracks().forEach(track => {
                   track.enabled = !newState;
+                  setIsHardwareMuted(!track.enabled);
                 });
               }
             }}
@@ -522,6 +527,45 @@ function VoiceMode() {
             <p className="mt-2 max-w-xl text-sm text-white/60 line-clamp-3">{reply}</p>
           )}
           {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        </div>
+
+        {/* Floating mic status indicator */}
+        <div 
+          className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 ${
+            isHardwareMuted 
+              ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/40 shadow-[0_0_15px_rgba(239,68,68,0.2)]" 
+              : status === "listening" 
+                ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.2)]"
+                : "bg-white/5 text-white/40 ring-1 ring-white/10"
+          }`}
+        >
+          {isHardwareMuted ? (
+            <>
+              <MicOff className="h-4 w-4 animate-pulse" />
+              <span>Microphone Muted</span>
+            </>
+          ) : status === "listening" ? (
+            <>
+              <div className="flex gap-0.5">
+                {[1, 2, 3].map(i => (
+                  <div 
+                    key={i} 
+                    className="h-3 w-1 rounded-full bg-emerald-400" 
+                    style={{ 
+                      animation: `voiceRipple 1s ease-in-out ${i * 0.2}s infinite`,
+                      height: `${Math.max(4, level * 20)}px` 
+                    }}
+                  />
+                ))}
+              </div>
+              <span>Mic Active</span>
+            </>
+          ) : (
+            <>
+              <Mic className="h-4 w-4" />
+              <span>Mic Ready</span>
+            </>
+          )}
         </div>
       </div>
 
