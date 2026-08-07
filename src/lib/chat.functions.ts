@@ -11,8 +11,8 @@ const SendMessageInput = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash",
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-2.0-flash",
+  think: "google/gemini-2.0-pro-exp-02-05",
 } as const;
 
 const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native-level speaker of Manipuri / Meiteilon (ISO 639-3: mni), the language of Manipur in Northeast India.

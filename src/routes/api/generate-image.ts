@@ -78,7 +78,7 @@ export const Route = createFileRoute("/api/generate-image")({
               //     concrete visual detail so the model doesn't drift.
           let translatedPrompt = body.prompt;
           try {
-            const trEp = chatCompletionsEndpoint("google/gemini-2.5-flash");
+            const trEp = chatCompletionsEndpoint("google/gemini-2.0-flash");
             const tr = await fetch(trEp.url, {
               method: "POST",
               headers: {

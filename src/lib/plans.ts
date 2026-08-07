@@ -6,7 +6,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     price: "₹0",
     priceInPaise: 0,
     dailyMessages: 20,
-    model: "google/gemini-2.5-pro",
+    model: "google/gemini-2.0-flash",
     features: [
       "20 AI messages per day",
       "Bilingual Manipuri & English",
@@ -19,7 +19,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     price: "₹99",
     priceInPaise: 9900,
     dailyMessages: 500,
-    model: "google/gemini-2.5-pro",
+    model: "google/gemini-2.0-flash",
     features: [
       "500 messages per day",
       "Faster responses",
@@ -33,7 +33,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     price: "₹399",
     priceInPaise: 39900,
     dailyMessages: 10000,
-    model: "google/gemini-2.5-pro",
+    model: "google/gemini-2.0-pro-exp-02-05",
     features: [
       "Effectively unlimited messages",
       "Fastest responses",

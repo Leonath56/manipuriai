@@ -17,14 +17,14 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-3.5-flash",
-  think: "google/gemini-3.1-pro-preview",
+  instant: "google/gemini-2.0-flash",
+  think: "google/gemini-2.0-pro-exp-02-05",
 } as const;
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash",
-  think: "google/gemini-3.1-pro-preview",
+  instant: "google/gemini-2.0-flash",
+  think: "google/gemini-2.0-pro-exp-02-05",
 } as const;
 
 function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
@@ -123,14 +123,14 @@ async function decideWebSearch(
   const t = setTimeout(() => ctrl.abort(), 2000);
   try {
     const r = await fetchChatCompletion(
-      "google/gemini-2.5-flash-lite",
+      "google/gemini-2.0-flash-lite",
       {
         messages: [
           {
             role: "system",
             content: force
               ? "You are a research assistant. For the user's question, output ONLY the best English web search query (max 12 words) that would fetch accurate, up-to-date info to answer it. If the question is pure chit-chat with no factual content at all, output exactly: NO."
-              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
+              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2026). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
           },
           { role: "user", content: query },
         ],
@@ -211,7 +211,7 @@ async function extractMemoryUpdate(
   _apiKey: string,
 ): Promise<Partial<UserMemory> | null> {
   try {
-    const r = await fetchChatCompletion("google/gemini-2.5-flash-lite", {
+    const r = await fetchChatCompletion("google/gemini-2.0-flash-lite", {
       response_format: { type: "json_object" },
       messages: [
         {
