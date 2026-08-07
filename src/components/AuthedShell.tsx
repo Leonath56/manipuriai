@@ -254,12 +254,25 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+        <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:px-4">
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => {
+              const aside = document.querySelector('aside');
+              if (aside) {
+                const isHidden = aside.classList.contains('hidden');
+                aside.classList.toggle('hidden', !isHidden);
+                aside.classList.toggle('md:block', isHidden);
+              }
+            }} aria-label="Toggle sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
           <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground text-xs leading-none font-semibold" aria-hidden="true">ꯃ</span>
           <span className="font-display font-semibold">Manipuri AI</span>
+          <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
         </header>
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
