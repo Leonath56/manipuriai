@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { X, Lock, Sparkles } from "lucide-react";
+import { X, Lock, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { streamChat } from "@/lib/chat-stream";
 import { useServerFn } from "@tanstack/react-start";
 import { synthesizeSpeech } from "@/lib/tts.functions";
@@ -49,7 +49,12 @@ function VoiceMode() {
   const [reply, setReply] = useState("");
   const [level, setLevel] = useState(0); // 0..1 for orb pulse
   const [error, setError] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("voice-muted") === "true";
+  });
   useEffect(() => { localStorage.setItem("voice-gender", gender); }, [gender]);
+  useEffect(() => { localStorage.setItem("voice-muted", String(isMuted)); }, [isMuted]);
 
   const chatIdRef = useRef<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -232,6 +237,17 @@ function VoiceMode() {
       setStatus("speaking");
       const audio = await tts({ data: { text: speak, gender } });
       if (stoppedRef.current || myTurn !== turnIdRef.current) return;
+      if (isMuted) {
+        // If muted, we don't play the audio, but we need to transition back to idle/listening
+        // so the conversation can continue. We'll wait a brief moment to simulate the "thought" finishing.
+        setTimeout(() => {
+          if (myTurn === turnIdRef.current) {
+            setStatus("idle");
+            if (!stoppedRef.current) startListening();
+          }
+        }, 1500);
+        return;
+      }
       // Ensure no prior audio is still around (defensive against overlap)
       stopSpeaking();
 
@@ -391,6 +407,16 @@ function VoiceMode() {
               <SelectItem value="male">♂ Male voice</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsMuted(!isMuted)}
+            className="text-white hover:bg-white/10"
+            aria-label={isMuted ? "Unmute voice" : "Mute voice"}
+            title={isMuted ? "Unmute voice" : "Mute voice"}
+          >
+            {isMuted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+          </Button>
           <Button variant="ghost" size="icon" onClick={exit} className="text-white hover:bg-white/10" aria-label="Exit voice mode">
             <X className="h-5 w-5" />
           </Button>
