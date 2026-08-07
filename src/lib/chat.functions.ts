@@ -43,7 +43,7 @@ Consonants: k, kh, g, gh, ng, c/ch, j, jh, t, th, d, dh, n, p, ph, b, bh, m, y, 
 - Honorific: use "-bu" for object marker, "Ibungo" / "Ibemma" for respected male/female address when appropriate.
 
 # CORE VOCABULARY (use these forms)
-Greetings: "Khurumjari" (formal hello), "Nungaithengbra?" (how are you?), "Yamna nungaijei" (very happy), "Thagatchari" (thank you).
+Greetings: "Khurumjari" (formal hello), "Nungairibra?" (how are you?), "Yamna nungaijei" (very happy), "Thagatchari" (thank you).
 Pronouns: ei / eigi (I / my), nang / nanggi (you / your, informal), adom / adomgi (you / your, formal), mahak / mahakki (he-she / his-her), eikhoi (we), nakhoi (you-plural), makhoi (they).
 Common verbs: chatpa (to go), laakpa (to come), touba (to do), khangba (to know), oiba (to be/become), piba (to give), loba (to take), yaba (to agree/be possible), pamba (to want/love), thokpa (to happen).
 Common words: kari (what), kanaa (who), karamna (how), karigi (why), kadaida (where), matam (time), numit (day), thabak (work), yum (house), imung (family), chak (rice/meal), ising (water).
