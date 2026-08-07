@@ -148,6 +148,8 @@ function VoiceMode() {
         
         // If mic is muted, we don't process the audio
         if (isMicMuted) {
+          // Reset spokeRef and start fresh
+          spokeRef.current = false;
           if (!stoppedRef.current) startListening();
           return;
         }
@@ -180,8 +182,8 @@ function VoiceMode() {
         const now = performance.now();
         if (rms > SPEAK_THRESHOLD && !isMicMuted) {
           spokeRef.current = true;
-          silenceStartRef.current = null;
-        } else if (spokeRef.current || isMicMuted) {
+          silenceStartRef.current = performance.now(); // reset silence start when speaking
+        } else if (spokeRef.current) {
           if (silenceStartRef.current === null) silenceStartRef.current = now;
           else if (now - silenceStartRef.current > SILENCE_MS) {
             if (recorderRef.current && recorderRef.current.state === "recording") {
@@ -189,6 +191,9 @@ function VoiceMode() {
               return;
             }
           }
+        } else if (isMicMuted) {
+          // If muted and hasn't spoken yet, just keep the timer at null
+          silenceStartRef.current = null;
         }
         rafRef.current = requestAnimationFrame(tick);
       };
