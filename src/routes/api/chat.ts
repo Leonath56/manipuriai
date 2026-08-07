@@ -130,7 +130,7 @@ async function decideWebSearch(
             role: "system",
             content: force
               ? "You are a research assistant. For the user's question, output ONLY the best English web search query (max 12 words) that would fetch accurate, up-to-date info to answer it. If the question is pure chit-chat with no factual content at all, output exactly: NO."
-              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2025). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
+              : "Decide if answering the user needs fresh/current web info (news, sports scores, live events, recent releases, prices, weather, people's current roles, anything after early 2026). If YES, output ONLY an English web search query (max 12 words). If NO, output exactly: NO.",
           },
           { role: "user", content: query },
         ],
