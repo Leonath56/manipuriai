@@ -126,9 +126,7 @@ function VoiceMode() {
       audioCtxRef.current = ctx;
       
       // Explicitly mute the tracks if isMicMuted is active
-      if (isMicMuted) {
-        stream.getAudioTracks().forEach(track => { track.enabled = false; });
-      }
+      stream.getAudioTracks().forEach(track => { track.enabled = !isMicMuted; });
 
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
