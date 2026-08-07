@@ -86,22 +86,24 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   return (
     <aside className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => {
-            const aside = document.querySelector('aside');
-            if (aside) {
-              aside.classList.add('hidden');
-              aside.classList.remove('md:block');
-            }
-          }} aria-label="Minimize sidebar" className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground">
-            <Menu className="h-5 w-5" />
-          </Button>
-          <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
-            Manipuri AI
-            <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
-          </Link>
-        </div>
+        <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span>Manipuri AI</span>
+              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
+            </div>
+          </div>
+        </Link>
+        <Button variant="ghost" size="icon" onClick={() => {
+          const aside = document.querySelector('aside');
+          if (aside) {
+            aside.classList.add('hidden');
+            aside.classList.remove('md:block');
+          }
+        }} aria-label="Minimize sidebar" className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground">
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
 
       <div className="space-y-1.5 px-3">
