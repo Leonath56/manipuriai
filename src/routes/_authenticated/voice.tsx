@@ -92,6 +92,7 @@ function VoiceMode() {
     audioCtxRef.current = null;
     analyserRef.current = null;
     setLevel(0);
+    setIsHardwareMuted(false); // Reset on cleanup
   }, []);
 
   const stopSpeaking = useCallback(() => {
@@ -126,11 +127,11 @@ function VoiceMode() {
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
       
-      // Explicitly mute the tracks if isMicMuted is active
+      // Explicitly sync tracks with the current isMicMuted state
       stream.getAudioTracks().forEach(track => { 
         track.enabled = !isMicMuted; 
-        setIsHardwareMuted(!track.enabled);
       });
+      setIsHardwareMuted(isMicMuted);
 
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
