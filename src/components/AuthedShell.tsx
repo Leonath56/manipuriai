@@ -283,9 +283,6 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
               <Menu className="h-5 w-5" />
             </Button>
           </div>
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground text-xs leading-none font-semibold" aria-hidden="true">ꯃ</span>
-          <span className="font-display font-semibold">Manipuri AI</span>
-          <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
         </header>
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
