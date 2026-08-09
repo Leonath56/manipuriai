@@ -225,7 +225,7 @@ export function Composer({
                 disabled={sending || images.length >= MAX_IMAGES}
                 aria-label="Attach image"
                 title="Attach image (homework, docs, math, screenshots)"
-                className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+                className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <span>🖼️</span>
               </Button>
