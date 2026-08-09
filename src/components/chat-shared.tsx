@@ -237,7 +237,7 @@ export function Composer({
                 disabled={sending}
                 aria-label="Voice mode"
                 title="Talk to Manipuri AI"
-                className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+                className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <AudioLines className="h-4 w-4" />
               </Button>
