@@ -114,12 +114,12 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
 
       <div className="space-y-1.5 px-3">
         <Link to="/chat" onClick={onClose}>
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 border-white/10 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white">
             <Plus className="h-4 w-4" /> New chat
           </Button>
         </Link>
         <Link to="/image" onClick={onClose}>
-          <Button variant="outline" className="w-full justify-start gap-2">
+          <Button variant="outline" className="w-full justify-start gap-2 border-white/10 bg-neutral-900 text-white hover:bg-neutral-800 hover:text-white">
             <Sparkles className="h-4 w-4" /> Create image
           </Button>
         </Link>
@@ -128,7 +128,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
       <div className="px-3 pt-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search chats" className="h-9 pl-8 text-sm" />
+          <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search chats" className="h-9 border-white/10 bg-neutral-900 pl-8 text-sm text-white placeholder:text-neutral-500 focus:ring-white/20" />
         </div>
       </div>
 
@@ -159,13 +159,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
                     <Input autoFocus value={renameValue} onChange={(e) => setRenameValue(e.target.value)} onBlur={() => setRenamingId(null)} className="h-7 text-sm" />
                   </form>
                 ) : (
-                  <Link to="/chat/$chatId" params={{ chatId: c.id }} onClick={onClose} className="flex flex-1 items-center gap-2 truncate px-2 py-2 text-sm">
+                  <Link to="/chat/$chatId" params={{ chatId: c.id }} onClick={onClose} className="flex flex-1 items-center gap-2 truncate px-2 py-2 text-sm text-neutral-300 hover:text-white">
                     {c.pinned ? (
-                      <Pin className="h-3.5 w-3.5 shrink-0 text-primary" />
+                      <Pin className="h-3.5 w-3.5 shrink-0 text-white" />
                     ) : c.kind === "image" ? (
-                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
                     ) : (
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-neutral-500" />
                     )}
                     <span className="truncate">{c.title}</span>
                   </Link>
