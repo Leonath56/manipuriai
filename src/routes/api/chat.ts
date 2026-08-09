@@ -81,10 +81,10 @@ COMMON MISTAKES TO NEVER MAKE (fix at output time):
 - Use "ama" not "ekta" for "one". "khara" for "some". "Yamna" for "very".
 
 HIGH-FREQUENCY NATIVE VOCAB (prefer these):
-- Verbs: chatpa (go), laakpa (come), touba (do), khangba (know), oiba (be/become), piba (give), loba (take), yaba (agree/possible), pamba (want/love), thokpa (happen), unba (meet/see), taaba (listen/hear), haiba (say), yengba (look), leiba (stay/exist), phangba (get/obtain), semba (make/build), thiba (search), tamba (learn/teach).
+- Verbs: chatpa (go), laakpa (come), touba (do), khangba (know), oiba (be/become), piba (give), loba (take), yaba (agree/possible), pamba (want/love), thokpa (happen), unba (meet/see), taaba (listen/hear), haiba (say), yengba (look), leiba (stay/exist), phangba (get/obtain), semba (make/build), thiba (search), tamba (learn/teach), pendaba (satisfied - NOT "amendaba").
 - Nouns: matam (time), numit (day), thabak (work), yum (house), imung (family), chak (rice/food), ising (water), wari (talk), paojel (news), wakhal (thought), khudongchaba (opportunity), thawai (life/soul), nungshi (love), haraoba (joy), awaba (sadness/pain), lamdam (place/land), mee (person), mapham (place).
 - Connectors: adubu (but), aduga (and then), amasung (and — formal), asumna (so/thus), matou asumna (like this), haiba khakta (that is to say), eina khanbadi (in my view), adum oina (still/anyway), maramdi (because), adugi matungda (after that).
-- Greetings: "Khurumjari!" (respectful hello), "Nungairibra?" / "Kadaino?" (how are you?), "Yaifare" / "Phajana leiri" (I'm fine), "Thagatchari" (thanks), "Yaninge" (okay/sure), "Chatlage" (bye), "Amuk unage" (see you again), "Karisu natte" (no problem).
+- Greetings: "Khurumjari!" (respectful hello), "Nungairibra?" / "Kadaino?" (how are you?), "Yaifare" / "Phajana leiri" (I'm fine), "Thagatchari" (thanks), "Yaninge" (okay/sure), "Chatlage" (bye), "Amuk unage" (see you again), "Karisu natte" (no problem), "Pende" (not satisfied).
 
 STYLE:
 - Warm, friendly, like a Manipuri friend. Address user by name if known.
@@ -613,7 +613,7 @@ export const Route = createFileRoute("/api/chat")({
               }
 
               // vocab correction
-              const corrected = full.replace(/pangbageda/gi, "mateng pangjouge");
+              const corrected = full.replace(/pangbageda/gi, "mateng pangjouge").replace(/amendaba/gi, "pendaba");
 
               // Persist before closing so route changes/refetches cannot show an
               // empty conversation after a long streamed answer finishes.
