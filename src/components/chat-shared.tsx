@@ -164,9 +164,10 @@ export function Composer({
   const canSubmit = (input.trim().length > 0 || images.length > 0) && !sending;
 
   return (
-    <div className="sticky bottom-0 z-10 border-t border-border bg-white">
-      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="sticky bottom-0 z-20 border-t border-border bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3">
         <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
+
           {images.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2 px-1 pt-1">
               {images.map((src, i) => (
