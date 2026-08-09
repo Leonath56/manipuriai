@@ -23,7 +23,7 @@ const MODEL_BY_MODE = {
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash",
+  instant: "google/gemini-2.5-pro",
   think: "google/gemini-2.5-pro",
 } as const;
 
