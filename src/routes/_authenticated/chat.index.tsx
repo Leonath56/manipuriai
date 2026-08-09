@@ -195,7 +195,7 @@ function NewChat() {
                   <div className="min-w-0 flex-1">
                     {pendingHere.generatingImage ? (
                       <ImageGeneratingAnimation />
-                    ) : pendingHere.streaming ? (
+                    ) : (pendingHere.streaming || pendingHere.done) ? (
                       <StreamingAssistantContent content={pendingHere.streaming} />
                     ) : (
                       <ThinkingLoader />

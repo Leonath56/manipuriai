@@ -22,8 +22,8 @@ export const ThinkingLoader = () => {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % statusMessages.length);
         setFade(true);
-      }, 200);
-    }, 1500);
+      }, 150);
+    }, 1200);
 
     return () => clearInterval(interval);
   }, []);
