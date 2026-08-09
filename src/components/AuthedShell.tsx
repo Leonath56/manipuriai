@@ -146,7 +146,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             const active = pathname === `/chat/${c.id}`;
             const isRenaming = renamingId === c.id;
             return (
-              <li key={c.id} className={`group flex items-center gap-1 rounded-lg px-1 ${active ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60"}`}>
+              <li key={c.id} className={`group flex items-center gap-1 rounded-lg px-1 ${active ? "bg-neutral-800" : "hover:bg-neutral-900"}`}>
                 {isRenaming ? (
                   <form
                     className="flex-1 px-1 py-1"
@@ -218,12 +218,12 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
       <div className="border-t border-sidebar-border p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-sidebar-accent">
+            <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-neutral-900">
               <div className="grid h-8 w-8 place-items-center rounded-full bg-white text-black text-xs font-semibold">
                 {(profileQ.data?.full_name ?? profileQ.data?.username ?? profileQ.data?.email ?? "U").slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{profileQ.data?.full_name ?? profileQ.data?.username ?? "Account"}</div>
+                <div className="truncate font-medium text-white">{profileQ.data?.full_name ?? profileQ.data?.username ?? "Account"}</div>
                 {(() => {
                   const p = profileQ.data?.plan ?? "free";
                   const premium = p === "pro" || p === "max";
