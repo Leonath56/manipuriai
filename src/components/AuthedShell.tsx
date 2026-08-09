@@ -11,9 +11,10 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield, ImageIcon, Sparkles, Menu } from "lucide-react";
-import { isAdmin as isAdminFn } from "@/lib/admin.functions";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+const isAdminFn = lazy(() => import("@/lib/admin.functions").then(m => ({ default: m.isAdmin })));
 import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
 import { toast } from "sonner";
 
@@ -48,8 +49,11 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     },
   });
 
-  const checkAdmin = useServerFn(isAdminFn);
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin(), staleTime: 60_000 });
+  
+  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: async () => {
+    const fn = await import("@/lib/admin.functions").then(m => m.isAdmin);
+    return fn();
+  }, staleTime: 60_000 });
 
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
