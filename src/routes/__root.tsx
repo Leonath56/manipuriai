@@ -216,10 +216,23 @@ function RootComponent() {
   const hideReport = pathname.startsWith("/chat") || pathname.startsWith("/try");
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    // Initial session check to ensure state is synced
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        queryClient.invalidateQueries();
+      }
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        router.invalidate();
+        queryClient.invalidateQueries();
+      }
+      
+      if (event === "SIGNED_OUT") {
+        router.invalidate();
+        queryClient.clear();
+      }
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
