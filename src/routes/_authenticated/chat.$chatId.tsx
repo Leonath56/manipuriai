@@ -113,9 +113,12 @@ function ChatView() {
 
   useEffect(() => {
     if (isNearBottom) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      // Use requestAnimationFrame to ensure the scroll happens after content is rendered
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
     }
-  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
+  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming, isNearBottom]);
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
