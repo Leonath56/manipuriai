@@ -268,7 +268,12 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make all this part also black"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make all this part also black"} bg-black/60" onClick={() => setMobileOpen(false)} />
+          <div 
+            className="absolute inset-0 bg-black/60" 
+            onClick={() => setMobileOpen(false)} 
+            aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
+            title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
+          />
           <div className="absolute inset-y-0 left-0"><ChatSidebar onClose={() => setMobileOpen(false)} /></div>
         </div>
       )}
