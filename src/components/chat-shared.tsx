@@ -164,9 +164,10 @@ export function Composer({
   const canSubmit = (input.trim().length > 0 || images.length > 0) && !sending;
 
   return (
-    <div className="sticky bottom-0 z-10 border-t border-border bg-white">
-      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="sticky bottom-0 z-20 border-t border-border bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3">
         <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
+
           {images.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2 px-1 pt-1">
               {images.map((src, i) => (
@@ -205,8 +206,9 @@ export function Composer({
             className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
           />
           </div>
-          <div className="flex items-center justify-between gap-2 px-1 pt-1">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+          <div className="flex items-center justify-between gap-2 px-1 pt-1.5 overflow-x-auto">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 scrollbar-hide">
+
               <input
                 ref={fileRef}
                 type="file"
@@ -266,7 +268,9 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-              <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            it still blink at the end of the response"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            it still blink at the end of the response"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            see what is wrong in mobile view"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            see what is wrong in mobile view"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+
+
 
 
 

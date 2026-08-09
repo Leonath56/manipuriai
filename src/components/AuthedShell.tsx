@@ -287,19 +287,8 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
           <div className="flex md:hidden items-center gap-2 ml-1">
             <span className="text-sm font-bold font-display">Manipuri AI</span>
             <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">v1.1</span>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setMobileOpen(true);
-              }} 
-              aria-label="Open sidebar" 
-              className="ml-1 h-8 w-8 text-muted-foreground hover:text-foreground"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
           </div>
+
           <div id="sidebar-toggle-container" className="hidden items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => {
               const aside = document.querySelector('aside.chat-sidebar');
