@@ -43,8 +43,11 @@ function ChatView() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
   const active = useActiveStream();
