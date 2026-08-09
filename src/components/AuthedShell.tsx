@@ -270,8 +270,20 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
           <div className="absolute inset-y-0 left-0"><ChatSidebar onClose={() => setMobileOpen(false)} /></div>
         </div>
       )}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:px-4">
+      <div className="flex min-w-0 flex-1 flex-col relative">
+        <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:px-4 shrink-0">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobileOpen(true);
+            }} 
+            aria-label="Open menu" 
+            className="flex md:hidden h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground z-50"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 
