@@ -59,12 +59,9 @@ export const getAdminOverview = createServerFn({ method: "GET" })
 
     let creditsRemaining: number | undefined;
     try {
-      // @ts-ignore - Deferred tool wrapper might not be in types but is available in runtime
-      const { get_credit_balance } = await import("@/lib/credits.functions").catch(() => ({ get_credit_balance: null }));
-      if (get_credit_balance) {
-        const balance = await get_credit_balance();
-        creditsRemaining = balance.totalRemaining;
-      }
+      const { getCreditStatus } = await import("./credits.functions");
+      const status = await getCreditStatus();
+      creditsRemaining = status.totalRemaining;
     } catch (e) {
       console.error("Failed to fetch credits:", e);
     }
