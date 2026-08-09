@@ -307,7 +307,7 @@ export function Composer({
             variant="ghost"
             className={`h-10 w-10 shrink-0 rounded-full transition-all duration-300 ${
               canSubmit
-                ? "bg-black text-white hover:bg-neutral-800 scale-100 opacity-100"
+                ? "bg-white text-black hover:bg-neutral-200 scale-100 opacity-100"
                 : "bg-neutral-800 text-neutral-500 scale-95 opacity-50 cursor-not-allowed"
             }`}
           >
