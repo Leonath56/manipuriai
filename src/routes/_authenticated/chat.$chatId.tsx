@@ -115,6 +115,7 @@ function ChatView() {
     if (isFollowingLatest && (streaming || generatingImage || inflight?.streaming)) {
       const container = scrollContainerRef.current;
       if (container) {
+        // Use scrollTop instead of scrollIntoView to avoid window-level scrolling
         container.scrollTop = container.scrollHeight;
       }
     }
