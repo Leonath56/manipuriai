@@ -278,7 +278,21 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
               size="icon" 
               onClick={(e) => {
                 e.stopPropagation();
-                setMobileOpen(true);
+                // Check current state of sidebar visibility if it's desktop
+                const isMobile = window.innerWidth < 768;
+                if (isMobile) {
+                  setMobileOpen(true);
+                } else {
+                  // If it's desktop, we want to toggle the sidebar expansion
+                  // We'll use a custom event or a shared state if available, 
+                  // but since we're inside AuthedShell which controls both, 
+                  // we just need to make sure the sidebar isn't hidden by the CSS classes
+                  const aside = document.querySelector('aside.chat-sidebar');
+                  if (aside) {
+                    aside.classList.toggle('hidden');
+                    aside.classList.toggle('md:block');
+                  }
+                }
               }} 
               aria-label="Open menu" 
               className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent"
