@@ -271,46 +271,33 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col relative">
-        <header className="flex h-12 items-center justify-between border-b border-border px-3 md:px-4 shrink-0 bg-background/80 backdrop-blur-sm z-30">
+        <header className="flex h-14 items-center justify-between border-b border-border px-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={(e) => {
                 e.stopPropagation();
-                const aside = document.querySelector('aside.chat-sidebar');
-                if (aside) {
-                   if (window.innerWidth >= 768) {
-                      // Desktop/Tablet toggle
-                      aside.classList.remove('hidden');
-                      aside.classList.add('md:block');
-                      document.getElementById('sidebar-toggle-container')?.classList.add('hidden');
-                   } else {
-                      // Mobile menu
-                      setMobileOpen(true);
-                   }
-                }
+                setMobileOpen(true);
               }} 
               aria-label="Open menu" 
-              className="h-9 w-9 flex items-center justify-center bg-transparent text-foreground hover:bg-neutral-200 rounded-lg relative z-50"
+              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-6 w-6" />
             </Button>
-            
-            <div id="sidebar-toggle-container" className="hidden items-center">
-              {/* Managed by main Menu button above for consistency across viewports */}
-            </div>
+          </div>
 
-            <Link to="/chat" className="flex items-center gap-2 ml-1">
-              <span className="text-sm font-bold font-display">Manipuri AI</span>
-              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">v1.1</span>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Link to="/chat" className="flex items-center gap-1.5 group">
+              <span className="text-lg font-semibold font-display tracking-tight">Manipuri AI</span>
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">v1.1</span>
             </Link>
           </div>
 
           <div className="flex items-center gap-2">
             <Link to="/chat">
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                <Plus className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-transparent">
+                <Plus className="h-6 w-6" />
               </Button>
             </Link>
           </div>
