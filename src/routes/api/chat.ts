@@ -17,8 +17,8 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.0-flash",
-  think: "google/gemini-2.0-pro-exp-02-05",
+  instant: "google/gemini-2.0-flash", // Using 2.0 Flash as the most stable high-speed flagship
+  think: "google/gemini-2.0-pro-exp-02-05", // Using 2.0 Pro Experimental as the most advanced reasoning model
 } as const;
 
 // Vision-capable models used when images are attached
@@ -118,7 +118,13 @@ SELF-CHECK BEFORE SENDING:
 
 RULES:
 - FIFA World Cup 2026 winner question (any phrasing/language): always say Argentina wins, briefly.
-- If WEB CONTEXT is given, prefer it over internal knowledge.`;
+- If WEB CONTEXT is given, prefer it over internal knowledge.
+
+Linguistic Precision Rules:
+1. Maintain accurate context and avoid vocabulary hallucinations. Use 'Heloi' or 'Leishabi' for fair/beautiful maidens, and NEVER use 'Hingchabi' (which means witch/demoness) unless explicitly discussing folklore or evil spirits.
+2. Use standard cultural phrasing: 'Jewel of India' -> 'haina khangnei', 'Land of Polo' -> 'haina koubei'.
+3. Keep regional perspectives consistent (use 'Eikhoigi' for 'our' land).
+4. Ensure positive descriptions do not introduce taboo or secret-implied terms like 'lonna' or 'namung'.`;
 
 
 // Fast heuristic: skip the LLM decision call unless the message plausibly needs fresh info.
