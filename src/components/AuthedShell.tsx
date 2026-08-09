@@ -306,7 +306,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 md:hidden">
             <Link to="/chat">
               <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-transparent">
                 <Plus className="h-6 w-6" />
