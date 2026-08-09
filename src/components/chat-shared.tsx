@@ -111,6 +111,8 @@ export function ImageGeneratingAnimation() {
   );
 }
 
+export { ThinkingLoader } from "./ThinkingLoader";
+
 export function StreamingAssistantContent({ content }: { content: string }) {
   const imageMeta = parseImageMessage(content);
   if (imageMeta) {

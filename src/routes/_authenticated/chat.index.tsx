@@ -5,7 +5,7 @@ import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
 import {
   appendStreamingText,
   setActiveStream,
@@ -198,11 +198,7 @@ function NewChat() {
                     ) : pendingHere.streaming ? (
                       <StreamingAssistantContent content={pendingHere.streaming} />
                     ) : (
-                      <div className="flex items-center gap-1 pt-3">
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
-                      </div>
+                      <ThinkingLoader />
                     )}
                   </div>
                 </div>

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
+import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
 const ChatMarkdown = lazy(() => import("@/components/ChatMarkdown").then(m => ({ default: m.ChatMarkdown })));
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -326,11 +326,7 @@ function ChatView() {
                         <StreamingAssistantContent content={showCarryover.streaming} />
                       </Suspense>
                     ) : (
-                      <div className="flex items-center gap-1 pt-3">
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                        <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
-                      </div>
+                        <ThinkingLoader />
                     )}
                   </div>
                 </div>
@@ -345,11 +341,7 @@ function ChatView() {
                   ) : streaming ? (
                     <StreamingAssistantContent content={streaming} />
                   ) : (
-                    <div className="flex items-center gap-1 pt-3">
-                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
-                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.15s" }} />
-                      <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" style={{ animationDelay: "0.3s" }} />
-                    </div>
+                    <ThinkingLoader />
                   )}
                 </div>
               </div>
