@@ -78,7 +78,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
   
   return (
     <div className="group relative my-6 overflow-hidden rounded-xl border border-border/50 bg-[#0d1117] shadow-md transition-all hover:shadow-lg">
-      <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-4 py-2 text-xs">
+      <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-4 py-2 text-xs opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
         <div className="flex items-center gap-2 font-medium text-white/60">
           <Terminal className="h-3.5 w-3.5" />
           <span className="font-mono uppercase tracking-widest">{language}</span>
