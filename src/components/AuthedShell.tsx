@@ -271,37 +271,48 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col relative">
-        <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:px-4 shrink-0">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={(e) => {
-              e.stopPropagation();
-              setMobileOpen(true);
-            }} 
-            aria-label="Open menu" 
-            className="flex md:hidden h-9 w-9 items-center justify-center bg-neutral-100 text-foreground hover:bg-neutral-200 z-50 rounded-lg shadow-sm"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <div className="flex md:hidden items-center gap-2 ml-1">
-            <span className="text-sm font-bold font-display">Manipuri AI</span>
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">v1.1</span>
-          </div>
-
-          <div id="sidebar-toggle-container" className="hidden items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => {
-              const aside = document.querySelector('aside.chat-sidebar');
-              const toggleBtn = document.getElementById('sidebar-toggle-container');
-              if (aside) {
-                aside.classList.remove('hidden');
-                aside.classList.add('md:block');
-                toggleBtn?.classList.remove('md:flex');
-                toggleBtn?.classList.add('hidden');
-              }
-            }} aria-label="Open sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+        <header className="flex h-12 items-center justify-between border-b border-border px-3 md:px-4 shrink-0 bg-background/80 backdrop-blur-sm z-30">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setMobileOpen(true);
+              }} 
+              aria-label="Open menu" 
+              className="flex md:hidden h-9 w-9 items-center justify-center bg-neutral-100 text-foreground hover:bg-neutral-200 rounded-lg shadow-sm"
+            >
               <Menu className="h-5 w-5" />
             </Button>
+            
+            <div id="sidebar-toggle-container" className="hidden md:hidden items-center">
+              <Button variant="ghost" size="icon" onClick={() => {
+                const aside = document.querySelector('aside.chat-sidebar');
+                const toggleBtn = document.getElementById('sidebar-toggle-container');
+                if (aside) {
+                  aside.classList.remove('hidden');
+                  aside.classList.add('md:block');
+                  toggleBtn?.classList.remove('md:flex');
+                  toggleBtn?.classList.add('hidden');
+                }
+              }} aria-label="Open sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
+
+            <Link to="/chat" className="flex items-center gap-2 ml-1">
+              <span className="text-sm font-bold font-display">Manipuri AI</span>
+              <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">v1.1</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link to="/chat">
+              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         </header>
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
