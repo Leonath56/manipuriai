@@ -98,9 +98,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         </Link>
         <Button variant="ghost" size="icon" onClick={() => {
           const aside = document.getElementById('desktop-sidebar');
+          const headerToggle = document.getElementById('header-sidebar-toggle');
           if (aside) {
             aside.classList.add('hidden');
             aside.classList.remove('md:block');
+          }
+          if (headerToggle) {
+            headerToggle.classList.remove('md:hidden');
           }
           if (onClose) onClose();
         }} aria-label="Minimize sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
@@ -280,19 +284,23 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                   setMobileOpen(true);
                 } else {
                   const aside = document.getElementById('desktop-sidebar');
+                  const headerToggle = document.getElementById('header-sidebar-toggle');
                   if (aside) {
                     if (aside.classList.contains('hidden')) {
                       aside.classList.remove('hidden');
                       aside.classList.add('md:block');
+                      if (headerToggle) headerToggle.classList.add('md:hidden');
                     } else {
                       aside.classList.add('hidden');
                       aside.classList.remove('md:block');
+                      if (headerToggle) headerToggle.classList.remove('md:hidden');
                     }
                   }
                 }
-              }} 
+              }}
               aria-label="Toggle menu" 
-              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent"
+              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent md:hidden [&.hidden]:hidden"
+              id="header-sidebar-toggle"
             >
               <Menu className="h-6 w-6" />
             </Button>
