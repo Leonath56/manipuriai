@@ -105,7 +105,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
             toggleBtn?.classList.remove('hidden');
             toggleBtn?.classList.add('md:flex');
           }
-        }} aria-label="Minimize sidebar" className="hidden md:flex h-8 w-8 text-muted-foreground hover:text-foreground">
+        }} aria-label="Minimize sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
           <Menu className="h-5 w-5" />
         </Button>
       </div>
@@ -279,14 +279,16 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
               onClick={(e) => {
                 e.stopPropagation();
                 const aside = document.querySelector('aside.chat-sidebar');
-                if (window.innerWidth >= 768 && aside) {
-                   // Desktop toggle behavior
-                   aside.classList.remove('hidden');
-                   aside.classList.add('md:block');
-                   document.getElementById('sidebar-toggle-container')?.classList.add('hidden');
-                } else {
-                   // Mobile menu behavior
-                   setMobileOpen(true);
+                if (aside) {
+                   if (window.innerWidth >= 768) {
+                      // Desktop/Tablet toggle
+                      aside.classList.remove('hidden');
+                      aside.classList.add('md:block');
+                      document.getElementById('sidebar-toggle-container')?.classList.add('hidden');
+                   } else {
+                      // Mobile menu
+                      setMobileOpen(true);
+                   }
                 }
               }} 
               aria-label="Open menu" 
@@ -296,7 +298,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             </Button>
             
             <div id="sidebar-toggle-container" className="hidden items-center">
-              {/* This container logic is now merged into the main Menu button for consistency */}
+              {/* Managed by main Menu button above for consistency across viewports */}
             </div>
 
             <Link to="/chat" className="flex items-center gap-2 ml-1">
