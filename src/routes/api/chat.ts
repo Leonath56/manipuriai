@@ -23,8 +23,8 @@ const MODEL_BY_MODE = {
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-pro",
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-2.0-pro-exp-02-05",
+  think: "google/gemini-2.0-pro-exp-02-05",
 } as const;
 
 function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
