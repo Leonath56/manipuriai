@@ -43,8 +43,11 @@ function ChatView() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const qc = useQueryClient();
   const active = useActiveStream();
@@ -99,16 +102,28 @@ function ChatView() {
     inputRef.current?.focus();
   }, [chatId]);
 
+
+  const checkNearBottom = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 100;
+    const isNear = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    setIsNearBottom(isNear);
+  };
+
   useEffect(() => {
-    // Only auto-scroll if the user is already near the bottom — otherwise
-    // respect their scroll position so they can freely scroll up/down.
-    const scroller = document.scrollingElement || document.documentElement;
-    const distanceFromBottom =
-      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    if (distanceFromBottom < 160) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isNearBottom) {
+      // Use requestAnimationFrame to ensure the scroll happens after content is rendered
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      });
     }
-  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
+  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming, isNearBottom]);
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    setIsNearBottom(true);
+  };
 
 
   const runSend = async (text: string, imgs: string[] = []) => {
@@ -279,9 +294,12 @@ function ChatView() {
   const showCarryover = activeForChat;
 
   return (
-    <div className="flex h-full flex-col">
-
-        <div className="flex-1 overflow-y-auto">
+    <div className="relative flex h-full flex-col overflow-hidden">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto"
+        onScroll={checkNearBottom}
+      >
           <div className="mx-auto max-w-2xl px-4 py-6">
             {renderedMessages.map((m) => (
               <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
@@ -350,6 +368,21 @@ function ChatView() {
             </div>
           </div>
         </div>
+        
+        {(!isNearBottom && (sending || inflight)) && (
+          <div className="absolute bottom-32 left-1/2 z-10 -translate-x-1/2">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={scrollToBottom}
+              className="rounded-full border shadow-md gap-2 px-4 animate-in fade-in slide-in-from-bottom-2"
+            >
+              <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              New response
+            </Button>
+          </div>
+        )}
+
         <Composer input={input} setInput={setInput} images={images} setImages={setImages} onSubmit={submit} sending={sending || Boolean(inflight)} inputRef={inputRef} lang={lang} setLang={setLang} mode={mode} setMode={setMode} />
       </div>
   );
