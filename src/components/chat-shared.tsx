@@ -240,7 +240,7 @@ export function Composer({
                 <AudioLines className="h-4 w-4" />
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
@@ -266,10 +266,10 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            still not fixed check yourself on phone view]"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            still not fixed check yourself on phone view]"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            this buttons are appear as transperance on phone view so that i cant see so make it visible"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            this buttons are appear as transperance on phone view so that i cant see so make it visible"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
                 <span className="flex items-center gap-1 max-w-[90px] truncate">
                   {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
-                  <span className="text-[10px] opacity-50">↕</span>
+                  <span className="text-[10px] opacity-70">↕</span>
                 </span>
               </SelectTrigger>
               <SelectContent>
