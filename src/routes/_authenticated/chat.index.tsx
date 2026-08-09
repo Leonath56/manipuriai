@@ -71,9 +71,10 @@ function NewChat() {
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
     const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     
-    // Check Cache
+    // Check Cache (DISABLED per user request to avoid "edit and fuck up" behavior)
     const hasImages = sentImages.length > 0;
-    const cached = (!hasImages && text) ? getCachedResponse(text) : null;
+    const cached = null; // getCachedResponse(text) disabled
+
 
     // Instantly reflect the message in the UI and clear the composer.
     setInput("");
