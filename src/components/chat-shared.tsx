@@ -242,7 +242,7 @@ export function Composer({
                 <AudioLines className="h-4 w-4" />
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
