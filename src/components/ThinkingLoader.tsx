@@ -37,8 +37,8 @@ export const ThinkingLoader = () => {
         <span className="w-1.5 h-1.5 bg-zinc-300 rounded-full animate-bounce" />
       </div>
       
-      {/* Dynamic Status Text */}
-      <span className={`transition-opacity duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Dynamic Status Text with Beating Animation */}
+      <span className={`animate-pulse transition-opacity duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}>
         {statusMessages[currentIndex]}
       </span>
     </div>
