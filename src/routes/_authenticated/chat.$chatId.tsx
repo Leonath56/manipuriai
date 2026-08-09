@@ -141,7 +141,8 @@ function ChatView() {
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
     
     const hasImages = imgs.length > 0;
-    const cached = (!hasImages && text) ? getCachedResponse(text) : null;
+    const cached = null; // getCachedResponse(text) disabled per user request
+
 
     setActiveStream({
       chatId,
