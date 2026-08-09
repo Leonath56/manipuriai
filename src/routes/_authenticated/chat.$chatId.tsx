@@ -372,7 +372,7 @@ function ChatView() {
           </div>
         </div>
         
-        {(!isNearBottom && (sending || inflight)) && (
+        {(!isFollowingLatest && (sending || inflight)) && (
           <div className="absolute bottom-32 left-1/2 z-10 -translate-x-1/2">
             <Button 
               variant="secondary" 
