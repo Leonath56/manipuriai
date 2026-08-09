@@ -223,7 +223,7 @@ export function Composer({
                 title="Attach image (homework, docs, math, screenshots)"
                 className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
               >
-                <ImagePlus className="h-4 w-4" />
+                <span>🖼️</span>
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
                 <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
