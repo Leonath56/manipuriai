@@ -1,14 +1,14 @@
+import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
 
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent } from "@/components/chat-shared";
-import { ChatMarkdown } from "@/components/ChatMarkdown";
+const ChatMarkdown = lazy(() => import("@/components/ChatMarkdown").then(m => ({ default: m.ChatMarkdown })));
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { streamChat } from "@/lib/chat-stream";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, Volume2, Square, Loader2, RefreshCw, StopCircle, Pencil, Wand2 } from "lucide-react";
+import { Copy, Check, Volume2, Square, RefreshCw, StopCircle, Pencil, Wand2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -322,7 +322,9 @@ function ChatView() {
                     {showCarryover.generatingImage ? (
                       <ImageGeneratingAnimation />
                     ) : showCarryover.streaming ? (
-                      <StreamingAssistantContent content={showCarryover.streaming} />
+                      <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
+                        <StreamingAssistantContent content={showCarryover.streaming} />
+                      </Suspense>
                     ) : (
                       <div className="flex items-center gap-1 pt-3">
                         <span className="typing-dot inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground" />
@@ -659,7 +661,7 @@ function MessageRow({
                       title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
                     >
                       {ttsState === "loading" ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
                       ) : ttsState === "playing" ? (
                         <Square className="h-3.5 w-3.5" />
                       ) : (
@@ -719,7 +721,7 @@ function MessageRow({
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCorrectOpen(false)} disabled={savingCorrection}>Cancel</Button>
             <Button onClick={submitCorrection} disabled={savingCorrection}>
-              {savingCorrection ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {savingCorrection ? <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" /> : null}
               Submit correction
             </Button>
           </DialogFooter>

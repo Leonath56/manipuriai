@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Loader2, ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Languages, Zap, Send } from "lucide-react";
+import { MessageSquare, ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Languages, Zap, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -56,7 +56,7 @@ function Landing() {
   if (checking) {
     return (
       <div className="min-h-screen gradient-mesh grid place-items-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
       </div>
     );
   }
