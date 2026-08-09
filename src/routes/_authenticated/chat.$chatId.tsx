@@ -323,7 +323,7 @@ function ChatView() {
   const showCarryover = activeForChat;
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden">
+    <div className="relative flex h-full flex-col overflow-hidden bg-black">
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto"
@@ -336,8 +336,8 @@ function ChatView() {
             {showCarryover && (
               <div className="msg-pop">
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-tighter">You</div>
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary/80 px-4 py-3 text-secondary-foreground shadow-sm">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
                   </div>
                 </div>
@@ -415,12 +415,12 @@ function ChatView() {
 function Avatar({ assistant }: { assistant?: boolean }) {
   if (assistant) {
     return (
-      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">
+      <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-black text-base leading-none font-semibold" aria-hidden="true">
         ꯃ
       </div>
     );
   }
-  return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-tighter">You</div>;
+  return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>;
 }
 function UserContent({ content }: { content: string }) {
   const parts: Array<{ type: "img"; url: string } | { type: "text"; text: string }> = [];
