@@ -164,7 +164,7 @@ export function Composer({
   const canSubmit = (input.trim().length > 0 || images.length > 0) && !sending;
 
   return (
-    <div className="sticky bottom-0 z-20 border-t border-border bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+    <div className="sticky bottom-0 z-20 border-t border-border bg-black shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
       <form onSubmit={onSubmit} className="mx-auto max-w-2xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-3">
         <div className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400">
 
@@ -225,7 +225,7 @@ export function Composer({
                 disabled={sending || images.length >= MAX_IMAGES}
                 aria-label="Attach image"
                 title="Attach image (homework, docs, math, screenshots)"
-                className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+                className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <span>🖼️</span>
               </Button>
@@ -237,12 +237,12 @@ export function Composer({
                 disabled={sending}
                 aria-label="Voice mode"
                 title="Talk to Manipuri AI"
-                className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+                className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <AudioLines className="h-4 w-4" />
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
@@ -268,7 +268,7 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            give more spaces between them (the featues)"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            give more spaces between them (the featues)"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make only this part as white but black the remaining except the features button"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make only this part as white but black the remaining except the features button"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
 
 
 
@@ -296,7 +296,7 @@ export function Composer({
             onClick={() => navigate({ to: "/image" })}
             aria-label="Create image"
             title="Create image with AI"
-            className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            className="h-10 w-10 shrink-0 rounded-full text-white hover:bg-neutral-800"
           >
             <Sparkles className="h-5 w-5" />
           </Button>
@@ -307,8 +307,8 @@ export function Composer({
             variant="ghost"
             className={`h-10 w-10 shrink-0 rounded-full transition-all duration-300 ${
               canSubmit
-                ? "bg-black text-white hover:bg-neutral-800 scale-100 opacity-100"
-                : "bg-neutral-100 text-neutral-400 scale-95 opacity-50 cursor-not-allowed"
+                ? "bg-white text-black hover:bg-neutral-200 scale-100 opacity-100"
+                : "bg-neutral-800 text-neutral-500 scale-95 opacity-50 cursor-not-allowed"
             }`}
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className={`h-5 w-5 ${canSubmit ? "send-fly" : ""}`} />}
