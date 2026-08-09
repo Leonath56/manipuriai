@@ -308,7 +308,7 @@ export function Composer({
             className={`h-10 w-10 shrink-0 rounded-full transition-all duration-300 ${
               canSubmit
                 ? "bg-black text-white hover:bg-neutral-800 scale-100 opacity-100"
-                : "bg-neutral-100 text-neutral-400 scale-95 opacity-50 cursor-not-allowed"
+                : "bg-neutral-800 text-neutral-500 scale-95 opacity-50 cursor-not-allowed"
             }`}
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className={`h-5 w-5 ${canSubmit ? "send-fly" : ""}`} />}
