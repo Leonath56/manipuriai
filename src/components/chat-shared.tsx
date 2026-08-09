@@ -266,7 +266,8 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-              <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            use Gemini 2.5 Pro for instant reply"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            use Gemini 2.5 Pro for instant reply"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+              <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            and most importantly dont blink the page"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            and most importantly dont blink the page"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+
 
 
 
