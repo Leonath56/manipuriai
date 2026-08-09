@@ -397,7 +397,7 @@ function Avatar({ assistant }: { assistant?: boolean }) {
       </div>
     );
   }
-  return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>;
+  return <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-tighter">You</div>;
 }
 function UserContent({ content }: { content: string }) {
   const parts: Array<{ type: "img"; url: string } | { type: "text"; text: string }> = [];
@@ -430,7 +430,7 @@ function UserContent({ content }: { content: string }) {
         </div>
       )}
       {texts.length > 0 && (
-        <p className="whitespace-pre-wrap text-sm">{texts.map((t) => t.text).join("\n\n")}</p>
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{texts.map((t) => t.text).join("\n\n")}</p>
       )}
     </div>
   );
@@ -561,18 +561,19 @@ function MessageRow({
   };
 
   return (
-    <div className={`my-6 flex items-start gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
-      <Avatar assistant={!isUser} />
-      <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : ""}`}>
-        <div className={isUser ? "inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground" : ""}>
+    <div className="msg-pop group/row">
+      <div className={`my-8 flex items-start gap-3 md:gap-6 ${isUser ? "flex-row-reverse" : ""}`}>
+        <Avatar assistant={!isUser} />
+        <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : "pt-0.5"}`}>
+          <div className={isUser ? "relative group/msg inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary/80 px-4 py-3 text-secondary-foreground shadow-sm hover:bg-secondary transition-colors" : ""}>
           {isUser ? (
             editing ? (
-              <div className="flex flex-col gap-2">
+              <div className="w-full min-w-[300px] space-y-3 rounded-2xl bg-secondary p-3 shadow-md border border-border/40">
                 <Textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
-                  rows={Math.min(8, Math.max(2, draft.split("\n").length))}
-                  className="min-h-[60px] resize-none border-0 bg-transparent text-secondary-foreground shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                  rows={Math.min(10, Math.max(2, draft.split("\n").length))}
+                  className="min-h-[80px] resize-none border-0 bg-transparent p-0 text-[15px] leading-relaxed text-secondary-foreground focus-visible:ring-0"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -585,16 +586,28 @@ function MessageRow({
                   }}
                 />
                 <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-7">
+                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-8 text-xs">
                     Cancel
                   </Button>
-                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-7">
-                    Send
+                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-8 text-xs px-4">
+                    Save & Submit
                   </Button>
                 </div>
               </div>
             ) : (
-              <UserContent content={message.content} />
+              <>
+                <UserContent content={message.content} />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={startEdit} 
+                  disabled={disabled}
+                  className="absolute -left-10 top-0 h-8 w-8 rounded-full opacity-0 group-hover/msg:opacity-100 transition-opacity"
+                  title="Edit message"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                </Button>
+              </>
             )
           ) : (() => {
             const imgMeta = parseImageMessage(message.content);
@@ -624,61 +637,46 @@ function MessageRow({
             return <ChatMarkdown content={message.content} />;
           })()}
         </div>
-        {!editing && (
-          <div className={`mt-1 flex items-center gap-1 text-[10px] text-muted-foreground ${isUser ? "flex-row-reverse" : ""}`}>
-            <span>{formatTime(message.created_at)}</span>
-            <div className="ml-1 flex items-center gap-0.5">
-              {!isUser && (
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={copy} aria-label="Copy">
-                  {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                </Button>
-              )}
-              {isUser ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  onClick={startEdit}
-                  disabled={disabled}
-                  aria-label="Edit message"
-                  title="Edit message"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={speak}
-                    disabled={ttsState === "loading"}
-                    aria-label={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                    title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                  >
-                    {ttsState === "loading" ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : ttsState === "playing" ? (
-                      <Square className="h-3.5 w-3.5" />
-                    ) : (
-                      <Volume2 className="h-3.5 w-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={openCorrection}
-                    aria-label="Suggest a Manipuri correction"
-                    title="Suggest a Manipuri correction — help train Manipuri AI"
-                  >
-                    <Wand2 className="h-3.5 w-3.5" />
-                  </Button>
-                </>
-              )}
+          {!editing && (
+            <div className={`mt-3 flex items-center gap-3 text-[10px] uppercase tracking-wider font-medium text-muted-foreground/60 ${isUser ? "flex-row-reverse" : ""}`}>
+              <span>{formatTime(message.created_at)}</span>
+              <div className={`flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
+                {!isUser && (
+                  <>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors" onClick={copy} title="Copy response">
+                      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors"
+                      onClick={speak}
+                      disabled={ttsState === "loading"}
+                      title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                    >
+                      {ttsState === "loading" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : ttsState === "playing" ? (
+                        <Square className="h-3.5 w-3.5" />
+                      ) : (
+                        <Volume2 className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors"
+                      onClick={openCorrection}
+                      title="Suggest a Manipuri correction"
+                    >
+                      <Wand2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <Dialog open={correctOpen} onOpenChange={setCorrectOpen}>
         <DialogContent className="max-w-lg">
