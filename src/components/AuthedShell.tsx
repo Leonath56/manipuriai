@@ -97,14 +97,12 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
           </div>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => {
-          const aside = document.querySelector('aside.chat-sidebar');
-          const toggleBtn = document.getElementById('sidebar-toggle-container');
+          const aside = document.getElementById('desktop-sidebar');
           if (aside) {
             aside.classList.add('hidden');
             aside.classList.remove('md:block');
-            toggleBtn?.classList.remove('hidden');
-            toggleBtn?.classList.add('md:flex');
           }
+          if (onClose) onClose();
         }} aria-label="Minimize sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
           <Menu className="h-5 w-5" />
         </Button>
@@ -263,7 +261,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
-      <div className="hidden md:block h-full"><ChatSidebar /></div>
+      <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
@@ -276,11 +274,25 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={(e) => {
-                e.stopPropagation();
-                setMobileOpen(true);
+              onClick={() => {
+                const isMobile = window.innerWidth < 768;
+                if (isMobile) {
+                  setMobileOpen(true);
+                } else {
+                  const aside = document.getElementById('desktop-sidebar');
+                  if (aside) {
+                    // Toggle visibility classes for desktop
+                    if (aside.classList.contains('hidden')) {
+                      aside.classList.remove('hidden');
+                      aside.classList.add('md:block');
+                    } else {
+                      aside.classList.add('hidden');
+                      aside.classList.remove('md:block');
+                    }
+                  }
+                }
               }} 
-              aria-label="Open menu" 
+              aria-label="Toggle menu" 
               className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent"
             >
               <Menu className="h-6 w-6" />
