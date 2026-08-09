@@ -265,7 +265,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-black">
-      <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72"><ChatSidebar /></div>
+      <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72 border-r border-white/10"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div 
