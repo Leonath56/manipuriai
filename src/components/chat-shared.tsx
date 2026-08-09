@@ -227,20 +227,26 @@ export function Composer({
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
                 <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
-                  {mode === "instant" ? <Zap className="h-3.5 w-3.5 text-black" /> : <Brain className="h-3.5 w-3.5 text-black" />}
+                  {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="instant">
-                    <div className="flex flex-col">
-                      <span className="font-medium">Instant reply</span>
-                      <span className="text-[11px] text-muted-foreground">Fast responses for everyday chat</span>
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 text-base">⚡</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Instant reply</span>
+                        <span className="text-[11px] text-muted-foreground">Fast responses for everyday chat</span>
+                      </div>
                     </div>
                   </SelectItem>
                   <SelectItem value="think">
-                    <div className="flex flex-col">
-                      <span className="font-medium">Deep thinking</span>
-                      <span className="text-[11px] text-muted-foreground">Slower, better for research & reasoning</span>
+                    <div className="flex items-start gap-2">
+                      <span className="mt-0.5 text-base">🧠</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Deep thinking</span>
+                        <span className="text-[11px] text-muted-foreground">Slower, better for research & reasoning</span>
+                      </div>
                     </div>
                   </SelectItem>
                 </SelectContent>
