@@ -582,8 +582,6 @@ export const Route = createFileRoute("/api/chat")({
                       if (delta) {
                         firstChunkSeen = true;
                         full += delta;
-                        // LOG RAW STREAMING DELTA FOR DEBUGGING
-                        console.log("STREAM_DELTA:", delta);
                         controller.enqueue(encoder.encode(delta));
                       }
                     } catch {

@@ -640,7 +640,6 @@ function MessageRow({
                 />
               );
             }
-            console.log("RENDER_CONTENT:", message.role, message.content.slice(0, 100));
             return <ChatMarkdown content={message.content} />;
           })()}
         </div>
