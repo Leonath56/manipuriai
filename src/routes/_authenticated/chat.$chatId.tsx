@@ -321,7 +321,7 @@ function ChatView() {
                   <div className="min-w-0 flex-1 pt-0.5">
                     {showCarryover.generatingImage ? (
                       <ImageGeneratingAnimation />
-                    ) : showCarryover.streaming ? (
+                    ) : (showCarryover.streaming || showCarryover.done) ? (
                       <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
                         <StreamingAssistantContent content={showCarryover.streaming} />
                       </Suspense>
