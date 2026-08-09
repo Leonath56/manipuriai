@@ -270,7 +270,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       )}
       <div className="flex min-w-0 flex-1 flex-col relative">
         <header className="flex h-14 items-center justify-between border-b border-border px-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
               size="icon" 
@@ -281,7 +281,6 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                 } else {
                   const aside = document.getElementById('desktop-sidebar');
                   if (aside) {
-                    // Toggle visibility classes for desktop
                     if (aside.classList.contains('hidden')) {
                       aside.classList.remove('hidden');
                       aside.classList.add('md:block');
