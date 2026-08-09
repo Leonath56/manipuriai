@@ -227,6 +227,18 @@ export function Composer({
               >
                 <span>🖼️</span>
               </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate({ to: "/voice" })}
+                disabled={sending}
+                aria-label="Voice mode"
+                title="Talk to Manipuri AI"
+                className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+              >
+                <AudioLines className="h-4 w-4" />
+              </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
                 <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-transparent px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
