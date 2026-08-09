@@ -206,8 +206,9 @@ export function Composer({
             className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
           />
           </div>
-          <div className="flex items-center justify-between gap-2 px-1 pt-1">
-            <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
+          <div className="flex items-center justify-between gap-2 px-1 pt-1.5 overflow-x-auto">
+            <div className="flex min-w-0 flex-1 items-center gap-1.5 scrollbar-hide">
+
               <input
                 ref={fileRef}
                 type="file"
