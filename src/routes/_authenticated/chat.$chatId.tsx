@@ -99,16 +99,27 @@ function ChatView() {
     inputRef.current?.focus();
   }, [chatId]);
 
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const checkNearBottom = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 100;
+    const isNear = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
+    setIsNearBottom(isNear);
+  };
+
   useEffect(() => {
-    // Only auto-scroll if the user is already near the bottom — otherwise
-    // respect their scroll position so they can freely scroll up/down.
-    const scroller = document.scrollingElement || document.documentElement;
-    const distanceFromBottom =
-      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    if (distanceFromBottom < 160) {
+    if (isNearBottom) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messagesQ.data, streaming, generatingImage, inflight?.streaming]);
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    setIsNearBottom(true);
+  };
 
 
   const runSend = async (text: string, imgs: string[] = []) => {
