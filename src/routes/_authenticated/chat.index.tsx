@@ -37,14 +37,25 @@ function NewChat() {
   const pendingHere = active;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+  const [isFollowingLatest, setIsFollowingLatest] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const checkScroll = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    const threshold = 80;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    setIsFollowingLatest(isAtBottom);
+  };
+
   useEffect(() => {
-    const scroller = document.scrollingElement || document.documentElement;
-    const distanceFromBottom =
-      scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    if (distanceFromBottom < 160) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isFollowingLatest && (pendingHere?.streaming || pendingHere?.generatingImage)) {
+      const container = scrollContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  }, [pendingHere?.streaming, pendingHere?.generatingImage]);
+  }, [pendingHere?.streaming, pendingHere?.generatingImage, isFollowingLatest]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +149,11 @@ function NewChat() {
   return (
     <div className="flex h-full flex-col">
 
-        <div className="flex-1 overflow-y-auto">
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto"
+          onScroll={checkScroll}
+        >
           <div className={`mx-auto ${pendingHere ? "" : "flex min-h-full justify-center"} max-w-2xl flex-col px-4 py-10`}>
             {!pendingHere && (
               <>

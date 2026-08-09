@@ -43,7 +43,7 @@ function ChatView() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
-  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [isFollowingLatest, setIsFollowingLatest] = useState(true);
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -103,26 +103,30 @@ function ChatView() {
   }, [chatId]);
 
 
-  const checkNearBottom = () => {
+  const checkScroll = () => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    const threshold = 100;
-    const isNear = container.scrollHeight - container.scrollTop - container.clientHeight < threshold;
-    setIsNearBottom(isNear);
+    const threshold = 80;
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+    setIsFollowingLatest(isAtBottom);
   };
 
   useEffect(() => {
-    if (isNearBottom) {
-      // Use requestAnimationFrame to ensure the scroll happens after content is rendered
-      requestAnimationFrame(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      });
+    if (isFollowingLatest && (streaming || generatingImage || inflight?.streaming)) {
+      const container = scrollContainerRef.current;
+      if (container) {
+        // Use scrollTop instead of scrollIntoView to avoid window-level scrolling
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  }, [messagesQ.data, streaming, generatingImage, inflight?.streaming, isNearBottom]);
+  }, [streaming, generatingImage, inflight?.streaming, isFollowingLatest]);
 
   const scrollToBottom = () => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    setIsNearBottom(true);
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+    }
+    setIsFollowingLatest(true);
   };
 
 
@@ -298,7 +302,7 @@ function ChatView() {
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto"
-        onScroll={checkNearBottom}
+        onScroll={checkScroll}
       >
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {renderedMessages.map((m) => (
@@ -369,7 +373,7 @@ function ChatView() {
           </div>
         </div>
         
-        {(!isNearBottom && (sending || inflight)) && (
+        {(!isFollowingLatest && (sending || inflight)) && (
           <div className="absolute bottom-32 left-1/2 z-10 -translate-x-1/2">
             <Button 
               variant="secondary" 
