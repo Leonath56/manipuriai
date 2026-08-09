@@ -57,6 +57,18 @@ export const getAdminOverview = createServerFn({ method: "GET" })
     const planCounts: Record<string, number> = {};
     for (const r of planRows ?? []) planCounts[r.plan] = (planCounts[r.plan] ?? 0) + 1;
 
+    let creditsRemaining: number | undefined;
+    try {
+      // @ts-ignore - Deferred tool wrapper might not be in types but is available in runtime
+      const { get_credit_balance } = await import("@/lib/credits.functions").catch(() => ({ get_credit_balance: null }));
+      if (get_credit_balance) {
+        const balance = await get_credit_balance();
+        creditsRemaining = balance.totalRemaining;
+      }
+    } catch (e) {
+      console.error("Failed to fetch credits:", e);
+    }
+
     return {
       totalUsers: profiles.count ?? 0,
       totalChats: chats.count ?? 0,
@@ -65,6 +77,7 @@ export const getAdminOverview = createServerFn({ method: "GET" })
       messagesToday,
       totalCorrections: corrections.count ?? 0,
       planCounts,
+      creditsRemaining,
     };
   });
 
