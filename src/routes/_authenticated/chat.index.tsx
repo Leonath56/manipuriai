@@ -185,7 +185,7 @@ function NewChat() {
             {!pendingHere && (
               <>
                 <div className="text-center">
-                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-black text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
                     ꯃ
                   </div>
                   <h1 className="mt-5 font-display text-3xl font-bold">How can I help you today?</h1>
@@ -212,13 +212,13 @@ function NewChat() {
             {pendingHere && (
               <div>
                 <div className="my-6 flex flex-row-reverse items-start gap-3">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-xs font-semibold">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-2.5 text-white">
                     <p className="whitespace-pre-wrap text-sm text-foreground/90">{pendingHere.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
                   </div>
                 </div>
                 <div className="my-6 flex items-start gap-3">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white text-black text-base leading-none font-semibold" aria-hidden="true">ꯃ</div>
                   <div className="min-w-0 flex-1">
                     {pendingHere.generatingImage ? (
                       <ImageGeneratingAnimation />

@@ -88,7 +88,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
     <aside className="chat-sidebar flex h-full w-72 flex-col border-r border-sidebar-border bg-black text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
         <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-black text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span>Manipuri AI</span>
@@ -219,7 +219,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-sidebar-accent">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-white text-black text-xs font-semibold">
                 {(profileQ.data?.full_name ?? profileQ.data?.username ?? profileQ.data?.email ?? "U").slice(0, 1).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
