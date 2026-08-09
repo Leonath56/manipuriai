@@ -338,7 +338,7 @@ function ChatView() {
                 <div className="min-w-0 flex-1 pt-0.5">
                   {generatingImage ? (
                     <ImageGeneratingAnimation />
-                  ) : streaming ? (
+                  ) : (streaming || (inflight?.done ?? false)) ? (
                     <StreamingAssistantContent content={streaming} />
                   ) : (
                     <ThinkingLoader />
