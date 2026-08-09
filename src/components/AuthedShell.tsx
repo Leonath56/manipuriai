@@ -281,12 +281,12 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                 setMobileOpen(true);
               }} 
               aria-label="Open menu" 
-              className="flex md:hidden h-9 w-9 items-center justify-center bg-transparent text-foreground hover:bg-neutral-200 rounded-lg relative z-50"
+              className="h-9 w-9 flex items-center justify-center bg-transparent text-foreground hover:bg-neutral-200 rounded-lg relative z-50"
             >
               <Menu className="h-5 w-5" />
             </Button>
             
-            <div id="sidebar-toggle-container" className="hidden md:hidden items-center">
+            <div id="sidebar-toggle-container" className="hidden md:flex items-center">
               <Button variant="ghost" size="icon" onClick={() => {
                 const aside = document.querySelector('aside.chat-sidebar');
                 const toggleBtn = document.getElementById('sidebar-toggle-container');
