@@ -313,7 +313,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
 
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Link to="/chat" className="flex items-center gap-1.5 group">
-              <span className="text-lg font-semibold font-display tracking-tight">Manipuri AI</span>
+              <span className="text-lg font-semibold font-display tracking-tight text-white">Manipuri AI</span>
               <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">v1.1</span>
             </Link>
           </div>

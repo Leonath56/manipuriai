@@ -188,8 +188,8 @@ function NewChat() {
                   <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-black text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
                     ꯃ
                   </div>
-                  <h1 className="mt-5 font-display text-3xl font-bold">How can I help you today?</h1>
-                  <p className="mt-2 text-sm text-muted-foreground">
+                  <h1 className="mt-5 font-display text-3xl font-bold text-white">How can I help you today?</h1>
+                  <p className="mt-2 text-sm text-neutral-400">
                     Write in Manipuri or English — attach photos of homework, math, docs, or screenshots and I'll answer based on them.
                   </p>
                 </div>
@@ -199,10 +199,10 @@ function NewChat() {
                     <button
                       key={s.title}
                       onClick={() => { setInput(s.prompt); inputRef.current?.focus(); }}
-                      className="rounded-xl border border-border bg-card p-3 text-left text-sm shadow-soft transition-colors hover:border-primary/40 hover:bg-accent/20"
+                      className="rounded-xl border border-white/10 bg-neutral-900 p-3 text-left text-sm shadow-soft transition-colors hover:border-white/30 hover:bg-neutral-800"
                     >
-                      <div className="font-medium">{s.title}</div>
-                      <div className="mt-0.5 truncate text-xs text-muted-foreground">{s.prompt}</div>
+                      <div className="font-medium text-white">{s.title}</div>
+                      <div className="mt-0.5 truncate text-xs text-neutral-500">{s.prompt}</div>
                     </button>
                   ))}
                 </div>
