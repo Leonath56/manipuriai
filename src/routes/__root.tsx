@@ -108,10 +108,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/logo.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap", media: "print", onLoad: "this.media='all'" },
-      { rel: "stylesheet", href: "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css", integrity: "sha384-GvrOXuhMATgEsSwCs4smvzuFnHZ597igSIFeVIyB3umivRaHWKIQ3uuxXtQ8yFEz", crossOrigin: "anonymous", media: "print", onLoad: "this.media='all'" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css", integrity: "sha384-GvrOXuhMATgEsSwCs4smvzuFnHZ597igSIFeVIyB3umivRaHWKIQ3uuxXtQ8yFEz", crossOrigin: "anonymous" },
     ],
     scripts: [
+      {
+        children: `
+          function loadDeferredStyles() {
+            var addStyle = function(url, integrity) {
+              var link = document.createElement('link');
+              link.rel = 'stylesheet';
+              link.href = url;
+              if (integrity) {
+                link.integrity = integrity;
+                link.crossOrigin = 'anonymous';
+              }
+              document.head.appendChild(link);
+            };
+            addStyle('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap');
+            addStyle('https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css', 'sha384-GvrOXuhMATgEsSwCs4smvzuFnHZ597igSIFeVIyB3umivRaHWKIQ3uuxXtQ8yFEz');
+          }
+          if (window.requestIdleCallback) {
+            requestIdleCallback(loadDeferredStyles);
+          } else {
+            window.addEventListener('load', loadDeferredStyles);
+          }
+        `
+      },
       {
         type: "application/ld+json",
         children: JSON.stringify({
