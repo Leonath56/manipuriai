@@ -272,7 +272,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-12 items-center gap-2 border-b border-border px-3 md:px-4">
-          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu" className="md:hidden">
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)} aria-label="Open menu" className="md:hidden h-8 w-8 text-muted-foreground hover:text-foreground">
             <Menu className="h-5 w-5" />
           </Button>
           <div id="sidebar-toggle-container" className="hidden items-center gap-2">
