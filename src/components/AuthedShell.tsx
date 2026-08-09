@@ -281,7 +281,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                 setMobileOpen(true);
               }} 
               aria-label="Open menu" 
-              className="flex md:hidden h-9 w-9 items-center justify-center bg-neutral-100 text-foreground hover:bg-neutral-200 rounded-lg shadow-sm"
+              className="flex md:hidden h-9 w-9 items-center justify-center bg-transparent text-foreground hover:bg-neutral-200 rounded-lg"
             >
               <Menu className="h-5 w-5" />
             </Button>
