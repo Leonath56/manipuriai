@@ -190,9 +190,14 @@ function ChatView() {
         ];
       });
       updateActiveStream({ done: true, streaming: result.reply });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["messages", chatId] }),
+        qc.invalidateQueries({ queryKey: ["chats"] }),
+      ]);
+      // Only clear the local streaming state AFTER the queries have refetched
+      // and the store has updated to avoid the "blink" where it briefly disappears.
       setStreaming("");
-      void qc.invalidateQueries({ queryKey: ["messages", chatId] });
-      await qc.invalidateQueries({ queryKey: ["chats"] });
+
 
     } catch (err) {
       const name = (err as { name?: string })?.name;
@@ -341,9 +346,9 @@ function ChatView() {
                   <div className="min-w-0 flex-1 pt-0.5">
                     {showCarryover.generatingImage ? (
                       <ImageGeneratingAnimation />
-                    ) : (showCarryover.streaming || showCarryover.done) ? (
+                    ) : (showCarryover.streaming || showCarryover.done || streaming) ? (
                       <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
-                        <StreamingAssistantContent content={showCarryover.streaming} />
+                        <StreamingAssistantContent content={showCarryover.streaming || streaming} />
                       </Suspense>
                     ) : (
                         <ThinkingLoader />
