@@ -313,7 +313,7 @@ function ChatView() {
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-tighter">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary/80 px-4 py-3 text-secondary-foreground shadow-sm">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
                   </div>
                 </div>
                 <div className="my-8 flex items-start gap-3 md:gap-6">
