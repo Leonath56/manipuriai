@@ -323,7 +323,7 @@ function ChatView() {
   const showCarryover = activeForChat;
 
   return (
-    <div className="relative flex h-full flex-col overflow-hidden">
+    <div className="relative flex h-full flex-col overflow-hidden bg-black">
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto"

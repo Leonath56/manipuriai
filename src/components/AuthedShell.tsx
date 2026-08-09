@@ -85,7 +85,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <aside className="chat-sidebar flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <aside className="chat-sidebar flex h-full w-72 flex-col border-r border-sidebar-border bg-black text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
         <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
           <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
@@ -264,16 +264,16 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
     supabase.from("profiles").update({ last_login_at: new Date().toISOString() }).then(() => {});
   }, []);
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
+    <div className="flex h-[100dvh] w-full overflow-hidden bg-black">
       <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <div className="absolute inset-0 aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make all this part also black"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            make all this part also black"} bg-black/60" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0"><ChatSidebar onClose={() => setMobileOpen(false)} /></div>
         </div>
       )}
-      <div className="flex min-w-0 flex-1 flex-col relative">
-        <header className="flex h-14 items-center justify-between border-b border-border px-4 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
+      <div className="flex min-w-0 flex-1 flex-col relative bg-black">
+        <header className="flex h-14 items-center justify-between border-b border-white/10 px-4 shrink-0 bg-black/95 backdrop-blur supports-[backdrop-filter]:bg-black/60 sticky top-0 z-30">
           <div className="flex items-center gap-2">
             <Button 
               variant="ghost" 
