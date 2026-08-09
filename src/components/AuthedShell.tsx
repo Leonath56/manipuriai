@@ -98,9 +98,13 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
         </Link>
         <Button variant="ghost" size="icon" onClick={() => {
           const aside = document.getElementById('desktop-sidebar');
+          const headerToggle = document.getElementById('header-sidebar-toggle');
           if (aside) {
             aside.classList.add('hidden');
             aside.classList.remove('md:block');
+          }
+          if (headerToggle) {
+            headerToggle.classList.remove('md:hidden');
           }
           if (onClose) onClose();
         }} aria-label="Minimize sidebar" className="h-8 w-8 text-muted-foreground hover:text-foreground">
