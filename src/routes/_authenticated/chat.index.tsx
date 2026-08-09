@@ -72,6 +72,7 @@ function NewChat() {
     const imageRequest = text && sentImages.length === 0 ? parseImageRequest(text) : null;
     
     // Check Cache
+    const hasImages = sentImages.length > 0;
     const cached = (!hasImages && text) ? getCachedResponse(text) : null;
 
     // Instantly reflect the message in the UI and clear the composer.
