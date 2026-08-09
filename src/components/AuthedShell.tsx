@@ -292,7 +292,8 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                 }
               }} 
               aria-label="Toggle menu" 
-              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent"
+              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent md:hidden [&.hidden]:hidden"
+              id="header-sidebar-toggle"
             >
               <Menu className="h-6 w-6" />
             </Button>
