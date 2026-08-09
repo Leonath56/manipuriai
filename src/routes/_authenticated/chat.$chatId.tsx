@@ -619,7 +619,7 @@ function MessageRow({
                   size="icon" 
                   onClick={startEdit} 
                   disabled={disabled}
-                  className="absolute -left-10 top-0 h-8 w-8 rounded-full opacity-0 group-hover/msg:opacity-100 transition-opacity"
+                  className="absolute -left-10 top-0 h-8 w-8 rounded-full opacity-100 md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity"
                   title="Edit message"
                 >
                   <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
@@ -657,7 +657,7 @@ function MessageRow({
           {!editing && (
             <div className={`mt-3 flex items-center gap-3 text-[10px] uppercase tracking-wider font-medium text-muted-foreground/60 ${isUser ? "flex-row-reverse" : ""}`}>
               <span>{formatTime(message.created_at)}</span>
-              <div className={`flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
+              <div className={`flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
                 {!isUser && (
                   <>
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors" onClick={copy} title="Copy response">
