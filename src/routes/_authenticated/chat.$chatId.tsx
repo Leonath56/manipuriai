@@ -16,6 +16,7 @@ import { synthesizeSpeech } from "@/lib/tts.functions";
 import { parseImageMessage, generateImages, parseImageRequest } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
 import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStream } from "@/lib/active-stream";
+import { getCachedResponse, setCachedResponse, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -38,8 +39,8 @@ function ChatView() {
   const { chatId } = Route.useParams();
   const [input, setInput] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">("auto");
-  const [mode, setMode] = useState<"instant" | "think">("instant");
+  const [lang, setLang] = useState<"auto" | "mni" | "mni-mtei" | "en">(() => getUserPrefs()?.lang ?? "auto");
+  const [mode, setMode] = useState<"instant" | "think">(() => getUserPrefs()?.mode ?? "instant");
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
@@ -131,18 +132,30 @@ function ChatView() {
 
 
   const runSend = async (text: string, imgs: string[] = []) => {
+    // Persist prefs
+    setUserPrefs({ lang, mode });
+
     setSending(true);
     setStreaming("");
     const imgTags = imgs.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
+    
+    const hasImages = imgs.length > 0;
+    const cached = (!hasImages && text) ? getCachedResponse(text) : null;
+
     setActiveStream({
       chatId,
       userText: stored,
       userImages: imgs,
-      streaming: "",
+      streaming: cached || "",
       generatingImage: false,
-      done: false,
+      done: Boolean(cached),
     });
+
+    if (cached) {
+      setStreaming(cached);
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
     try {
@@ -154,10 +167,15 @@ function ChatView() {
         mode,
         signal: controller.signal,
         onChunk: (delta) => {
+          if (cached) return;
           setStreaming((s) => s + delta);
           appendStreamingText(delta);
         },
       });
+
+      if (!cached && result.reply) {
+        setCachedResponse(text, result.reply);
+      }
       const now = new Date().toISOString();
       qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
         const rows = old ?? [];
