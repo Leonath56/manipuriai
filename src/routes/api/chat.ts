@@ -17,7 +17,7 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash",
+  instant: "google/gemini-2.5-pro",
   think: "google/gemini-2.5-pro",
 } as const;
 
