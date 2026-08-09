@@ -43,7 +43,7 @@ function ChatView() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [streaming, setStreaming] = useState("");
-  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [isFollowingLatest, setIsFollowingLatest] = useState(true);
   
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
