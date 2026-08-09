@@ -17,14 +17,14 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.0-flash", // Using 2.0 Flash as the most stable high-speed flagship
-  think: "google/gemini-2.0-pro-exp-02-05", // Using 2.0 Pro Experimental as the most advanced reasoning model
+  instant: "google/gemini-2.5-flash", 
+  think: "google/gemini-2.5-pro",
 } as const;
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.0-flash",
-  think: "google/gemini-2.0-pro-exp-02-05",
+  instant: "google/gemini-2.5-flash",
+  think: "google/gemini-2.5-pro",
 } as const;
 
 function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
