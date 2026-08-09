@@ -17,8 +17,8 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-pro",
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-2.0-pro-exp-02-05", // Gemini 2.0 Pro Experimental for best quality and speed
+  think: "google/gemini-2.0-pro-exp-02-05",
 } as const;
 
 // Vision-capable models used when images are attached
