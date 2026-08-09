@@ -85,7 +85,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <aside className="flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+    <aside className="chat-sidebar flex h-full w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex items-center justify-between px-4 py-4">
         <Link to="/chat" className="flex items-center gap-2 font-display text-base font-bold" onClick={onClose}>
           <span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground text-base leading-none font-semibold" aria-hidden="true">ꯃ</span>
@@ -97,7 +97,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
           </div>
         </Link>
         <Button variant="ghost" size="icon" onClick={() => {
-          const aside = document.querySelector('aside');
+          const aside = document.querySelector('aside.chat-sidebar');
           const toggleBtn = document.getElementById('sidebar-toggle-container');
           if (aside) {
             aside.classList.add('hidden');
@@ -263,7 +263,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-background">
-      <div className="hidden md:block"><ChatSidebar /></div>
+      <div className="hidden md:block h-full"><ChatSidebar /></div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
@@ -295,7 +295,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
           </Button>
           <div id="sidebar-toggle-container" className="hidden items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => {
-              const aside = document.querySelector('aside');
+              const aside = document.querySelector('aside.chat-sidebar');
               const toggleBtn = document.getElementById('sidebar-toggle-container');
               if (aside) {
                 aside.classList.remove('hidden');
