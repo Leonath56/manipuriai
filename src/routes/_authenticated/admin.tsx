@@ -113,15 +113,21 @@ function AdminPage() {
           <Badge variant="secondary">Admin</Badge>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <StatCard icon={<Users className="h-4 w-4" />} label="Total users" value={o?.totalUsers ?? "…"} />
           <StatCard icon={<MessageSquare className="h-4 w-4" />} label="Total chats" value={o?.totalChats ?? "…"} />
           <StatCard icon={<Sparkles className="h-4 w-4" />} label="Total messages" value={o?.totalMessages ?? "…"} />
-          <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages (7d)" value={o?.messagesLast7d ?? "…"} />
           <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages today" value={o?.messagesToday ?? "…"} />
+          <StatCard 
+            icon={<ShieldAlert className="h-4 w-4" />} 
+            label="AI Credits Remaining" 
+            value={o?.creditsRemaining !== undefined ? `${o.creditsRemaining.toFixed(2)}` : "…"} 
+            className="border-primary/50 bg-primary/5"
+          />
           <StatCard icon={<Wand2 className="h-4 w-4" />} label="Corrections" value={o?.totalCorrections ?? "…"} />
           <StatCard icon={<Users className="h-4 w-4" />} label="Free users" value={o?.planCounts.free ?? 0} />
           <StatCard icon={<Users className="h-4 w-4" />} label="Paid users" value={(o?.planCounts.pro ?? 0) + (o?.planCounts.max ?? 0)} />
+          <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages (7d)" value={o?.messagesLast7d ?? "…"} />
         </div>
 
         <Card className="p-4">
@@ -334,9 +340,9 @@ function AdminPage() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number | string }) {
+function StatCard({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: number | string; className?: string }) {
   return (
-    <Card className="p-4">
+    <Card className={`p-4 ${className || ""}`}>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon} {label}</div>
       <div className="mt-2 text-2xl font-bold">{value}</div>
     </Card>
