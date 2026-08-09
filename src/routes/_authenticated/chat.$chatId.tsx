@@ -300,21 +300,21 @@ function ChatView() {
         className="flex-1 overflow-y-auto"
         onScroll={checkNearBottom}
       >
-          <div className="mx-auto max-w-2xl px-4 py-6">
+          <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {renderedMessages.map((m) => (
               <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
             ))}
             {showCarryover && (
-              <div>
-                <div className="my-6 flex flex-row-reverse items-start gap-3">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-xs font-semibold">You</div>
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary px-4 py-2.5 text-secondary-foreground">
-                    <p className="whitespace-pre-wrap text-sm">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+              <div className="msg-pop">
+                <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-secondary text-secondary-foreground text-[10px] font-bold uppercase tracking-tighter">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary/80 px-4 py-3 text-secondary-foreground shadow-sm">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
                   </div>
                 </div>
-                <div className="my-6 flex items-start gap-3">
+                <div className="my-8 flex items-start gap-3 md:gap-6">
                   <Avatar assistant />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 pt-0.5">
                     {showCarryover.generatingImage ? (
                       <ImageGeneratingAnimation />
                     ) : showCarryover.streaming ? (
@@ -331,9 +331,9 @@ function ChatView() {
               </div>
             )}
             {sending && !activeForChat && (
-              <div className="my-6 flex items-start gap-3">
+              <div className="my-8 flex items-start gap-3 md:gap-6 msg-pop">
                 <Avatar assistant />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 pt-0.5">
                   {generatingImage ? (
                     <ImageGeneratingAnimation />
                   ) : streaming ? (
