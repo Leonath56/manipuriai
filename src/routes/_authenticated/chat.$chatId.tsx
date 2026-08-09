@@ -102,8 +102,6 @@ function ChatView() {
     inputRef.current?.focus();
   }, [chatId]);
 
-  const [isNearBottom, setIsNearBottom] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const checkNearBottom = () => {
     const container = scrollContainerRef.current;
