@@ -9,17 +9,20 @@ export const Route = createFileRoute("/_authenticated")({
   // /chat/$chatId. The session is refreshed automatically by the Supabase
   // client in the background.
   beforeLoad: async () => {
-    let { data } = await supabase.auth.getSession();
-    let user = data.session?.user;
-    // If no session in storage, try to refresh using the persisted refresh token
-    // before bouncing to /auth. This prevents "login again and again" when the
-    // access token has expired but the refresh token is still valid.
-    if (!user) {
-      const refreshed = await supabase.auth.refreshSession();
-      user = refreshed.data.session?.user;
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.user) {
+      return { user: session.user };
     }
-    if (!user) throw redirect({ to: "/auth" });
-    return { user };
+
+    // Attempt to refresh if session is missing/expired but refresh token exists in storage
+    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+    
+    if (refreshedSession?.user) {
+      return { user: refreshedSession.user };
+    }
+
+    throw redirect({ to: "/auth" });
   },
   component: () => <Outlet />,
 });
