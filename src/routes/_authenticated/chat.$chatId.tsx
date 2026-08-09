@@ -434,7 +434,7 @@ function UserContent({ content }: { content: string }) {
         </div>
       )}
       {texts.length > 0 && (
-        <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{texts.map((t) => t.text).join("\n\n")}</p>
+        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{texts.map((t) => t.text).join("\n\n")}</p>
       )}
     </div>
   );

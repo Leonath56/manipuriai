@@ -8,18 +8,18 @@ import { Button } from "./ui/button";
 
 export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none 
-      prose-p:leading-relaxed prose-p:my-2 
-      prose-headings:font-display prose-headings:font-semibold prose-headings:text-foreground/90 
+    <div className="prose prose-sm max-w-none text-foreground/90
+      prose-p:leading-relaxed prose-p:my-2 prose-p:text-foreground/90
+      prose-headings:font-display prose-headings:font-semibold prose-headings:text-foreground
       prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-      prose-strong:text-foreground/90 prose-strong:font-bold
+      prose-strong:text-foreground prose-strong:font-bold
       prose-ul:my-2 prose-ol:my-2 
-      prose-li:my-0.5
+      prose-li:my-0.5 prose-li:text-foreground/90
       prose-code:before:content-none prose-code:after:content-none
       prose-pre:bg-transparent prose-pre:p-0 prose-pre:my-3
       prose-table:border prose-table:border-border/40
-      prose-th:bg-muted/30 prose-th:px-3 prose-th:py-2 prose-th:text-xs prose-th:uppercase prose-th:tracking-wider
-      prose-td:px-3 prose-td:py-2 prose-td:border-t prose-td:border-border/20
+      prose-th:bg-muted/30 prose-th:px-3 prose-th:py-2 prose-th:text-xs prose-th:uppercase prose-th:tracking-wider prose-th:text-foreground
+      prose-td:px-3 prose-td:py-2 prose-td:border-t prose-td:border-border/20 prose-td:text-foreground/90
       dark:prose-invert">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
