@@ -301,7 +301,7 @@ function ChatView() {
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto"
-        onScroll={checkNearBottom}
+        onScroll={checkScroll}
       >
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {renderedMessages.map((m) => (
