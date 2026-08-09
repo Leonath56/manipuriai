@@ -49,10 +49,8 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
   });
 
   
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: async () => {
-    const fn = await import("@/lib/admin.functions").then(m => m.isAdmin);
-    return fn();
-  }, staleTime: 60_000 });
+  const checkAdmin = useServerFn(isAdminFn);
+  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin(), staleTime: 60_000 });
 
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
