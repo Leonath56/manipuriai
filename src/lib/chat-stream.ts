@@ -56,10 +56,23 @@ export async function streamChat({ chatId, message, language, mode, images, sour
 
   const takeRevealChunk = () => {
     if (!pending) return "";
+    
+    // Markdown heuristics: if we see a code block start, table start, or heading, 
+    // emit larger chunks to avoid breaking the markdown parser mid-token.
+    const markdownHeuristic = pending.match(/^(\s*(?:```|\||#+)\s*)/);
+    if (markdownHeuristic) {
+      const token = markdownHeuristic[1];
+      pending = pending.slice(token.length);
+      return token;
+    }
+
     const firstWord = pending.match(/^(\s*\S+\s*)/);
     if (firstWord) {
       const token = firstWord[1];
-      const hasCompletedWord = /\s$/.test(token) || streamDone || pending.length > 40;
+      // Reduce the buffer wait for Markdown special chars
+      const isMarkdownChar = /[*_#`|>\[\](]/.test(token);
+      const hasCompletedWord = /\s$/.test(token) || streamDone || pending.length > 40 || isMarkdownChar;
+      
       if (!hasCompletedWord) return "";
       pending = pending.slice(token.length);
       return token;
