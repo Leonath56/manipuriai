@@ -494,7 +494,8 @@ export const Route = createFileRoute("/api/chat")({
           // We intentionally DO NOT strip the [image] placeholder to maintain context.
 
           // Cap each history turn to ~600 chars to bound input tokens.
-          const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\((?!data:)[^)]+\)/g, "[image]").trim();
+          // Keep a text indicator of images in history without sending the large data URLs
+          const stripImgs = (s: string) => s.replace(/!\[[^\]]*\]\([^)]+\)/g, "[attached image]").trim();
           const trim = (s: string, n = 400) => (s.length > n ? s.slice(0, n) + "…" : s);
           const priorHistory = history
             .filter((m, idx) => !(idx === history.length - 1 && m.role === "user" && m.content === storedUserText))
@@ -524,7 +525,7 @@ export const Route = createFileRoute("/api/chat")({
             : effectiveMessage;
 
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
