@@ -296,7 +296,7 @@ export function Composer({
             onClick={() => navigate({ to: "/image" })}
             aria-label="Create image"
             title="Create image with AI"
-            className="h-10 w-10 shrink-0 rounded-full text-black hover:bg-neutral-100"
+            className="h-10 w-10 shrink-0 rounded-full text-white hover:bg-neutral-800"
           >
             <Sparkles className="h-5 w-5" />
           </Button>
