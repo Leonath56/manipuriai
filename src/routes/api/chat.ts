@@ -613,7 +613,7 @@ export const Route = createFileRoute("/api/chat")({
               }
 
               // vocab correction
-              const corrected = full.replace(/pangbageda/gi, "mateng pangjouge");
+              const corrected = full.replace(/pangbageda/gi, "mateng pangjouge").replace(/amendaba/gi, "pendaba");
 
               // Persist before closing so route changes/refetches cannot show an
               // empty conversation after a long streamed answer finishes.
