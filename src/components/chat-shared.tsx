@@ -206,8 +206,8 @@ export function Composer({
             className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
           />
           </div>
-          <div className="flex items-center justify-between gap-2 px-1 pt-1.5 overflow-x-auto">
-            <div className="flex min-w-0 flex-1 items-center gap-1.5 scrollbar-hide">
+          <div className="flex items-center justify-between gap-3 px-1 pt-2 overflow-x-auto">
+            <div className="flex min-w-0 flex-1 items-center gap-3 scrollbar-hide">
 
               <input
                 ref={fileRef}
@@ -268,7 +268,7 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            for phone view it perfect but in desktop and tablet view there is double 3 line fix this without touching for phone"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            for phone view it perfect but in desktop and tablet view there is double 3 line fix this without touching for phone"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            give more spaces between them (the featues)"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                            \n                                            give more spaces between them (the featues)"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-50 px-2 text-xs font-medium text-black hover:bg-neutral-100 [&>svg:last-child]:hidden">
 
 
 
