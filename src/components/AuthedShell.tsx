@@ -280,19 +280,14 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
               setMobileOpen(true);
             }} 
             aria-label="Open menu" 
-            className="flex md:hidden h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground z-50"
+            className="flex md:hidden h-9 w-9 items-center justify-center bg-neutral-100 text-foreground hover:bg-neutral-200 z-50 rounded-lg shadow-sm"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => setMobileOpen(true)} 
-            aria-label="Open menu" 
-            className="flex md:hidden h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+          <div className="flex md:hidden items-center gap-2 ml-1">
+            <span className="text-sm font-bold font-display">Manipuri AI</span>
+            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">v1.1</span>
+          </div>
           <div id="sidebar-toggle-container" className="hidden items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => {
               const aside = document.querySelector('aside.chat-sidebar');
