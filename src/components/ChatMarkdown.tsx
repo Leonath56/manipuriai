@@ -1,5 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import { memo, useState } from "react";
 import { Check, Copy, Terminal } from "lucide-react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -8,21 +10,25 @@ import { Button } from "./ui/button";
 
 export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: string }) {
   return (
-    <div className="prose prose-sm max-w-none text-foreground/90
-      prose-p:leading-relaxed prose-p:my-2 prose-p:text-foreground/90
-      prose-headings:font-display prose-headings:font-semibold prose-headings:text-foreground
-      prose-a:text-primary prose-a:no-underline hover:prose-a:underline
+    <div className="prose prose-sm max-w-none text-foreground/95
+      prose-p:leading-relaxed prose-p:my-3 prose-p:text-foreground/90
+      prose-headings:font-display prose-headings:font-bold prose-headings:text-foreground prose-headings:mt-6 prose-headings:mb-3
+      prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg
+      prose-a:text-primary prose-a:font-medium prose-a:no-underline hover:prose-a:underline
       prose-strong:text-foreground prose-strong:font-bold
-      prose-ul:my-2 prose-ol:my-2 
-      prose-li:my-0.5 prose-li:text-foreground/90
+      prose-ul:my-3 prose-ol:my-3 
+      prose-li:my-1 prose-li:text-foreground/90
       prose-code:before:content-none prose-code:after:content-none
-      prose-pre:bg-transparent prose-pre:p-0 prose-pre:my-3
-      prose-table:border prose-table:border-border/40
-      prose-th:bg-muted/30 prose-th:px-3 prose-th:py-2 prose-th:text-xs prose-th:uppercase prose-th:tracking-wider prose-th:text-foreground
-      prose-td:px-3 prose-td:py-2 prose-td:border-t prose-td:border-border/20 prose-td:text-foreground/90
+      prose-pre:bg-transparent prose-pre:p-0 prose-pre:my-4
+      prose-table:my-6 prose-table:border prose-table:border-border/40
+      prose-th:bg-muted/30 prose-th:px-4 prose-th:py-2.5 prose-th:text-xs prose-th:uppercase prose-th:tracking-wider prose-th:text-foreground/80 prose-th:font-bold
+      prose-td:px-4 prose-td:py-2.5 prose-td:border-t prose-td:border-border/20 prose-td:text-foreground/90
+      prose-blockquote:border-l-4 prose-blockquote:border-primary/30 prose-blockquote:bg-muted/10 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-blockquote:text-muted-foreground prose-blockquote:italic
+      prose-hr:my-8 prose-hr:border-border/30
       dark:prose-invert">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           code({ node, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || "");
@@ -30,7 +36,7 @@ export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: s
             
             if (isInline) {
               return (
-                <code className="rounded bg-muted/60 px-1.5 py-0.5 text-[0.85em] font-medium text-foreground/90 border border-border/20" {...props}>
+                <code className="rounded bg-muted/60 px-1.5 py-0.5 text-[0.85em] font-mono font-medium text-foreground border border-border/20" {...props}>
                   {children}
                 </code>
               );
@@ -42,27 +48,17 @@ export const ChatMarkdown = memo(function ChatMarkdown({ content }: { content: s
               </CodeBlock>
             );
           },
-          // Customizing table for responsiveness
           table({ children }) {
             return (
-              <div className="my-4 w-full overflow-x-auto rounded-xl border border-border/30 bg-card/20 shadow-sm scrollbar-thin scrollbar-thumb-muted-foreground/20">
-                <table className="w-full border-collapse text-left">
+              <div className="my-6 w-full overflow-x-auto rounded-xl border border-border/30 bg-card/20 shadow-sm scrollbar-thin scrollbar-thumb-muted-foreground/20">
+                <table className="w-full border-collapse text-left text-sm">
                   {children}
                 </table>
               </div>
             );
           },
-          // Ensure lists are clean
-          ul({ children }) { return <ul className="list-disc pl-6">{children}</ul>; },
-          ol({ children }) { return <ol className="list-decimal pl-6">{children}</ol>; },
-          // Beautiful blockquotes
-          blockquote({ children }) {
-            return (
-              <blockquote className="border-l-4 border-primary/40 bg-muted/20 px-4 py-1 italic rounded-r-lg my-4 text-muted-foreground">
-                {children}
-              </blockquote>
-            );
-          }
+          ul({ children }) { return <ul className="list-disc pl-6 space-y-1">{children}</ul>; },
+          ol({ children }) { return <ol className="list-decimal pl-6 space-y-1">{children}</ol>; },
         }}
       >
         {content}
@@ -81,7 +77,7 @@ function CodeBlock({ language, children }: { language: string; children: string 
   };
   
   return (
-    <div className="group relative my-5 overflow-hidden rounded-xl border border-border/50 bg-[#282c34] shadow-md transition-all hover:shadow-lg">
+    <div className="group relative my-6 overflow-hidden rounded-xl border border-border/50 bg-[#0d1117] shadow-md transition-all hover:shadow-lg">
       <div className="flex items-center justify-between border-b border-white/5 bg-white/5 px-4 py-2 text-xs">
         <div className="flex items-center gap-2 font-medium text-white/60">
           <Terminal className="h-3.5 w-3.5" />
