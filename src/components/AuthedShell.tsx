@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,10 +11,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield, ImageIcon, Sparkles, Menu } from "lucide-react";
-import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-const isAdminFn = lazy(() => import("@/lib/admin.functions").then(m => ({ default: m.isAdmin })));
+
 import { deleteChat, renameChat, togglePinChat } from "@/lib/chat.functions";
 import { toast } from "sonner";
 
