@@ -60,11 +60,9 @@ function AuthPage() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", { 
       redirect_uri: window.location.origin + "/auth",
-      options: {
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        }
+      extraParams: {
+        access_type: 'offline',
+        prompt: 'consent',
       }
     });
     if (result.error) {
