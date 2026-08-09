@@ -65,7 +65,7 @@ iframe[src*="lovable.dev/badge"] {
 
   /* ChatGPT-like dark palette — neutral charcoal + off-white */
   --background: oklch(0.24 0 0);                /* #212121 main */
-  --foreground: oklch(0.96 0 0);                /* near-white text */
+  --foreground: oklch(0.98 0 0);                /* pure off-white text */
 
   --card: oklch(0.24 0 0);
   --card-foreground: oklch(0.96 0 0);
