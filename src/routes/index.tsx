@@ -134,19 +134,27 @@ function Landing() {
               <span className="text-foreground/90"> fluently, respectfully</span>, with markdown, code and cultural nuance.
             </p>
 
-            <div className="mt-9 flex flex-col items-center gap-4">
-              <Link to="/try" aria-label="Start chatting now" className="group">
-                <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg">
-                  <MessageSquare className="h-5 w-5" strokeWidth={2.25} />
-                  Chat Now
-                  <span className="ml-1 grid h-8 w-8 place-items-center rounded-full transition-transform group-hover:translate-x-1" style={{ background: "oklch(0.16 0.02 60 / 0.15)" }}>
-                    <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
-                  </span>
-                </button>
-              </Link>
-              <Link to="/auth" className="text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-                Sign in to save your chats →
-              </Link>
+            <div className="mt-9 flex flex-col items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Link to="/try" aria-label="Start chatting now" className="group">
+                  <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg w-full sm:w-[220px] justify-center">
+                    <MessageSquare className="h-5 w-5" strokeWidth={2.25} />
+                    Chat Now
+                    <span className="ml-1 grid h-8 w-8 place-items-center rounded-full transition-transform group-hover:translate-x-1" style={{ background: "oklch(0.16 0.02 60 / 0.15)" }}>
+                      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                    </span>
+                  </button>
+                </Link>
+                <Link to="/auth" className="group">
+                  <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg w-full sm:w-[220px] justify-center">
+                    Sign in
+                    <span className="ml-1 grid h-8 w-8 place-items-center rounded-full transition-transform group-hover:translate-x-1" style={{ background: "oklch(0.16 0.02 60 / 0.15)" }}>
+                      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                    </span>
+                  </button>
+                </Link>
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Sign in to save your chats</p>
             </div>
 
 
