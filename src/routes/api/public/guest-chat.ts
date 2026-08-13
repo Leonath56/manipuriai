@@ -18,6 +18,7 @@ const BodySchema = z.object({
     .default([]),
   message: z.string().trim().min(1).max(2000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
+  images: z.array(z.string()).optional(),
 });
 
 async function persistGuestTurn(opts: {
@@ -189,7 +190,18 @@ export const Route = createFileRoute("/api/public/guest-chat")({
           const messages = [
             { role: "system", content: SYSTEM_PROMPT + userInfo + languageHint },
             ...body.history.map((m) => ({ role: m.role, content: m.content })),
-            { role: "user", content: body.message },
+            { 
+              role: "user", 
+              content: body.images?.length 
+                ? [
+                    { type: "text", text: body.message },
+                    ...body.images.map(url => ({ 
+                      type: "image_url", 
+                      image_url: { url } 
+                    }))
+                  ] as any
+                : body.message 
+            },
           ];
 
           const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
