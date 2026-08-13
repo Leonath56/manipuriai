@@ -193,20 +193,20 @@ function NewChat() {
           className="flex-1 overflow-y-auto"
           onScroll={checkScroll}
         >
-          <div className={`mx-auto ${pendingHere ? "" : "flex min-h-full justify-center"} max-w-2xl flex-col px-4 py-10`}>
+          <div className={`mx-auto ${pendingHere ? "" : "flex min-h-full flex-col"} max-w-2xl px-4 py-4 sm:py-10`}>
             {!pendingHere && (
               <>
                 <div className="text-center">
                   <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-white text-black text-2xl leading-none font-semibold shadow-glow" aria-hidden="true">
                     ꯃ
                   </div>
-                  <h1 className="mt-5 font-display text-3xl font-bold text-white">How can I help you today?</h1>
+                  <h1 className="mt-3 font-display text-2xl font-bold text-white sm:mt-5 sm:text-3xl">How can I help you today?</h1>
                   <p className="mt-2 text-sm text-neutral-400">
                     Write in Manipuri or English — attach photos of homework, math, docs, or screenshots and I'll answer based on them.
                   </p>
                 </div>
 
-                <div className="mt-8 grid gap-2 sm:grid-cols-2">
+                <div className="mt-6 grid gap-2 sm:mt-8 sm:grid-cols-2">
                   {randomSuggestions.map((s) => (
                     <button
                       key={s.title}
