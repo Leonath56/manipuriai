@@ -185,26 +185,42 @@ export function Composer({
               ))}
             </div>
           )}
-          <Textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onPaste={(e) => {
-              const items = Array.from(e.clipboardData?.items ?? []);
-              const files = items.map((it) => it.getAsFile()).filter((f): f is File => !!f && f.type.startsWith("image/"));
-              if (files.length) {
-                e.preventDefault();
-                void onPickFiles(files as unknown as FileList);
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e as unknown as React.FormEvent); }
-            }}
-            rows={1}
-            placeholder={images.length ? "Ask about the image…" : "Message Manipuri AI…"}
-            style={{ fontSize: "16px" }}
-            className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 px-2 py-2 focus-visible:ring-0"
-          />
+          <div className="relative flex flex-col">
+            <Textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onPaste={(e) => {
+                const items = Array.from(e.clipboardData?.items ?? []);
+                const files = items.map((it) => it.getAsFile()).filter((f): f is File => !!f && f.type.startsWith("image/"));
+                if (files.length) {
+                  e.preventDefault();
+                  void onPickFiles(files as unknown as FileList);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); onSubmit(e as unknown as React.FormEvent); }
+              }}
+              rows={1}
+              placeholder={images.length ? "Ask about the image…" : "Message Manipuri AI…"}
+              style={{ fontSize: "16px" }}
+              className="min-h-11 resize-none border-0 bg-white text-black placeholder:text-neutral-500 pl-2 pr-10 py-2 focus-visible:ring-0"
+            />
+            <div className="absolute right-1 top-1.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate({ to: "/voice" })}
+                disabled={sending}
+                aria-label="Voice mode"
+                title="Talk to Manipuri AI"
+                className="h-8 w-8 rounded-full text-black hover:bg-neutral-100"
+              >
+                <AudioLines className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
           </div>
           <div className="flex items-center justify-between gap-3 px-1 pt-2 overflow-x-auto">
             <div className="flex min-w-0 flex-1 items-center gap-3 scrollbar-hide">
@@ -228,18 +244,6 @@ export function Composer({
                 className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <span>🖼️</span>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate({ to: "/voice" })}
-                disabled={sending}
-                aria-label="Voice mode"
-                title="Talk to Manipuri AI"
-                className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
-              >
-                <AudioLines className="h-4 w-4" />
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
                 <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
@@ -268,7 +272,7 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            there is many space left above so make the logo and other start form there to save space at the below"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            there is many space left above so make the logo and other start form there to save space at the below"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            the voice should move there in the prompt but dont overlap when user write the prompt make it end the before the voice button"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            the voice should move there in the prompt but dont overlap when user write the prompt make it end the before the voice button"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
                 <span className="flex items-center gap-1 max-w-[90px] truncate">
                   {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                   <span className="text-[10px] opacity-70">↕</span>
