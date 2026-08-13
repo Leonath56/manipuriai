@@ -13,8 +13,8 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "ChatGPT-style AI fluent in Manipuri (Meiteilon) and English. Voice, images and Meitei Mayek script. Free to start." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://manipuriai.online/" },
-      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=2" },
-      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=2" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
     ],
     links: [
       { rel: "canonical", href: "https://manipuriai.online/" },
