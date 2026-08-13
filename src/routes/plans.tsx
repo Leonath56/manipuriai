@@ -18,8 +18,8 @@ export const Route = createFileRoute("/plans")({
       { property: "og:description", content: "Unlimited Meiteilon & English chat, voice mode and AI image generation from ₹99/month." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://manipuriai.online/plans" },
-      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=2" },
-      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=2" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
     ],
     links: [{ rel: "canonical", href: "https://manipuriai.online/plans" }],
     scripts: [
