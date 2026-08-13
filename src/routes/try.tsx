@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Send, Loader2, Lock, ArrowLeft } from "lucide-react";
+import { Send, Loader2, Lock, ArrowLeft, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const ChatMarkdown = lazy(() =>
@@ -28,7 +28,7 @@ function getOrCreateGuestId(): string {
   return id;
 }
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = { role: "user" | "assistant"; content: string; images?: string[] };
 
 export const Route = createFileRoute("/try")({
   head: () => ({
@@ -57,10 +57,13 @@ function TryPage() {
   const [nameInput, setNameInput] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(() => hasPersistedSession());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     const savedName = localStorage.getItem(NAME_KEY);
@@ -99,14 +102,24 @@ function TryPage() {
 
   const sendMessage = async () => {
     const text = input.trim();
-    if (!text || loading || !name) return;
+    if ((!text && images.length === 0) || loading || !name) return;
     if (count >= GUEST_LIMIT) {
       navigate({ to: "/auth", search: { mode: "signup" } });
       return;
     }
 
-    const userMsg: Msg = { role: "user", content: text };
-    const historyForApi = messages.slice(-6);
+    const userMsg: Msg = { role: "user", content: text, images: [...images] };
+    const historyForApi = messages.slice(-6).map(m => ({
+      role: m.role,
+      content: m.images?.length 
+        ? `${m.content}\n\n[attached image]` 
+        : m.content
+    }));
+    setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
+    setInput("");
+    setImages([]);
+    setLoading(true);
+
     setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
     setInput("");
     setLoading(true);
@@ -119,7 +132,8 @@ function TryPage() {
           name,
           guestId: getOrCreateGuestId(),
           history: historyForApi,
-          message: text,
+          message: images.length ? `${text}\n\n[attached image]` : text,
+          images: images,
           language: "auto",
         }),
       });
@@ -242,7 +256,16 @@ function TryPage() {
                     </Suspense>
                   ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 ) : (
-                  <span className="whitespace-pre-wrap">{m.content}</span>
+                  <div className="space-y-2">
+                    {m.images && m.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {m.images.map((img, idx) => (
+                          <img key={idx} src={img} alt="Uploaded" className="h-20 w-20 object-cover rounded-lg border border-border/50" />
+                        ))}
+                      </div>
+                    )}
+                    <span className="whitespace-pre-wrap">{m.content}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -256,9 +279,35 @@ function TryPage() {
             onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
             className="rounded-2xl border border-neutral-300 bg-white p-2 shadow-soft focus-within:ring-2 focus-within:ring-neutral-400"
           >
+            {images.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2 px-1 pt-1">
+                {images.map((src, i) => (
+                  <div key={i} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-neutral-300 bg-neutral-100">
+                    <img src={src} alt="Upload preview" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImages(images.filter((_, idx) => idx !== i))}
+                      className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-black text-white shadow"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onPaste={async (e) => {
+                const items = Array.from(e.clipboardData?.items ?? []);
+                const files = items.map(it => it.getAsFile()).filter((f): f is File => !!f && f.type.startsWith("image/"));
+                if (files.length) {
+                  e.preventDefault();
+                  const { readImagesAsDataUrls } = await import("@/components/chat-shared");
+                  const urls = await readImagesAsDataUrls(files);
+                  setImages(prev => [...prev, ...urls].slice(0, 4));
+                }
+              }}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -272,13 +321,40 @@ function TryPage() {
               disabled={loading}
             />
             <div className="flex items-center justify-between px-1 pt-1">
-              <span className="text-xs text-neutral-500">
-                {locked ? (
-                  <>Free trial used — <Link to="/auth" search={{ mode: "signup" }} className="font-medium text-neutral-900 underline">sign up</Link> to continue</>
-                ) : (
-                  <>{remaining} / {GUEST_LIMIT} free messages left</>
-                )}
-              </span>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={async (e) => {
+                    const files = e.target.files;
+                    if (files?.length) {
+                      const { readImagesAsDataUrls } = await import("@/components/chat-shared");
+                      const urls = await readImagesAsDataUrls(files);
+                      setImages(prev => [...prev, ...urls].slice(0, 4));
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={loading || images.length >= 4}
+                  className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-neutral-500">
+                  {locked ? (
+                    <>Free trial used — <Link to="/auth" search={{ mode: "signup" }} className="font-medium text-neutral-900 underline">sign up</Link> to continue</>
+                  ) : (
+                    <>{remaining} / {GUEST_LIMIT} messages left</>
+                  )}
+                </span>
+              </div>
               <Button
                 type="submit"
                 size="icon"
