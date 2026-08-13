@@ -26,16 +26,8 @@ export const Route = createFileRoute("/")({
   component: Landing,
 });
 
-function hasPersistedSession() {
-  if (typeof window === "undefined") return false;
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) return true;
-    }
-  } catch {}
-  return false;
-}
+// Utility removed to simplify flow and avoid client-side-only flash logic
+
 
 function Landing() {
   const navigate = useNavigate();
