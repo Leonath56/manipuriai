@@ -167,11 +167,23 @@ function NewChat() {
 
 
   const suggestions = [
-    { title: "Solve homework from a photo", prompt: "Solve the math problem in this image step by step." },
-    { title: "Explain a screenshot", prompt: "Explain what this screenshot is showing." },
-    { title: "Translate to Manipuri", prompt: "Translate to Manipuri: The rain is falling softly today." },
-    { title: "Explain in English", prompt: "Explain quantum computing like I'm 12." },
+    { title: "Meiteilon homework mateng pangbiyu", prompt: "Explain this Meiteilon grammar for me." },
+    { title: "Meitei Mayek script tamba", prompt: "How do I write my name in Meitei Mayek?" },
+    { title: "Translate English to Manipuri", prompt: "Translate: 'May you have a wonderful day' into native Meiteilon." },
+    { title: "Manipur-gi history wari", prompt: "Tell me an interesting story from Manipur's history." },
+    { title: "Manipuri recipe thiba", prompt: "How to make Eromba step by step?" },
+    { title: "Manipuri digital service helper", prompt: "Help me write a professional email in Meiteilon." },
+    { title: "Deep thinking on Meiteilon culture", prompt: "What makes Manipuri culture unique in Northeast India?" },
+    { title: "Instant facts about Imphal", prompt: "Tell me about the importance of Kangla Fort." },
   ];
+
+  const [randomSuggestions, setRandomSuggestions] = useState<typeof suggestions>([]);
+
+  useEffect(() => {
+    const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
+    setRandomSuggestions(shuffled.slice(0, 4));
+  }, []);
+
 
   return (
     <div className="flex h-full flex-col">
@@ -195,14 +207,24 @@ function NewChat() {
                 </div>
 
                 <div className="mt-8 grid gap-2 sm:grid-cols-2">
-                  {suggestions.map((s) => (
+                  {randomSuggestions.map((s) => (
                     <button
                       key={s.title}
                       onClick={() => { setInput(s.prompt); inputRef.current?.focus(); }}
-                      className="rounded-xl border border-white/10 bg-neutral-900 p-3 text-left text-sm shadow-soft transition-colors hover:border-white/30 hover:bg-neutral-800"
+                      className="rounded-xl border border-white/10 bg-neutral-900 p-3 text-left text-sm shadow-soft transition-colors hover:border-white/30 hover:bg-neutral-800 hidden sm:block"
                     >
-                      <div className="font-medium text-white">{s.title}</div>
-                      <div className="mt-0.5 truncate text-xs text-neutral-500">{s.prompt}</div>
+                      <div className="font-medium text-white text-xs sm:text-sm">{s.title}</div>
+                      <div className="mt-0.5 truncate text-[10px] sm:text-xs text-neutral-500">{s.prompt}</div>
+                    </button>
+                  ))}
+                  {randomSuggestions.slice(0, 2).map((s) => (
+                    <button
+                      key={`mob-${s.title}`}
+                      onClick={() => { setInput(s.prompt); inputRef.current?.focus(); }}
+                      className="rounded-xl border border-white/10 bg-neutral-900 p-3 text-left text-sm shadow-soft transition-colors hover:border-white/30 hover:bg-neutral-800 sm:hidden"
+                    >
+                      <div className="font-medium text-white text-xs">{s.title}</div>
+                      <div className="mt-0.5 truncate text-[10px] text-neutral-500">{s.prompt}</div>
                     </button>
                   ))}
                 </div>
