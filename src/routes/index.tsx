@@ -127,8 +127,7 @@ function Landing() {
 
 
             <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              Manipuri AI reads what you write in Meiteilon or English and replies in the same language —
-              <span className="text-foreground/90"> fluently, respectfully</span>, with markdown, code and cultural nuance.
+              Manipuri AI reads what you write in Meiteilon, English, or <span className="text-foreground/90 font-medium">Mix Manipuri & English</span> and replies fluently with native cultural nuance.
             </p>
 
             <div className="mt-9 flex flex-col items-center gap-6">
