@@ -39,27 +39,32 @@ function hasPersistedSession() {
 
 function Landing() {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(() => hasPersistedSession());
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     (async () => {
-      let { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        const r = await supabase.auth.refreshSession();
-        data = r.data;
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate({ to: "/chat", replace: true });
+      } else {
+        setChecking(false);
       }
-      if (data.session) navigate({ to: "/chat", replace: true });
-      else setChecking(false);
     })().catch(() => setChecking(false));
   }, [navigate]);
 
   if (checking) {
     return (
-      <div className="min-h-screen gradient-mesh grid place-items-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+      <div className="min-h-screen bg-black grid place-items-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="grid h-12 w-12 place-items-center rounded-full text-2xl font-semibold animate-pulse" style={{ background: "linear-gradient(135deg, var(--gold-soft), var(--gold-deep))", color: "oklch(0.16 0.02 60)" }}>ꯃ</span>
+          <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-full origin-left animate-progress-fast bg-gold" style={{ background: "var(--gold)" }} />
+          </div>
+        </div>
       </div>
     );
   }
+
 
   return (
     <div className="relative min-h-screen overflow-hidden aurora-bg">
