@@ -100,8 +100,7 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
           const aside = document.getElementById('desktop-sidebar');
           const headerToggle = document.getElementById('header-sidebar-toggle');
           if (aside) {
-            aside.classList.add('hidden');
-            aside.classList.remove('md:block');
+            aside.setAttribute('data-state', 'closed');
           }
           if (headerToggle) {
             headerToggle.classList.remove('md:hidden');
@@ -267,7 +266,8 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-[100dvh] w-full overflow-hidden bg-black">
       <div 
         id="desktop-sidebar" 
-        className="hidden md:block h-full w-72 border-r border-white/10 overflow-hidden transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,transform]"
+        className="hidden md:block h-full border-r border-white/10 overflow-hidden transition-[width,opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,opacity,transform] data-[state=closed]:w-0 data-[state=closed]:-translate-x-full data-[state=closed]:opacity-0 data-[state=open]:w-72 data-[state=open]:translate-x-0 data-[state=open]:opacity-100"
+        data-state="open"
       >
         <ChatSidebar />
       </div>
@@ -279,7 +279,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
             title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
           />
-          <div className="absolute inset-y-0 left-0 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] translate-x-0">
+          <div className="absolute inset-y-0 left-0 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] translate-x-0 animate-in slide-in-from-left">
             <ChatSidebar onClose={() => setMobileOpen(false)} />
           </div>
         </div>
@@ -298,13 +298,11 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                   const aside = document.getElementById('desktop-sidebar');
                   const headerToggle = document.getElementById('header-sidebar-toggle');
                   if (aside) {
-                    if (aside.classList.contains('hidden')) {
-                      aside.classList.remove('hidden');
-                      aside.classList.add('md:block');
+                    if (aside.getAttribute('data-state') === 'closed') {
+                      aside.setAttribute('data-state', 'open');
                       if (headerToggle) headerToggle.classList.add('md:hidden');
                     } else {
-                      aside.classList.add('hidden');
-                      aside.classList.remove('md:block');
+                      aside.setAttribute('data-state', 'closed');
                       if (headerToggle) headerToggle.classList.remove('md:hidden');
                     }
                   }

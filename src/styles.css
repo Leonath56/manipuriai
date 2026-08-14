@@ -412,14 +412,14 @@ iframe[src*="lovable.dev/badge"] {
   100% { transform: scale(1.9); opacity: 0; }
 }
 
-/* Smooth Side Tab Animation */
+/* Sidebar Entrance Animation */
 .chat-sidebar {
-  animation: slideInSidebar 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: sidebarEntrance 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes slideInSidebar {
-  from { transform: translateX(-100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+@keyframes sidebarEntrance {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Global Smooth Transitions */
