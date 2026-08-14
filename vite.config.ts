@@ -39,6 +39,10 @@ export default defineConfig({
           find: "entities",
           replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/index.js"),
         },
+        {
+          find: /entities\/lib\/esm\/index\.js\/(.*)/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
       ],
       extensions: [".js", ".ts", ".jsx", ".tsx", ".mjs", ".json"],
     },
