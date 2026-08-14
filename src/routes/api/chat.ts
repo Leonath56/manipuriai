@@ -581,7 +581,13 @@ export const Route = createFileRoute("/api/chat")({
               // already on the wire.
               let upstream: Response;
               try {
-                upstream = await fetchChatCompletion(modelId, { messages, stream: true });
+                // If there are tools, we use them. Gemini 2.5 Pro supports tool calling.
+                const aiPayload: any = { messages, stream: true };
+                if (tools.length > 0) {
+                  aiPayload.tools = tools;
+                  aiPayload.tool_choice = "auto";
+                }
+                upstream = await fetchChatCompletion(modelId, aiPayload);
               } catch {
                 clearInterval(heartbeat);
                 controller.enqueue(encoder.encode("AI request failed. Please retry."));
