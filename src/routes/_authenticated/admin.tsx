@@ -252,7 +252,7 @@ function AdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {(mcpServersQ.data?.servers ?? []).map((s) => (
+                {((mcpServersQ.data as any)?.servers ?? []).map((s: any) => (
                   <tr key={s.id} className="border-t border-border/40">
                     <td className="py-2 pr-3 font-medium">
                       <div>{s.name}</div>
