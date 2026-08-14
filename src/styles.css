@@ -435,8 +435,8 @@ iframe[src*="lovable.dev/badge"] {
   to { opacity: 1; }
 }
 
-/* Global Smooth Transitions */
-* {
+/* Global Smooth Transitions - Excluding Select components to prevent unwanted animations */
+*:not([role="combobox"]):not([role="listbox"]):not([role="option"]) {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
