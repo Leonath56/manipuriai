@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertAdmin } from "./admin.server";
+import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
@@ -80,18 +81,18 @@ export const getAdminOverview = createServerFn({ method: "GET" })
 
 export const listAdminUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { search?: string; limit?: number } | undefined) => d ?? {})
+  .inputValidator((d) => z.object({ search: z.string().optional(), limit: z.number().optional() }).optional().parse(d ?? {}))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const limit = Math.min(data.limit ?? 100, 500);
+    const limit = Math.min(data?.limit ?? 100, 500);
 
     let q = supabaseAdmin
       .from("profiles")
       .select("id, email, username, full_name, age, plan, preferred_language, last_login_at, created_at, avatar_url")
       .order("created_at", { ascending: false })
       .limit(limit);
-    if (data.search) {
+    if (data?.search) {
       const s = `%${data.search}%`;
       q = q.or(`email.ilike.${s},username.ilike.${s},full_name.ilike.${s}`);
     }
@@ -144,7 +145,7 @@ export const listAdminCorrections = createServerFn({ method: "GET" })
 
 export const getAdminUserConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { userId: string }) => d)
+  .inputValidator((d) => z.object({ userId: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -192,7 +193,7 @@ export const listGuestTrialSessions = createServerFn({ method: "GET" })
 
 export const getGuestTrialMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { sessionId: string }) => d)
+  .inputValidator((d) => z.object({ sessionId: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
