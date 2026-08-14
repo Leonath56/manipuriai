@@ -5,9 +5,7 @@ import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
-    // Don't use requireSupabaseAuth: this fn is polled from the shell and
-    // may fire during logout when the bearer is already gone. Return
-    // { isAdmin: false } instead of throwing 401 (which blank-screens).
+    // We try to use requireSupabaseAuth logic manually to avoid 401 throw on initial load/logout
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
     const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
@@ -15,22 +13,22 @@ export const isAdmin = createServerFn({ method: "GET" })
     const token = authHeader.slice("Bearer ".length).trim();
     if (!token || token === "undefined" || token.split(".").length !== 3) return { isAdmin: false };
 
-    const { createClient } = await import("@supabase/supabase-js");
-    const supa = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '', process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '', {
-      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-    });
-    const { data: claimsRes } = await supa.auth.getClaims(token);
-    const userId = claimsRes?.claims?.sub;
-    if (!userId) return { isAdmin: false };
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const supa = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '', process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '', {
+        auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+      });
+      const { data: claimsRes } = await supa.auth.getClaims(token);
+      const userId = claimsRes?.claims?.sub;
+      if (!userId) return { isAdmin: false };
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data } = await supabaseAdmin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    return { isAdmin: !!data };
+      // Use the RPC has_role for better security and consistency
+      const { data: hasRole } = await supa.rpc("has_role", { _user_id: userId, _role: "admin" });
+      return { isAdmin: !!hasRole };
+    } catch (e) {
+      console.error("isAdmin check failed:", e);
+      return { isAdmin: false };
+    }
   });
 
 export const getAdminOverview = createServerFn({ method: "GET" })
