@@ -32,11 +32,11 @@ export default defineConfig({
     resolve: {
       alias: [
         {
-          find: /^entities\/lib\/esm\/(.*)\.js$/,
+          find: /^entities\/lib\/esm\/(.*)$/,
           replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
         },
         {
-          find: /^entities\/lib\/esm\/(.*)$/,
+          find: /^entities\/lib\/(.*)$/,
           replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
         },
         {
