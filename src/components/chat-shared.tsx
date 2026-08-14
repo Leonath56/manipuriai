@@ -293,11 +293,11 @@ export function Composer({
             size="icon"
             variant="ghost"
             onClick={() => navigate({ to: "/image" })}
-            aria-label="Create image"
-            title="Create image with AI"
+            aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            replace this with appropiate coulurful emoji"}
+            title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            replace this with appropiate coulurful emoji"}
             className="h-10 w-10 shrink-0 rounded-full text-white hover:bg-neutral-800"
           >
-            <Sparkles className="h-5 w-5" />
+            <span className="text-xl">🎨</span>
           </Button>
           <Button
             type="submit"
