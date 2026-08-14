@@ -246,7 +246,7 @@ export function Composer({
                 <span>🖼️</span>
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 [&>svg:last-child]:hidden">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
@@ -272,7 +272,7 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            why i need to login again and again if once login in already"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            why i need to login again and again if once login in already"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            now add a new animation when i click on this two button as it cant remove the already exist button"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            now add a new animation when i click on this two button as it cant remove the already exist button"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
                   <span className="flex items-center gap-1 max-w-[90px] truncate">
                     {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                     <span className="text-[10px] opacity-70">↕</span>
