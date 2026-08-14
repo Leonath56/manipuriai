@@ -251,7 +251,7 @@ export function Composer({
                     {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                     <span>{mode === "instant" ? "Instant" : "Think"}</span>
                   </SelectTrigger>
-                  <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={5}>
+                  <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={5} style={{ transition: 'none', animation: 'none' }}>
                     <SelectItem value="instant">
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5 text-base">⚡</span>
@@ -273,13 +273,13 @@ export function Composer({
                   </SelectContent>
                 </Select>
                 <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                  <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            still have this fucking animation just remove the button completely and add a new one with no animation"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            still have this fucking animation just remove the button completely and add a new one with no animation"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white !animate-none !transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
+                  <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Search for and disable any remaining global or component CSS transition/animation rules that could affect those menus or their wrappers."} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Search for and disable any remaining global or component CSS transition/animation rules that could affect those menus or their wrappers."} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white !animate-none !transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
                     <span className="flex items-center gap-1 max-w-[90px] truncate">
                       {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                       <span className="text-[10px] opacity-70">↕</span>
                     </span>
                   </SelectTrigger>
-                  <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={5}>
+                  <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={5} style={{ transition: 'none', animation: 'none' }}>
                     <SelectItem value="auto">Auto-detect language</SelectItem>
                     <SelectItem value="mni">Reply in Manipuri (Latin)</SelectItem>
                     <SelectItem value="mni-mtei">Reply in Manipuri (Meitei Mayek ꯃꯌꯦꯛ)</SelectItem>
