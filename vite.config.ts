@@ -30,11 +30,37 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: {
-        "entities/lib/decode.js": path.resolve(process.cwd(), "node_modules/entities/lib/decode.js"),
-        "entities/lib/encode.js": path.resolve(process.cwd(), "node_modules/entities/lib/encode.js"),
-        entities: path.resolve(process.cwd(), "node_modules/entities"),
-      },
+      alias: [
+        {
+          find: /^entities\/lib\/esm\/(.*)\.js$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: /^entities\/lib\/(.*)\.js$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: /^entities\/lib\/esm\/(.*)$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: /^entities\/lib\/(.*)$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: /^entities\/(.*)\.js$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: /^entities\/(.*)$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: "entities",
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/index.js"),
+        },
+      ],
+      extensions: [".js", ".ts", ".jsx", ".tsx", ".mjs", ".json"],
     },
   },
 });
