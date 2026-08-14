@@ -411,3 +411,29 @@ iframe[src*="lovable.dev/badge"] {
   0%   { transform: scale(0.6); opacity: 0.7; }
   100% { transform: scale(1.9); opacity: 0; }
 }
+
+/* Smooth Side Tab Animation */
+.chat-sidebar {
+  animation: slideInSidebar 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInSidebar {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Global Smooth Transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Prevent transition on layout containers that should be snappy or handled specifically */
+.flex, .grid, body, html {
+  transition: none;
+}
+
+.transition-all {
+  transition-duration: 300ms;
+}
