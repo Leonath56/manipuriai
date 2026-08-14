@@ -37,6 +37,7 @@ export default defineConfig({
         "entities/lib/encode.js": path.resolve(process.cwd(), "node_modules/entities/lib/esm/encode.js"),
         entities: path.resolve(process.cwd(), "node_modules/entities/lib/esm/index.js"),
       },
+      extensions: [".js", ".ts", ".jsx", ".tsx", ".mjs", ".json"],
     },
   },
 });
