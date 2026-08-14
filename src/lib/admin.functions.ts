@@ -85,14 +85,14 @@ export const listAdminUsers = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const limit = Math.min(data.limit ?? 100, 500);
+    const limit = Math.min(data?.limit ?? 100, 500);
 
     let q = supabaseAdmin
       .from("profiles")
       .select("id, email, username, full_name, age, plan, preferred_language, last_login_at, created_at, avatar_url")
       .order("created_at", { ascending: false })
       .limit(limit);
-    if (data.search) {
+    if (data?.search) {
       const s = `%${data.search}%`;
       q = q.or(`email.ilike.${s},username.ilike.${s},full_name.ilike.${s}`);
     }
