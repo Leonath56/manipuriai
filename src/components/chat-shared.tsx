@@ -246,11 +246,11 @@ export function Composer({
                 <span>🖼️</span>
               </Button>
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
-                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
+                <SelectTrigger className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 [&>svg:last-child]:hidden">
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-0 transition-none">
                   <SelectItem value="instant">
                     <div className="flex items-start gap-2">
                       <span className="mt-0.5 text-base">⚡</span>
@@ -272,13 +272,13 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            need to improve the manipuri language as it is worsen after some fixed"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            need to improve the manipuri language as it is worsen after some fixed"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white hover:bg-neutral-800 [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            remove the animation when i click instant button and auto button"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            remove the animation when i click instant button and auto button"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 [&>svg:last-child]:hidden">
                   <span className="flex items-center gap-1 max-w-[90px] truncate">
                     {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                     <span className="text-[10px] opacity-70">↕</span>
                   </span>
                 </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-0 transition-none">
                 <SelectItem value="auto">Auto-detect language</SelectItem>
                 <SelectItem value="mni">Reply in Manipuri (Latin)</SelectItem>
                 <SelectItem value="mni-mtei">Reply in Manipuri (Meitei Mayek ꯃꯌꯦꯛ)</SelectItem>
