@@ -212,3 +212,64 @@ export const getGuestTrialMessages = createServerFn({ method: "GET" })
     ]);
     return { session: session ?? null, messages: messages ?? [] };
   });
+
+export const listMcpServers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
+      .from("mcp_servers")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return { servers: data ?? [] };
+  });
+
+export const addMcpServer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({
+    name: z.string(),
+    url: z.string().url(),
+    api_key: z.string().optional(),
+    description: z.string().optional(),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: server, error } = await supabaseAdmin
+      .from("mcp_servers")
+      .insert({ ...data, user_id: context.userId })
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return server;
+  });
+
+export const toggleMcpServer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string(), is_active: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("mcp_servers")
+      .update({ is_active: data.is_active })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
+
+export const deleteMcpServer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ id: z.string() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("mcp_servers")
+      .delete()
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  });
