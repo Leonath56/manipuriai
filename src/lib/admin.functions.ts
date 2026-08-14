@@ -10,9 +10,9 @@ export const isAdmin = createServerFn({ method: "GET" })
     // { isAdmin: false } instead of throwing 401 (which blank-screens).
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
-    const authHeader = req?.headers.get("authorization");
+    const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return { isAdmin: false };
-    const token = authHeader.slice("Bearer ".length);
+    const token = authHeader.slice("Bearer ".length).trim();
     if (token.split(".").length !== 3) return { isAdmin: false };
 
     const { createClient } = await import("@supabase/supabase-js");
