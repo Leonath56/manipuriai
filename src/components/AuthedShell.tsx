@@ -265,16 +265,23 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
   }, []);
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-black">
-      <div id="desktop-sidebar" className="hidden md:block h-full transition-all duration-300 w-72 border-r border-white/10"><ChatSidebar /></div>
+      <div 
+        id="desktop-sidebar" 
+        className="hidden md:block h-full w-72 border-r border-white/10 overflow-hidden transition-[width,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,transform]"
+      >
+        <ChatSidebar />
+      </div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div 
-            className="absolute inset-0 bg-black/60" 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500 ease-out" 
             onClick={() => setMobileOpen(false)} 
             aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
             title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n\nmake all this part also black"}
           />
-          <div className="absolute inset-y-0 left-0"><ChatSidebar onClose={() => setMobileOpen(false)} /></div>
+          <div className="absolute inset-y-0 left-0 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] translate-x-0">
+            <ChatSidebar onClose={() => setMobileOpen(false)} />
+          </div>
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col relative bg-black">
