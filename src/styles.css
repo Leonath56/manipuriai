@@ -16,6 +16,14 @@
   transform: none !important;
 }
 
+@utility button-click-feedback {
+  &:active {
+    transform: scale(0.96);
+    background-color: oklch(1 0 0 / 0.15) !important;
+  }
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.1s ease;
+}
+
 
 /* Hide the injected "Edit with Lovable" badge on published deployments */
 #lovable-badge,
