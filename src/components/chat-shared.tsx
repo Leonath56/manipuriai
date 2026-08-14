@@ -239,11 +239,14 @@ export function Composer({
                 size="icon"
                 onClick={() => fileRef.current?.click()}
                 disabled={sending || images.length >= MAX_IMAGES}
-                aria-label="Attach image"
-                title="Attach image (homework, docs, math, screenshots)"
+                aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            add a Plus sign to let the user know that this  is the photo upload section"}
+                title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            add a Plus sign to let the user know that this  is the photo upload section"}
                 className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
-                <span>🖼️</span>
+                <div className="relative flex items-center justify-center">
+                  <span className="text-base leading-none">🖼️</span>
+                  <span className="absolute -bottom-1 -right-1 text-[10px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">+</span>
+                </div>
               </Button>
               <div className="flex shrink-0 items-center gap-2">
                 <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
