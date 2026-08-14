@@ -461,7 +461,7 @@ export const Route = createFileRoute("/api/chat")({
               })();
 
 
-          const [historyRes, webInfo, memoryRes] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpServers] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
@@ -474,9 +474,28 @@ export const Route = createFileRoute("/api/chat")({
               .select("name, language, occupation, interests, favorite_topics, notes")
               .eq("user_id", userId)
               .maybeSingle(),
+            getActiveMcpServers(),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
           const memory = (memoryRes.data ?? null) as UserMemory | null;
+
+          // Fetch tools from MCP servers in parallel
+          const mcpTools = await Promise.all(
+            mcpServers.map(async (server) => {
+              const tools = await listMcpTools(server.url, server.api_key);
+              return tools.map((t) => ({ ...t, serverUrl: server.url, apiKey: server.api_key }));
+            })
+          ).then((results) => results.flat());
+
+          // Convert MCP tools to model-friendly format
+          const tools = mcpTools.map((t) => ({
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: t.inputSchema,
+            },
+          }));
 
 
           const languageHint =
