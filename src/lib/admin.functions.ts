@@ -16,7 +16,7 @@ export const isAdmin = createServerFn({ method: "GET" })
     if (!token || token === "undefined" || token.split(".").length !== 3) return { isAdmin: false };
 
     const { createClient } = await import("@supabase/supabase-js");
-    const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
+    const supa = createClient(process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '', process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || '', {
       auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
     });
     const { data: claimsRes } = await supa.auth.getClaims(token);
