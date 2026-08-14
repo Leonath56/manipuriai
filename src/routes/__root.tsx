@@ -102,9 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "canonical", href: "https://manipuriai.online" },
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico?v=2", sizes: "any" },
-      { rel: "icon", href: "/logo.png?v=2", type: "image/png", sizes: "512x512" },
-      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=2" },
+      { rel: "icon", href: "/favicon.ico?v=3", sizes: "any" },
+      { rel: "icon", href: "/logo.png?v=3", type: "image/png", sizes: "512x512" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png?v=3" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     ],
