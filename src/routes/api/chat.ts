@@ -4,6 +4,7 @@ import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
 import { fetchChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
+import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
