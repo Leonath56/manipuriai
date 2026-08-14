@@ -482,7 +482,7 @@ export const Route = createFileRoute("/api/chat")({
           // Fetch tools from MCP servers in parallel
           const mcpTools = await Promise.all(
             mcpServers.map(async (server) => {
-              const tools = await listMcpTools(server.url, server.api_key);
+              const tools = await listMcpTools(server.url, server.api_key || undefined);
               return tools.map((t) => ({ ...t, serverUrl: server.url, apiKey: server.api_key }));
             })
           ).then((results) => results.flat());
