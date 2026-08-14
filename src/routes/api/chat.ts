@@ -4,6 +4,7 @@ import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
 import { fetchChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
+import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -460,7 +461,7 @@ export const Route = createFileRoute("/api/chat")({
               })();
 
 
-          const [historyRes, webInfo, memoryRes] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpServers] = await Promise.all([
             supabase
               .from("messages")
               .select("role, content")
@@ -473,9 +474,28 @@ export const Route = createFileRoute("/api/chat")({
               .select("name, language, occupation, interests, favorite_topics, notes")
               .eq("user_id", userId)
               .maybeSingle(),
+            getActiveMcpServers(),
           ]);
           const history = (historyRes.data ?? []).slice().reverse();
           const memory = (memoryRes.data ?? null) as UserMemory | null;
+
+          // Fetch tools from MCP servers in parallel
+          const mcpTools = await Promise.all(
+            mcpServers.map(async (server) => {
+              const tools = await listMcpTools(server.url, server.api_key || undefined);
+              return tools.map((t) => ({ ...t, serverUrl: server.url, apiKey: server.api_key }));
+            })
+          ).then((results) => results.flat());
+
+          // Convert MCP tools to model-friendly format
+          const tools = mcpTools.map((t) => ({
+            type: "function",
+            function: {
+              name: t.name,
+              description: t.description,
+              parameters: t.inputSchema,
+            },
+          }));
 
 
           const languageHint =
@@ -530,8 +550,12 @@ export const Route = createFileRoute("/api/chat")({
               ]
             : effectiveMessage;
 
+          const mcpContext = mcpTools.length > 0
+            ? `\n\n# AVAILABLE AGENT TOOLS (MCP)\nYou have access to the following specialized tools via MCP:\n${mcpTools.map(t => `- ${t.name}: ${t.description}`).join("\n")}\nUse these tools when needed to provide accurate and up-to-date information.`
+            : "";
+
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
@@ -561,7 +585,13 @@ export const Route = createFileRoute("/api/chat")({
               // already on the wire.
               let upstream: Response;
               try {
-                upstream = await fetchChatCompletion(modelId, { messages, stream: true });
+                // If there are tools, we use them. Gemini 2.5 Pro supports tool calling.
+                const aiPayload: any = { messages, stream: true };
+                if (tools.length > 0) {
+                  aiPayload.tools = tools;
+                  aiPayload.tool_choice = "auto";
+                }
+                upstream = await fetchChatCompletion(modelId, aiPayload);
               } catch {
                 clearInterval(heartbeat);
                 controller.enqueue(encoder.encode("AI request failed. Please retry."));
@@ -578,6 +608,7 @@ export const Route = createFileRoute("/api/chat")({
 
               let buffer = "";
               let full = "";
+              let toolCalls: any[] = [];
               const reader = upstream.body.getReader();
               try {
                 while (true) {
@@ -594,6 +625,20 @@ export const Route = createFileRoute("/api/chat")({
                     try {
                       const j = JSON.parse(payload);
                       const choice = j.choices?.[0];
+                      
+                      // Handle tool calls in streaming
+                      if (choice?.delta?.tool_calls) {
+                        for (const tc of choice.delta.tool_calls) {
+                          const idx = tc.index ?? 0;
+                          if (!toolCalls[idx]) toolCalls[idx] = tc;
+                          else {
+                            if (tc.function?.arguments) {
+                              toolCalls[idx].function.arguments += tc.function.arguments;
+                            }
+                          }
+                        }
+                      }
+
                       const delta: string | undefined =
                         choice?.delta?.content ?? choice?.message?.content;
                       if (delta) {
@@ -603,6 +648,77 @@ export const Route = createFileRoute("/api/chat")({
                       }
                     } catch {
                       // ignore
+                    }
+                  }
+                }
+
+                // Execute tool calls if any
+                if (toolCalls.length > 0) {
+                  const toolResults = [];
+                  for (const tc of toolCalls) {
+                    const name = tc.function.name;
+                    const args = JSON.parse(tc.function.arguments || "{}");
+                    const mcpTool = mcpTools.find(t => t.name === name);
+                    
+                    if (mcpTool) {
+                      try {
+                        // Indicate tool usage to the user
+                        controller.enqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
+                        const result = await callMcpTool(mcpTool.serverUrl, name, args, mcpTool.apiKey || undefined);
+                        toolResults.push({
+                          role: "tool",
+                          tool_call_id: tc.id,
+                          name,
+                          content: JSON.stringify(result)
+                        });
+                      } catch (err) {
+                        toolResults.push({
+                          role: "tool",
+                          tool_call_id: tc.id,
+                          name,
+                          content: `Error: ${err instanceof Error ? err.message : String(err)}`
+                        });
+                      }
+                    }
+                  }
+
+                  if (toolResults.length > 0) {
+                    // Send tool results back to the model for final response
+                    const finalMessages = [
+                      ...messages,
+                      { role: "assistant", tool_calls: toolCalls },
+                      ...toolResults
+                    ];
+                    
+                    const finalUpstream = await fetchChatCompletion(modelId, { 
+                      messages: finalMessages, 
+                      stream: true 
+                    });
+
+                    if (finalUpstream.ok && finalUpstream.body) {
+                      const finalReader = finalUpstream.body.getReader();
+                      let finalBuffer = "";
+                      while (true) {
+                        const { done, value } = await finalReader.read();
+                        if (done) break;
+                        finalBuffer += decoder.decode(value, { stream: true });
+                        const finalLines = finalBuffer.split("\n");
+                        finalBuffer = finalLines.pop() ?? "";
+                        for (const raw of finalLines) {
+                          const line = raw.trim();
+                          if (!line.startsWith("data:")) continue;
+                          const payload = line.slice(5).trim();
+                          if (payload === "[DONE]") continue;
+                          try {
+                            const j = JSON.parse(payload);
+                            const delta = j.choices?.[0]?.delta?.content;
+                            if (delta) {
+                              full += delta;
+                              controller.enqueue(encoder.encode(delta));
+                            }
+                          } catch {}
+                        }
+                      }
                     }
                   }
                 }

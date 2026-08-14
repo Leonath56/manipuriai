@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages } from "@/lib/admin.functions";
-import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus } from "lucide-react";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer } from "@/lib/admin.functions";
+import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus, Server, Plus, Trash2, Check, X, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/admin")({
@@ -30,6 +30,14 @@ function AdminPage() {
   const [viewUserId, setViewUserId] = useState<string | null>(null);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [viewGuestId, setViewGuestId] = useState<string | null>(null);
+  
+  // MCP State
+  const listMcpFn = useServerFn(listMcpServers);
+  const addMcpFn = useServerFn(addMcpServer);
+  const toggleMcpFn = useServerFn(toggleMcpServer);
+  const deleteMcpFn = useServerFn(deleteMcpServer);
+  const [isAddMcpOpen, setIsAddMcpOpen] = useState(false);
+  const [newMcp, setNewMcp] = useState({ name: "", url: "", description: "", api_key: "" });
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 300);
@@ -66,6 +74,12 @@ function AdminPage() {
     queryKey: ["admin-guest-messages", viewGuestId],
     queryFn: () => guestMsgsFn({ data: { sessionId: viewGuestId! } }),
     enabled: !!viewGuestId && adminQ.data?.isAdmin === true,
+  });
+
+  const mcpServersQ = useQuery<any, Error>({
+    queryKey: ["admin-mcp-servers"],
+    queryFn: () => listMcpFn(),
+    enabled: adminQ.data?.isAdmin === true,
   });
 
   const chatMessages = useMemo(() => {
@@ -217,6 +231,80 @@ function AdminPage() {
         </Card>
 
         <Card className="p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2"><Server className="h-4 w-4" /> Agent Integrations (MCP Servers)</h2>
+              <p className="text-xs text-muted-foreground">Manage external tools and agents available to the AI via Model Context Protocol.</p>
+            </div>
+            <Button size="sm" onClick={() => setIsAddMcpOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Add Server
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">URL</th>
+                  <th className="py-2 pr-3">Status</th>
+                  <th className="py-2 pr-3">Added</th>
+                  <th className="py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {((mcpServersQ.data as any)?.servers ?? []).map((s: any) => (
+                  <tr key={s.id} className="border-t border-border/40">
+                    <td className="py-2 pr-3 font-medium">
+                      <div>{s.name}</div>
+                      {s.description && <div className="text-[10px] text-muted-foreground font-normal">{s.description}</div>}
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground font-mono truncate max-w-[200px]">{s.url}</td>
+                    <td className="py-2 pr-3">
+                      <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px]">
+                        {s.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td className="py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7"
+                          onClick={async () => {
+                            await toggleMcpFn({ data: { id: s.id, is_active: !s.is_active } });
+                            mcpServersQ.refetch();
+                          }}
+                        >
+                          {s.is_active ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-destructive"
+                          onClick={async () => {
+                            if (confirm(`Delete MCP server "${s.name}"?`)) {
+                              await deleteMcpFn({ data: { id: s.id } });
+                              mcpServersQ.refetch();
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {mcpServersQ.isLoading && <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Loading…</td></tr>}
+                {!mcpServersQ.isLoading && (mcpServersQ.data?.servers ?? []).length === 0 && (
+                  <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No MCP servers configured.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card className="p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold flex items-center gap-2"><UserPlus className="h-4 w-4" /> Free trial (guest) sessions</h2>
@@ -332,6 +420,70 @@ function AdminPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isAddMcpOpen} onOpenChange={setIsAddMcpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add MCP Server</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Server Name</label>
+              <Input 
+                placeholder="e.g. Brave Search" 
+                value={newMcp.name}
+                onChange={e => setNewMcp(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Server URL (HTTP/SSE)</label>
+              <Input 
+                placeholder="https://..." 
+                value={newMcp.url}
+                onChange={e => setNewMcp(prev => ({ ...prev, url: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">API Key (Optional)</label>
+              <Input 
+                type="password"
+                placeholder="X-API-Key value" 
+                value={newMcp.api_key}
+                onChange={e => setNewMcp(prev => ({ ...prev, api_key: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Input 
+                placeholder="What tools does this server provide?" 
+                value={newMcp.description}
+                onChange={e => setNewMcp(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            <div className="flex items-start gap-2 rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <p>MCP servers must expose a <code>/tools</code> GET endpoint and a <code>/tools/call</code> POST endpoint following the standard protocol.</p>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setIsAddMcpOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={async () => {
+                  if (!newMcp.name || !newMcp.url) return;
+                  try {
+                    await addMcpFn({ data: newMcp });
+                    setIsAddMcpOpen(false);
+                    setNewMcp({ name: "", url: "", description: "", api_key: "" });
+                    mcpServersQ.refetch();
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "Failed to add server");
+                  }
+                }}
+              >
+                Add Server
+              </Button>
             </div>
           </div>
         </DialogContent>
