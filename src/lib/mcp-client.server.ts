@@ -59,6 +59,21 @@ export async function callMcpTool(
   args: Record<string, any>,
   apiKey?: string
 ): Promise<any> {
+  // Validate URL to prevent SSRF
+  try {
+    const url = new URL(serverUrl);
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('169.254.')) {
+      console.warn(`Blocking potential SSRF attempt to ${serverUrl}`);
+      throw new Error("SSRF blocked");
+    }
+  } catch (e) {
+    console.error(`Invalid MCP server URL: ${serverUrl}`);
+    throw e;
+  }
+
   try {
     const response = await fetch(`${serverUrl}/tools/call`, {
       method: "POST",
