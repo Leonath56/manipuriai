@@ -604,6 +604,7 @@ export const Route = createFileRoute("/api/chat")({
 
               let buffer = "";
               let full = "";
+              let toolCalls: any[] = [];
               const reader = upstream.body.getReader();
               try {
                 while (true) {
@@ -620,6 +621,20 @@ export const Route = createFileRoute("/api/chat")({
                     try {
                       const j = JSON.parse(payload);
                       const choice = j.choices?.[0];
+                      
+                      // Handle tool calls in streaming
+                      if (choice?.delta?.tool_calls) {
+                        for (const tc of choice.delta.tool_calls) {
+                          const idx = tc.index ?? 0;
+                          if (!toolCalls[idx]) toolCalls[idx] = tc;
+                          else {
+                            if (tc.function?.arguments) {
+                              toolCalls[idx].function.arguments += tc.function.arguments;
+                            }
+                          }
+                        }
+                      }
+
                       const delta: string | undefined =
                         choice?.delta?.content ?? choice?.message?.content;
                       if (delta) {
@@ -629,6 +644,77 @@ export const Route = createFileRoute("/api/chat")({
                       }
                     } catch {
                       // ignore
+                    }
+                  }
+                }
+
+                // Execute tool calls if any
+                if (toolCalls.length > 0) {
+                  const toolResults = [];
+                  for (const tc of toolCalls) {
+                    const name = tc.function.name;
+                    const args = JSON.parse(tc.function.arguments || "{}");
+                    const mcpTool = mcpTools.find(t => t.name === name);
+                    
+                    if (mcpTool) {
+                      try {
+                        // Indicate tool usage to the user
+                        controller.enqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
+                        const result = await callMcpTool(mcpTool.serverUrl, name, args, mcpTool.apiKey || undefined);
+                        toolResults.push({
+                          role: "tool",
+                          tool_call_id: tc.id,
+                          name,
+                          content: JSON.stringify(result)
+                        });
+                      } catch (err) {
+                        toolResults.push({
+                          role: "tool",
+                          tool_call_id: tc.id,
+                          name,
+                          content: `Error: ${err instanceof Error ? err.message : String(err)}`
+                        });
+                      }
+                    }
+                  }
+
+                  if (toolResults.length > 0) {
+                    // Send tool results back to the model for final response
+                    const finalMessages = [
+                      ...messages,
+                      { role: "assistant", tool_calls: toolCalls },
+                      ...toolResults
+                    ];
+                    
+                    const finalUpstream = await fetchChatCompletion(modelId, { 
+                      messages: finalMessages, 
+                      stream: true 
+                    });
+
+                    if (finalUpstream.ok && finalUpstream.body) {
+                      const finalReader = finalUpstream.body.getReader();
+                      let finalBuffer = "";
+                      while (true) {
+                        const { done, value } = await finalReader.read();
+                        if (done) break;
+                        finalBuffer += decoder.decode(value, { stream: true });
+                        const finalLines = finalBuffer.split("\n");
+                        finalBuffer = finalLines.pop() ?? "";
+                        for (const raw of finalLines) {
+                          const line = raw.trim();
+                          if (!line.startsWith("data:")) continue;
+                          const payload = line.slice(5).trim();
+                          if (payload === "[DONE]") continue;
+                          try {
+                            const j = JSON.parse(payload);
+                            const delta = j.choices?.[0]?.delta?.content;
+                            if (delta) {
+                              full += delta;
+                              controller.enqueue(encoder.encode(delta));
+                            }
+                          } catch {}
+                        }
+                      }
                     }
                   }
                 }
