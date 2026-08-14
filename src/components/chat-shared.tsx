@@ -239,8 +239,8 @@ export function Composer({
                 size="icon"
                 onClick={() => fileRef.current?.click()}
                 disabled={sending || images.length >= MAX_IMAGES}
-                aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            add a Plus sign to let the user know that this  is the photo upload section"}
-                title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            add a Plus sign to let the user know that this  is the photo upload section"}
+                aria-label="Upload photo"
+                title="Upload photo"
                 className="h-8 w-8 shrink-0 rounded-full text-white hover:bg-neutral-800"
               >
                 <div className="relative flex items-center justify-center">
@@ -276,7 +276,7 @@ export function Composer({
                   </SelectContent>
                 </Select>
                 <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                  <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Search for and disable any remaining global or component CSS transition/animation rules that could affect those menus or their wrappers."} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            Search for and disable any remaining global or component CSS transition/animation rules that could affect those menus or their wrappers."} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white !animate-none !transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
+                  <SelectTrigger aria-label="Select language" title="Select language" className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white !animate-none !transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
                     <span className="flex items-center gap-1 max-w-[90px] truncate">
                       {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                       <span className="text-[10px] opacity-70">↕</span>
@@ -296,8 +296,8 @@ export function Composer({
             size="icon"
             variant="ghost"
             onClick={() => navigate({ to: "/image" })}
-            aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            replace this with appropiate coulurful emoji"}
-            title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            replace this with appropiate coulurful emoji"}
+            aria-label="Generate images"
+            title="Generate images"
             className="h-10 w-10 shrink-0 rounded-full text-white hover:bg-neutral-800"
           >
             <span className="text-xl">🎨</span>
