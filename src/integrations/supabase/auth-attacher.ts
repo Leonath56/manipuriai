@@ -10,10 +10,10 @@ export const attachSupabaseAuth = createMiddleware({ type: 'function' }).client(
     let token = data.session?.access_token
     if (!token) {
       // Session may not be hydrated yet on first render / after token expiry.
-      // Try to refresh from the persisted refresh token before firing the RPC —
-      // otherwise the server middleware throws "No authorization header".
-      const refreshed = await supabase.auth.refreshSession()
-      token = refreshed.data.session?.access_token
+      // Try to refresh from the persisted refresh token before firing the RPC.
+      // We also check for an existing session again in case hydration finished.
+      const { data: refreshed } = await supabase.auth.refreshSession()
+      token = refreshed.session?.access_token
     }
     return next({
       headers: token ? { Authorization: `Bearer ${token}` } : {},
