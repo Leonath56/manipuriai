@@ -76,7 +76,7 @@ function AdminPage() {
     enabled: !!viewGuestId && adminQ.data?.isAdmin === true,
   });
 
-  const mcpServersQ = useQuery({
+  const mcpServersQ = useQuery<any, Error>({
     queryKey: ["admin-mcp-servers"],
     queryFn: () => listMcpFn(),
     enabled: adminQ.data?.isAdmin === true,
