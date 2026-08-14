@@ -13,7 +13,7 @@ export const isAdmin = createServerFn({ method: "GET" })
     const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) return { isAdmin: false };
     const token = authHeader.slice("Bearer ".length).trim();
-    if (token.split(".").length !== 3) return { isAdmin: false };
+    if (!token || token === "undefined" || token.split(".").length !== 3) return { isAdmin: false };
 
     const { createClient } = await import("@supabase/supabase-js");
     const supa = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {
