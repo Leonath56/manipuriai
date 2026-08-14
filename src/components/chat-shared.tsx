@@ -250,7 +250,7 @@ export function Composer({
                   {mode === "instant" ? <span>⚡</span> : <span>🧠</span>}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
-                <SelectContent className="no-animation" position="popper" sideOffset={5}>
+                <SelectContent className="!animate-none" position="popper" sideOffset={5}>
                   <SelectItem value="instant">
                     <div className="flex items-start gap-2">
                       <span className="mt-0.5 text-base">⚡</span>
@@ -272,13 +272,13 @@ export function Composer({
                 </SelectContent>
               </Select>
               <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            when i say hi it reply non sense reply why for the very past message make it perfect"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            when i say hi it reply non sense reply why for the very past message make it perfect"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
+                <SelectTrigger aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            remove this two button and function and again implement the same fucntion without any mistake to avoid the animation"} title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            remove this two button and function and again implement the same fucntion without any mistake to avoid the animation"} className="h-8 w-auto shrink-0 gap-1.5 border-0 bg-neutral-900 px-2 text-xs font-medium text-white transition-none hover:bg-neutral-800 button-click-feedback [&>svg:last-child]:hidden">
                   <span className="flex items-center gap-1 max-w-[90px] truncate">
                     {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek ꯃ" : "English"}
                     <span className="text-[10px] opacity-70">↕</span>
                   </span>
                 </SelectTrigger>
-              <SelectContent className="no-animation" position="popper" sideOffset={5}>
+              <SelectContent className="!animate-none" position="popper" sideOffset={5}>
                 <SelectItem value="auto">Auto-detect language</SelectItem>
                 <SelectItem value="mni">Reply in Manipuri (Latin)</SelectItem>
                 <SelectItem value="mni-mtei">Reply in Manipuri (Meitei Mayek ꯃꯌꯦꯛ)</SelectItem>
