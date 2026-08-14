@@ -258,18 +258,25 @@ export function ChatSidebar({ onClose }: { onClose?: () => void }) {
 
 export function AuthedShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarState, setSidebarState] = useState<'open' | 'closed'>('open');
+
   // Track last-login once per mount
   useEffect(() => {
     supabase.from("profiles").update({ last_login_at: new Date().toISOString() }).then(() => {});
   }, []);
+
   return (
     <div className="flex h-[100dvh] w-full overflow-hidden bg-black">
       <div 
         id="desktop-sidebar" 
-        className="hidden md:block h-full border-r border-white/10 overflow-hidden transition-[width,opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,opacity,transform] data-[state=closed]:w-0 data-[state=closed]:-translate-x-full data-[state=closed]:opacity-0 data-[state=open]:w-72 data-[state=open]:translate-x-0 data-[state=open]:opacity-100"
-        data-state="open"
+        className="hidden md:block h-full border-r border-white/10 overflow-hidden transition-[width,opacity,transform] duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,opacity,transform]"
+        style={{
+          width: sidebarState === 'open' ? '18rem' : '0',
+          opacity: sidebarState === 'open' ? 1 : 0,
+          transform: sidebarState === 'open' ? 'translateX(0)' : 'translateX(-100%)',
+        }}
       >
-        <ChatSidebar />
+        <ChatSidebar onClose={() => setSidebarState('closed')} />
       </div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
@@ -295,21 +302,11 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
                 if (isMobile) {
                   setMobileOpen(true);
                 } else {
-                  const aside = document.getElementById('desktop-sidebar');
-                  const headerToggle = document.getElementById('header-sidebar-toggle');
-                  if (aside) {
-                    if (aside.getAttribute('data-state') === 'closed') {
-                      aside.setAttribute('data-state', 'open');
-                      if (headerToggle) headerToggle.classList.add('md:hidden');
-                    } else {
-                      aside.setAttribute('data-state', 'closed');
-                      if (headerToggle) headerToggle.classList.remove('md:hidden');
-                    }
-                  }
+                  setSidebarState(prev => prev === 'open' ? 'closed' : 'open');
                 }
               }}
               aria-label="Toggle menu" 
-              className="h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent md:hidden [&.hidden]:hidden"
+              className={`h-10 w-10 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-transparent ${sidebarState === 'open' ? 'md:hidden' : ''}`}
               id="header-sidebar-toggle"
             >
               <Menu className="h-6 w-6" />
