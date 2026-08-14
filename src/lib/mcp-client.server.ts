@@ -40,7 +40,7 @@ export async function listMcpTools(serverUrl: string, apiKey?: string): Promise<
 export async function callMcpTool(
   serverUrl: string,
   toolName: string,
-  arguments: Record<string, any>,
+  args: Record<string, any>,
   apiKey?: string
 ): Promise<any> {
   try {
@@ -52,7 +52,7 @@ export async function callMcpTool(
       },
       body: JSON.stringify({
         name: toolName,
-        arguments,
+        arguments: args,
       }),
     });
 
