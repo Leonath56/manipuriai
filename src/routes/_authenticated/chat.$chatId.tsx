@@ -510,7 +510,12 @@ function MessageRow({
           const utter = new SpeechSynthesisUtterance(clean);
           utter.rate = 0.95;
           utter.onend = () => setTtsState("idle");
-          utter.onerror = () => { setTtsState("idle"); toast.error("Playback failed"); };
+          utter.onerror = (e) => { 
+            console.error("SpeechSynthesis error:", e);
+            setTtsState("idle"); 
+            toast.error("Read-aloud failed. Please check your device's silent mode and permissions."); 
+          };
+          window.speechSynthesis.cancel(); // Stop any pending speech
           window.speechSynthesis.speak(utter);
           setTtsState("playing");
         } else {
