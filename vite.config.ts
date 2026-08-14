@@ -30,13 +30,16 @@ export default defineConfig({
   },
   vite: {
     resolve: {
-      alias: {
-        "entities/decode": path.resolve(process.cwd(), "node_modules/entities/lib/esm/decode.js"),
-        "entities/encode": path.resolve(process.cwd(), "node_modules/entities/lib/esm/encode.js"),
-        "entities/lib/decode.js": path.resolve(process.cwd(), "node_modules/entities/lib/esm/decode.js"),
-        "entities/lib/encode.js": path.resolve(process.cwd(), "node_modules/entities/lib/esm/encode.js"),
-        entities: path.resolve(process.cwd(), "node_modules/entities/lib/esm/index.js"),
-      },
+      alias: [
+        {
+          find: /^entities\/(.*)$/,
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/$1.js"),
+        },
+        {
+          find: "entities",
+          replacement: path.resolve(process.cwd(), "node_modules/entities/lib/esm/index.js"),
+        },
+      ],
       extensions: [".js", ".ts", ".jsx", ".tsx", ".mjs", ".json"],
     },
   },
