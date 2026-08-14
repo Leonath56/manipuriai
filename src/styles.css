@@ -436,7 +436,7 @@ iframe[src*="lovable.dev/badge"] {
 }
 
 /* Global Smooth Transitions - Excluding Select components to prevent unwanted animations */
-*:not([role="combobox"]):not([role="listbox"]):not([role="option"]) {
+*:not([role="combobox"]):not([role="listbox"]):not([role="option"]):not([data-radix-popper-content-wrapper]):not([class*="Select"]) {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
