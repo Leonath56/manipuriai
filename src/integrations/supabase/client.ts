@@ -52,6 +52,7 @@ function createSupabaseClient() {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storageKey: 'sb-manipuriai-auth-token',
     }
   });
 }
