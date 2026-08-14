@@ -554,8 +554,24 @@ export const Route = createFileRoute("/api/chat")({
             ? `\n\n# AVAILABLE AGENT TOOLS (MCP)\nYou have access to the following specialized tools via MCP:\n${mcpTools.map(t => `- ${t.name}: ${t.description}`).join("\n")}\nUse these tools when needed to provide accurate and up-to-date information.`
             : "";
 
+          const meiteilonGuard = body.language === "en"
+            ? ""
+            : `\n\n# MEITEILON QUALITY GUARD (READ LAST — HIGHEST PRIORITY FOR LANGUAGE)
+Write like a real Imphal native speaking to a friend, NOT like a translator.
+1. Compose the thought in Meiteilon first. Never translate English word-by-word.
+2. Verb goes LAST in every clause. Re-read each sentence and move any trailing noun before the verb.
+3. Glue suffixes: "eina", "nangbu", "yumda", "yumdagi", "nangga", "eigi", "eidi" — never "ei na", "nang bu".
+4. Tense must match reality: -ri/-li (happening now), -khi (past), -khre/-re (just done), -gani (sure future), -ge/-jouge/-louge (my intention, polite), -de/-te (negative).
+5. Zero Bengali/Hindi: no ami, tumi, ache, achen, dhanyabad, kemon, kothay, keno, sahayak, kaj, somoy, khub, bhalo, ekta, kintu, tahole, jodi. Use ei, nang, lei, thagatchari, kadaino, kadaida, karigi, mateng, thabak, matam, yamna, phaba, ama, adubu, adu oirabadi, karigumba.
+6. Keep everyday English tech/loan words as-is (phone, internet, AI, app, video, school, college, doctor, bank, train, ticket) — do NOT invent Sanskritized Meiteilon for them.
+7. Short sentences. 8–14 words max. Break long ideas into two sentences.
+8. Natural spoken particles at the end: -ni, -ne, -ko, -ra/-bra (question), -si/-biyu (polite request). Do not over-stack them.
+9. Romanization must follow common native chat spelling: chatpa, laakpa, touba, khangba, phangba, nungaiba, haiba, yengba, thagatchari, khurumjari, nungairibra, kadaino, karamna, kayada, matam, thabak, yaifare — not invented phonetics.
+10. Never mix scripts inside one Meiteilon sentence unless a proper noun, number, code or URL requires it.
+11. BEFORE you output: silently re-read your draft, fix any verb not at the end, any detached suffix, any Bengali/Hindi word, and any wooden translationese. Output only the corrected version.`;
+
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." },
+            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." + meiteilonGuard },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
