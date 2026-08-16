@@ -41,128 +41,44 @@ export async function streamChat({ chatId, message, language, mode, images, sour
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let full = "";
-  let pending = "";
   let waitingForMeta = true;
   let metaBuffer = "";
-  let streamDone = false;
-  let readError: unknown = null;
 
-  // Smooth reveal: emit one visible word/token at a time. The network can send
-  // large bursts, but the UI should never dump a paragraph or clear while
-  // waiting for the rest of a long reply.
-  let timerId: ReturnType<typeof setTimeout> | null = null;
-  let resolveDrain: (() => void) | null = null;
-  const drained = new Promise<void>((resolve) => { resolveDrain = resolve; });
+  // Progressive rendering: every token that arrives from the API is emitted to
+  // the UI immediately — no artificial pacing, no waiting for the full answer.
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    let chunk = decoder.decode(value, { stream: true });
 
-  const takeRevealChunk = () => {
-    if (!pending) return "";
-    
-    // Markdown heuristics: if we see a code block start, table start, or heading, 
-    // emit larger chunks to avoid breaking the markdown parser mid-token.
-    const markdownHeuristic = pending.match(/^(\s*(?:```|\||#+)\s*)/);
-    if (markdownHeuristic) {
-      const token = markdownHeuristic[1];
-      pending = pending.slice(token.length);
-      return token;
-    }
-
-    const firstWord = pending.match(/^(\s*\S+\s*)/);
-    if (firstWord) {
-      const token = firstWord[1];
-      // Reduce the buffer wait for Markdown special chars
-      const isMarkdownChar = /[*_#`|>\[\](]/.test(token);
-      const hasCompletedWord = /\s$/.test(token) || streamDone || pending.length > 40 || isMarkdownChar;
-      
-      if (!hasCompletedWord) return "";
-      pending = pending.slice(token.length);
-      return token;
-    }
-    if (!streamDone) return "";
-    const chunk = pending;
-    pending = "";
-    return chunk;
-  };
-
-  const nextDelay = () => {
-    if (pending.length > 2200) return 10;
-    if (pending.length > 900) return 16;
-    if (pending.length > 260) return 24;
-    return 34;
-  };
-
-  const scheduleTick = (delay = nextDelay()) => {
-    if (timerId !== null) return;
-    timerId = setTimeout(tick, delay);
-  };
-
-  const tick = () => {
-    timerId = null;
-    if (pending.length === 0) {
-      if (streamDone) {
-        resolveDrain?.();
-        resolveDrain = null;
-        return;
+    if (waitingForMeta) {
+      metaBuffer += chunk;
+      if ("__META__".startsWith(metaBuffer) && metaBuffer.length < "__META__".length) {
+        continue;
       }
-      scheduleTick(24);
-      return;
+      if (metaBuffer.startsWith("__META__")) {
+        const nl = metaBuffer.indexOf("\n");
+        if (nl === -1) continue;
+        const metaLine = metaBuffer.slice(8, nl);
+        try {
+          const meta = JSON.parse(metaLine);
+          onMeta?.(meta);
+        } catch { /* ignore */ }
+        chunk = metaBuffer.slice(nl + 1);
+      } else {
+        chunk = metaBuffer;
+      }
+      metaBuffer = "";
+      waitingForMeta = false;
     }
-    const chunk = takeRevealChunk();
-    if (chunk) onChunk(chunk);
-    if (pending.length > 0 || !streamDone) scheduleTick(chunk ? nextDelay() : 18);
-    else {
-      resolveDrain?.();
-      resolveDrain = null;
-    }
-  };
-  const ensureTick = () => { scheduleTick(0); };
 
-  try {
-    while (true) {
-      const { done: rDone, value } = await reader.read();
-      if (rDone) break;
-      let chunk = decoder.decode(value, { stream: true });
-      if (waitingForMeta) {
-        metaBuffer += chunk;
-        if ("__META__".startsWith(metaBuffer) && metaBuffer.length < "__META__".length) {
-          continue;
-        }
-        if (metaBuffer.startsWith("__META__")) {
-          const nl = metaBuffer.indexOf("\n");
-          if (nl === -1) continue;
-          const metaLine = metaBuffer.slice(8, nl);
-          try {
-            const meta = JSON.parse(metaLine);
-            onMeta?.(meta);
-          } catch { /* ignore */ }
-          chunk = metaBuffer.slice(nl + 1);
-          metaBuffer = "";
-          waitingForMeta = false;
-        } else {
-          chunk = metaBuffer;
-          metaBuffer = "";
-          waitingForMeta = false;
-        }
-      }
-      // Heartbeats keep the connection alive but should not replace the typing
-      // dots with an invisible/blank assistant message.
-      chunk = chunk.replace(/\u200B/g, "");
-      if (chunk) {
-        full += chunk;
-        pending += chunk;
-        ensureTick();
-      }
+    // Heartbeats keep the connection alive but must not render as content.
+    chunk = chunk.replace(/\u200B/g, "");
+    if (chunk) {
+      full += chunk;
+      onChunk(chunk);
     }
-  } catch (err) {
-    readError = err;
-  } finally {
-    streamDone = true;
   }
 
-  if (readError) {
-    if (timerId !== null) { clearTimeout(timerId); timerId = null; }
-    throw readError;
-  }
-  ensureTick();
-  await drained;
   return { reply: full };
 }
