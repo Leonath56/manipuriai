@@ -161,14 +161,40 @@ function TryPage() {
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let full = "";
+      let contentBuffer = "";
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
+        const chunk = decoder.decode(value, { stream: true }).replace(/\u200B/g, "");
+        if (!chunk) continue;
+
         full += chunk;
+        contentBuffer += chunk;
+
+        if (contentBuffer.includes(" ") || contentBuffer.includes("\n")) {
+          const words = contentBuffer.split(/(\s+)/);
+          const lastIsSpace = /\s$/.test(contentBuffer);
+          const toEmit = lastIsSpace ? words : words.slice(0, -1);
+          contentBuffer = lastIsSpace ? "" : words[words.length - 1];
+
+          for (const word of toEmit) {
+            if (word) {
+              setMessages((m) => {
+                const next = [...m];
+                const last = next[next.length - 1];
+                next[next.length - 1] = { ...last, content: (last.content || "") + word };
+                return next;
+              });
+              await new Promise(r => setTimeout(r, 25 + Math.random() * 25));
+            }
+          }
+        }
+      }
+      if (contentBuffer) {
         setMessages((m) => {
           const next = [...m];
-          next[next.length - 1] = { role: "assistant", content: full };
+          const last = next[next.length - 1];
+          next[next.length - 1] = { ...last, content: (last.content || "") + contentBuffer };
           return next;
         });
       }

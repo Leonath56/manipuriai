@@ -44,8 +44,9 @@ export async function streamChat({ chatId, message, language, mode, images, sour
   let waitingForMeta = true;
   let metaBuffer = "";
 
-  // Progressive rendering: every token that arrives from the API is emitted to
-  // the UI immediately — no artificial pacing, no waiting for the full answer.
+  // Word-by-word streaming: tokens are emitted to the UI with a small delay
+  // to create a smooth, natural reading experience.
+  let contentBuffer = "";
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -76,8 +77,32 @@ export async function streamChat({ chatId, message, language, mode, images, sour
     chunk = chunk.replace(/\u200B/g, "");
     if (chunk) {
       full += chunk;
-      onChunk(chunk);
+      contentBuffer += chunk;
+
+      // Split into words and emit them one by one for a smooth effect.
+      // If the chunk contains spaces, we can emit the words.
+      if (contentBuffer.includes(" ") || contentBuffer.includes("\n")) {
+        const words = contentBuffer.split(/(\s+)/);
+        // Keep the last part in the buffer if it doesn't end with a space/newline
+        // to avoid cutting a word in half.
+        const lastIsSpace = /\s$/.test(contentBuffer);
+        const toEmit = lastIsSpace ? words : words.slice(0, -1);
+        contentBuffer = lastIsSpace ? "" : words[words.length - 1];
+
+        for (const word of toEmit) {
+          if (word) {
+            onChunk(word);
+            // Small delay to make it look like it's being typed/read naturally
+            await new Promise(r => setTimeout(r, 20 + Math.random() * 30));
+          }
+        }
+      }
     }
+  }
+
+  // Flush remaining buffer
+  if (contentBuffer) {
+    onChunk(contentBuffer);
   }
 
   return { reply: full };
