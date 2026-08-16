@@ -44,7 +44,15 @@ function AdminPage() {
     return () => clearTimeout(t);
   }, [search]);
 
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
+  const adminQ = useQuery({ 
+    queryKey: ["is-admin"], 
+    queryFn: async () => {
+      console.log("Calling isAdminFn...");
+      const res = await isAdminFn();
+      console.log("isAdminFn result:", res);
+      return res;
+    } 
+  });
   const overviewQ = useQuery({
     queryKey: ["admin-overview"],
     queryFn: () => overviewFn(),
