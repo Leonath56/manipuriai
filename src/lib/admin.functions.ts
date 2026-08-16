@@ -22,6 +22,7 @@ export const isAdmin = createServerFn({ method: "GET" })
 
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      // Use service role to verify the user token and check roles
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       
       if (authError || !user) {
