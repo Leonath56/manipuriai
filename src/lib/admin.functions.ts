@@ -25,9 +25,9 @@ export const isAdmin = createServerFn({ method: "GET" })
       const userId = claimsRes?.claims?.sub;
       if (!userId) return { isAdmin: false };
 
-      // Use the RPC has_role for better security and consistency
-      const { data: hasRole } = await supa.rpc("has_role", { _user_id: userId, _role: "admin" });
-      return { isAdmin: !!hasRole };
+      // Fallback: use profile role check if RPC has_role fails due to permissions
+      const { data: roleRow } = await supa.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+      return { isAdmin: !!roleRow };
     } catch (e) {
       console.error("isAdmin check failed:", e);
       return { isAdmin: false };
