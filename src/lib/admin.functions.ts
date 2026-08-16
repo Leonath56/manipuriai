@@ -5,30 +5,46 @@ import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
-    // We try to use requireSupabaseAuth logic manually to avoid 401 throw on initial load/logout
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
     const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return { isAdmin: false };
+    
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.log("isAdmin: No bearer token found in headers");
+      return { isAdmin: false };
+    }
+    
     const token = authHeader.slice("Bearer ".length).trim();
-    if (!token || token === "undefined" || token.split(".").length !== 3) return { isAdmin: false };
+    if (!token || token === "undefined" || token.split(".").length !== 3) {
+      console.log("isAdmin: Invalid token format");
+      return { isAdmin: false };
+    }
 
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
       const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       
-      if (authError || !user) return { isAdmin: false };
+      if (authError || !user) {
+        console.error("isAdmin: Auth error or no user", authError);
+        return { isAdmin: false };
+      }
 
-      const { data: roleRow } = await supabaseAdmin
+      const { data: roleRow, error: roleError } = await supabaseAdmin
         .from("user_roles")
         .select("role")
         .eq("user_id", user.id)
         .eq("role", "admin")
         .maybeSingle();
         
+      if (roleError) {
+        console.error("isAdmin: Role check error", roleError);
+        return { isAdmin: false };
+      }
+
+      console.log(`isAdmin: User ${user.id} role check result:`, !!roleRow);
       return { isAdmin: !!roleRow };
     } catch (e) {
-      console.error("isAdmin check failed:", e);
+      console.error("isAdmin: Critical error", e);
       return { isAdmin: false };
     }
   });
