@@ -93,7 +93,7 @@ export async function streamChat({ chatId, message, language, mode, images, sour
           if (word) {
             onChunk(word);
             // Small delay to make it look like it's being typed/read naturally
-            await new Promise(r => setTimeout(r, 20 + Math.random() * 30));
+            await new Promise(r => setTimeout(r, 25 + Math.random() * 25));
           }
         }
       }
