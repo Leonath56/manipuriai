@@ -10,5 +10,5 @@ export async function assertAdmin(userId: string) {
     .maybeSingle();
   
   if (error) throw new Error(error.message);
-  if (!hasRole) throw new Error("Forbidden: admin only");
+  if (!roleRow) throw new Error("Forbidden: admin only");
 }
