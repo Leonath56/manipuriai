@@ -5,31 +5,40 @@ import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
-    // We try to use requireSupabaseAuth logic manually to avoid 401 throw on initial load/logout
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
     const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return { isAdmin: false };
+    
+    if (!authHeader?.startsWith("Bearer ")) {
+      return { isAdmin: false };
+    }
+    
     const token = authHeader.slice("Bearer ".length).trim();
-    if (!token || token === "undefined" || token.split(".").length !== 3) return { isAdmin: false };
+    if (!token || token === "undefined" || token.split(".").length !== 3) {
+      return { isAdmin: false };
+    }
 
     try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
-      const SUPABASE_ANON_KEY = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
       
-      const supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
-      });
-      const { data: claimsRes } = await supa.auth.getClaims(token);
-      const userId = claimsRes?.claims?.sub;
-      if (!userId) return { isAdmin: false };
+      if (authError || !user) {
+        return { isAdmin: false };
+      }
 
-      // Use the RPC has_role for better security and consistency
-      const { data: hasRole } = await supa.rpc("has_role", { _user_id: userId, _role: "admin" });
-      return { isAdmin: !!hasRole };
+      const { data: roleRow, error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+        
+      if (roleError) {
+        return { isAdmin: false };
+      }
+
+      return { isAdmin: !!roleRow };
     } catch (e) {
-      console.error("isAdmin check failed:", e);
       return { isAdmin: false };
     }
   });
