@@ -1,11 +1,13 @@
 export async function assertAdmin(userId: string) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   
-  // Use the has_role function via admin client for strict verification
-  const { data: hasRole, error } = await supabaseAdmin.rpc("has_role", { 
-    _user_id: userId, 
-    _role: "admin" 
-  });
+  // Check public.user_roles table directly with service role if RPC fails or as primary check
+  const { data: roleRow, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   
   if (error) throw new Error(error.message);
   if (!hasRole) throw new Error("Forbidden: admin only");
