@@ -99,7 +99,14 @@
   },
   "pnpm": {
     "overrides": {
-      "entities": "4.5.0"
+      "entities": "4.5.0",
+      "js-yaml": "5.3.0"
     }
+  },
+  "overrides": {
+    "js-yaml": "5.3.0"
+  },
+  "resolutions": {
+    "js-yaml": "5.3.0"
   }
 }
