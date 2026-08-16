@@ -21,8 +21,38 @@ export async function listMcpTools(serverUrl: string, apiKey?: string): Promise<
     if (!['http:', 'https:'].includes(url.protocol)) {
       throw new Error("Invalid protocol");
     }
-    // Simple private IP check (could be more robust)
-    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('169.254.')) {
+    
+    // Strict IP validation to prevent SSRF
+    const hostname = url.hostname.toLowerCase();
+    const isPrivateIP = (ip: string) => {
+      return (
+        ip === 'localhost' ||
+        ip === '127.0.0.1' ||
+        ip === '0.0.0.0' ||
+        ip.startsWith('10.') ||
+        ip.startsWith('172.16.') ||
+        ip.startsWith('172.17.') ||
+        ip.startsWith('172.18.') ||
+        ip.startsWith('172.19.') ||
+        ip.startsWith('172.20.') ||
+        ip.startsWith('172.21.') ||
+        ip.startsWith('172.22.') ||
+        ip.startsWith('172.23.') ||
+        ip.startsWith('172.24.') ||
+        ip.startsWith('172.25.') ||
+        ip.startsWith('172.26.') ||
+        ip.startsWith('172.27.') ||
+        ip.startsWith('172.28.') ||
+        ip.startsWith('172.29.') ||
+        ip.startsWith('172.30.') ||
+        ip.startsWith('172.31.') ||
+        ip.startsWith('192.168.') ||
+        ip.startsWith('169.254.') ||
+        ip.endsWith('.local')
+      );
+    };
+
+    if (isPrivateIP(hostname)) {
       console.warn(`Blocking potential SSRF attempt to ${serverUrl}`);
       return [];
     }
@@ -65,7 +95,37 @@ export async function callMcpTool(
     if (!['http:', 'https:'].includes(url.protocol)) {
       throw new Error("Invalid protocol");
     }
-    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1' || url.hostname.startsWith('169.254.')) {
+    
+    const hostname = url.hostname.toLowerCase();
+    const isPrivateIP = (ip: string) => {
+      return (
+        ip === 'localhost' ||
+        ip === '127.0.0.1' ||
+        ip === '0.0.0.0' ||
+        ip.startsWith('10.') ||
+        ip.startsWith('172.16.') ||
+        ip.startsWith('172.17.') ||
+        ip.startsWith('172.18.') ||
+        ip.startsWith('172.19.') ||
+        ip.startsWith('172.20.') ||
+        ip.startsWith('172.21.') ||
+        ip.startsWith('172.22.') ||
+        ip.startsWith('172.23.') ||
+        ip.startsWith('172.24.') ||
+        ip.startsWith('172.25.') ||
+        ip.startsWith('172.26.') ||
+        ip.startsWith('172.27.') ||
+        ip.startsWith('172.28.') ||
+        ip.startsWith('172.29.') ||
+        ip.startsWith('172.30.') ||
+        ip.startsWith('172.31.') ||
+        ip.startsWith('192.168.') ||
+        ip.startsWith('169.254.') ||
+        ip.endsWith('.local')
+      );
+    };
+
+    if (isPrivateIP(hostname)) {
       console.warn(`Blocking potential SSRF attempt to ${serverUrl}`);
       throw new Error("SSRF blocked");
     }
