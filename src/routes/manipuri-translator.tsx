@@ -13,7 +13,7 @@ export const Route = createFileRoute("/manipuri-translator")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Manipuri Translator — English ⇄ Meiteilon" },
       { name: "twitter:description", content: "Free AI translator for Manipuri (Meiteilon), English and Meitei Mayek." },
-      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
     ],
     links: [{ rel: "canonical", href: "https://manipuriai.online/manipuri-translator" }],
   }),
