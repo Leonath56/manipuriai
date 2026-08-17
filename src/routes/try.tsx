@@ -32,6 +32,7 @@ type Msg = { role: "user" | "assistant"; content: string; images?: string[] };
 
 export const Route = createFileRoute("/try")({
   head: () => ({
+    links: [{ rel: "canonical", href: "https://manipuriai.online/try" }],
     meta: [
       { title: "Try Manipuri AI — 3 free messages" },
       { name: "description", content: "Try Manipuri AI for free — chat 3 times without signing up. The first bilingual AI for Meiteilon & English." },
