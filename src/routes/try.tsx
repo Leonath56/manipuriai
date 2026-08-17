@@ -38,7 +38,7 @@ export const Route = createFileRoute("/try")({
       { name: "description", content: "Try Manipuri AI for free — chat 3 times without signing up. The first bilingual AI for Meiteilon & English." },
       { property: "og:title", content: "Try Manipuri AI — 3 free messages" },
       { property: "og:description", content: "Try Manipuri AI for free — chat 3 times without signing up." },
-      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Try Manipuri AI — 3 free messages" },
       { name: "twitter:description", content: "Try Manipuri AI for free — chat 3 times without signing up." },
