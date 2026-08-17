@@ -42,7 +42,7 @@ export const Route = createFileRoute("/try")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Try Manipuri AI — 3 free messages" },
       { name: "twitter:description", content: "Try Manipuri AI for free — chat 3 times without signing up." },
-      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
     ],
   }),
   component: TryPage,
