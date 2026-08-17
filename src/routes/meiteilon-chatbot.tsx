@@ -13,7 +13,7 @@ export const Route = createFileRoute("/meiteilon-chatbot")({
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Meiteilon Chatbot — ChatGPT for Manipur" },
       { name: "twitter:description", content: "ChatGPT-style AI assistant that speaks Meiteilon (Manipuri) fluently." },
-      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=3" },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
     ],
     links: [{ rel: "canonical", href: "https://manipuriai.online/meiteilon-chatbot" }],
   }),
