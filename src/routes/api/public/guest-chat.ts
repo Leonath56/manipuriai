@@ -206,6 +206,23 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             const encoder = new TextEncoder();
             const stream = new ReadableStream({
               async start(controller) {
+                let closed = false;
+                const safeEnqueue = (chunk: Uint8Array) => {
+                  if (closed || request.signal.aborted) return false;
+                  try {
+                    controller.enqueue(chunk);
+                    return true;
+                  } catch {
+                    closed = true;
+                    return false;
+                  }
+                };
+                const safeClose = () => {
+                  if (closed) return;
+                  closed = true;
+                  try { controller.close(); } catch {}
+                };
+
                 try {
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
                   const words = fastGreeting.split(" ");
@@ -217,7 +234,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                     await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
                   }
 
-                  controller.close();
+                  safeClose();
+
                 } catch {
                   // client disconnected mid-stream
                 }
