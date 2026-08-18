@@ -367,18 +367,39 @@ export const Route = createFileRoute("/api/chat")({
             const stream = new ReadableStream({
               async start(controller) {
                 try {
-                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  const encoder = new TextEncoder();
+                  let closed = false;
+                  const safeEnqueue = (chunk: Uint8Array) => {
+                    if (closed || request.signal.aborted) return false;
+                    try {
+                      controller.enqueue(chunk);
+                      return true;
+                    } catch {
+                      closed = true;
+                      return false;
+                    }
+                  };
+                  const safeClose = () => {
+                    if (closed) return;
+                    closed = true;
+                    try { controller.close(); } catch {}
+                  };
+
+                  safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
                   const words = fastGreeting.split(" ");
                   for (let i = 0; i < words.length; i++) {
-                    if (request.signal.aborted) break;
-                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    if (request.signal.aborted || closed) break;
+                    if (!safeEnqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")))) {
+                      break;
+                    }
                     await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
                   }
-                  controller.close();
+                  safeClose();
                 } catch {
                   // client disconnected mid-stream — nothing to do
                 }
+
 
                 // Persist in background
                 if (finalChatId !== "temp") {
