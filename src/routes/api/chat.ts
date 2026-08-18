@@ -615,7 +615,10 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
                 }
-                upstream = await fetchChatCompletion(modelId, aiPayload);
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
+                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: ctrl.signal });
+                clearTimeout(timeout);
               } catch {
                 clearInterval(heartbeat);
                 controller.enqueue(encoder.encode("AI request failed. Please retry."));
