@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 // during an in-flight reply doesn't unmount the streaming UI.
 export type ActiveStream = {
   chatId: string | null;
+  timestamp: number;     // Unique identifier for the turn to prevent deduplication
   userText: string;      // raw stored text (may contain image markdown)
   userImages: string[];  // data URLs (for the pending user bubble preview)
   streaming: string;     // partial assistant reply (grows over time)
