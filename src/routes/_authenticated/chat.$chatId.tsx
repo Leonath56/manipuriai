@@ -325,18 +325,20 @@ function ChatView() {
   let activeTurnStart = -1;
   let turnAlreadyPersisted = false;
   if (activeForChat) {
+    // Only a trailing user row with no assistant reply after it can be the
+    // in-flight turn; anything earlier is real history and must stay visible.
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i];
-      if (m.role === "assistant") break; // a reply exists after any earlier user row
+      if (m.role === "assistant") {
+        // The newest turn already has its reply in the list. Once the stream is
+        // finished, that row set replaces the carryover bubble.
+        turnAlreadyPersisted = activeForChat.done;
+        break;
+      }
       if (m.role === "user" && m.content === activeForChat.userText) {
         activeTurnStart = i;
         break;
       }
-    }
-    if (activeTurnStart === -1) {
-      // The turn (user + assistant) is already in the list — render it from the
-      // list and drop the carryover bubble instead of slicing anything away.
-      turnAlreadyPersisted = true;
     }
   }
   const renderedMessages =
@@ -344,6 +346,7 @@ function ChatView() {
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
   const showCarryover = activeForChat && !turnAlreadyPersisted ? activeForChat : null;
+
 
 
   return (
