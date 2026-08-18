@@ -127,7 +127,7 @@ const SYSTEM_PROMPT = `You are Manipuri AI — a NATIVE Meiteilon (Manipuri) spe
 # GUEST MODE
 - Answer helpfully and fully — essays, explanations, code, lists — whatever is asked. Do NOT artificially shorten. Do NOT invent facts about the user.`;
 
-const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungaithengbra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
+const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungaithengbra|how are you|good morning|good evening|good afternoon|kari leirage)(\!|\?|\.)*$/i;
 const FAST_GREETINGS = [
   "{name} Nungairibra? Kari mateng pangjouge?",
   "Hi {name}, Nungairibra? Kari wari leige?",
@@ -141,6 +141,7 @@ const FAST_GREETINGS = [
   "{name}, Nungairibra? Ngasi kari thabak leige?",
   "Khurumjari {name}! Ngasi ebani kari wari sanage khalliba?",
   "Khurumjari {name}! Nungairibra? Kari wari leige?",
+  "Kari leirage, {name}?",
 ];
 
 function getFastGreeting(msg: string, name: string): string | null {
