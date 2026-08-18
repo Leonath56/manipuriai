@@ -80,7 +80,7 @@ function NewChat() {
     setInput("");
     setImages([]);
     setActiveStream({
-      chatId: null,
+      chatId: "pending", // Mark as pending to differentiate from null/stale
       userText: stored,
       userImages: sentImages,
       streaming: cached || "",
@@ -150,7 +150,7 @@ function NewChat() {
           { id: "a-1", role: "assistant", content: acc, created_at: new Date().toISOString() },
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
-        updateActiveStream({ done: true });
+        updateActiveStream({ done: true, chatId: finalChatId });
         
         // Use a small delay before navigation to ensure the state is fully 
         // committed and avoid a "double blink" during transition.
