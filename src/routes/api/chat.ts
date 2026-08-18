@@ -752,7 +752,13 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                       if (delta) {
                         firstChunkSeen = true;
                         full += delta;
-                        controller.enqueue(encoder.encode(delta));
+                        try {
+                          controller.enqueue(encoder.encode(delta));
+                        } catch (e) {
+                          // Stream might be closed by client abort
+                          reader.cancel();
+                          return;
+                        }
                       }
                     } catch {
                       // ignore

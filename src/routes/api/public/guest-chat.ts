@@ -319,7 +319,13 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                       if (delta) {
                         const fixed = delta.replace(/pangbageda/gi, "mateng pangjouge");
                         assistantAcc += fixed;
-                        controller.enqueue(encoder.encode(fixed));
+                        try {
+                          controller.enqueue(encoder.encode(fixed));
+                        } catch (e) {
+                          // Client disconnected
+                          reader.cancel();
+                          return;
+                        }
                       }
                     } catch {
                       // ignore
