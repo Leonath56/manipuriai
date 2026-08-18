@@ -601,9 +601,13 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               let firstChunkSeen = false;
               const heartbeat = setInterval(() => {
                 if (!firstChunkSeen) {
-                  try { controller.enqueue(encoder.encode("\u200B")); } catch { /* closed */ }
+                  try {
+                    controller.enqueue(encoder.encode("\u200B"));
+                  } catch {
+                    clearInterval(heartbeat);
+                  }
                 }
-              }, 6000);
+              }, 3000);
 
               // Open the upstream AI connection AFTER response headers are
               // already on the wire.
