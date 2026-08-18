@@ -190,13 +190,20 @@ function ChatView() {
         ];
       });
       updateActiveStream({ done: true, streaming: result.reply });
+      
+      // Invalidate queries so the background cache reflects the new turn.
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["messages", chatId] }),
         qc.invalidateQueries({ queryKey: ["chats"] }),
       ]);
-      // Only clear the local streaming state AFTER the queries have refetched
-      // and the store has updated to avoid the "blink" where it briefly disappears.
-      setStreaming("");
+      
+      // Wait for a few frames to ensure the newly fetched DB rows are rendered
+      // and the component has stabilized before clearing the local streaming state.
+      // This eliminates the "blink" where the reply briefly disappears between
+      // finishing and the DB refetch completing.
+      setTimeout(() => {
+        setStreaming("");
+      }, 50);
 
 
     } catch (err) {
