@@ -366,14 +366,19 @@ export const Route = createFileRoute("/api/chat")({
             const nowIso = new Date().toISOString();
             const stream = new ReadableStream({
               async start(controller) {
-                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
-                const words = fastGreeting.split(" ");
-                for (let i = 0; i < words.length; i++) {
-                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
-                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                try {
+                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                  const words = fastGreeting.split(" ");
+                  for (let i = 0; i < words.length; i++) {
+                    if (request.signal.aborted) break;
+                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                  }
+                  controller.close();
+                } catch {
+                  // client disconnected mid-stream — nothing to do
                 }
-                controller.close();
 
                 // Persist in background
                 if (finalChatId !== "temp") {
