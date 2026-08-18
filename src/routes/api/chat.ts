@@ -837,6 +837,10 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                       while (true) {
                         const { done, value } = await finalReader.read();
                         if (done) break;
+                        if (request.signal.aborted || closed) {
+                          await finalReader.cancel().catch(() => {});
+                          break;
+                        }
                         finalBuffer += decoder.decode(value, { stream: true });
                         const finalLines = finalBuffer.split("\n");
                         finalBuffer = finalLines.pop() ?? "";
@@ -850,12 +854,16 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
-                              safeEnqueue(encoder.encode(delta));
+                              if (!safeEnqueue(encoder.encode(delta))) {
+                                await finalReader.cancel().catch(() => {});
+                                break;
+                              }
                             }
                           } catch {}
                         }
                       }
                     }
+
                   }
                 }
               } catch (err) {

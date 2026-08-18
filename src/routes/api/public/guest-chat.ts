@@ -210,10 +210,13 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
                   const words = fastGreeting.split(" ");
                   for (let i = 0; i < words.length; i++) {
-                    if (request.signal.aborted) break;
-                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    if (request.signal.aborted || closed) break;
+                    if (!safeEnqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")))) {
+                      break;
+                    }
                     await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
                   }
+
                   controller.close();
                 } catch {
                   // client disconnected mid-stream
