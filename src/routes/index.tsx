@@ -23,7 +23,6 @@ export const Route = createFileRoute("/")({
       { rel: "canonical", href: "https://manipuriai.online" },
       { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online" },
       { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online" },
-      { rel: "alternate", hrefLang: "mni-Mtei", href: "https://manipuriai.online" },
       { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online" },
     ],
   }),
