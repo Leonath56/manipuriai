@@ -318,29 +318,33 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
+  // Only the *trailing* unanswered user message belongs to the in-flight turn.
+  // Matching by content alone hid an earlier identical message (e.g. a previous
+  // "hi"), which made repeated greetings look like a single message whose reply
+  // kept changing.
   let activeTurnStart = -1;
+  let turnAlreadyPersisted = false;
   if (activeForChat) {
-    // We use a specific ID strategy for optimistic rows that includes the timestamp.
-    // However, the database rows won't have this. The critical fix is to only hide 
-    // the VERY LAST message if it matches the active stream's text, or if we can
-    // match it by a temporary ID.
     for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messages[i].role === "user" && messages[i].content === activeForChat.userText) {
-        // If the ID matches our optimistic pattern with the same timestamp, it's definitely this turn.
-        // Otherwise, we take the last occurrence to ensure "hi" doesn't hide previous "hi"s.
+      const m = messages[i];
+      if (m.role === "assistant") break; // a reply exists after any earlier user row
+      if (m.role === "user" && m.content === activeForChat.userText) {
         activeTurnStart = i;
         break;
       }
+    }
+    if (activeTurnStart === -1) {
+      // The turn (user + assistant) is already in the list — render it from the
+      // list and drop the carryover bubble instead of slicing anything away.
+      turnAlreadyPersisted = true;
     }
   }
   const renderedMessages =
     activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
-  // CRITICAL: Prevent the "ThinkingLoader" from appearing in previous chat rows.
-  // This happens when the active stream store is not cleared correctly, causing
-  // another chatId to pick up a 'stray' active stream.
-  const showCarryover = activeForChat && (activeForChat.chatId === chatId || activeForChat.chatId === "pending") ? activeForChat : null;
+  const showCarryover = activeForChat && !turnAlreadyPersisted ? activeForChat : null;
+
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-black">
