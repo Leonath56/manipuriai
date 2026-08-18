@@ -128,10 +128,6 @@ function TryPage() {
     setImages([]);
     setLoading(true);
 
-    setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
-    setInput("");
-    setLoading(true);
-
     try {
       const resp = await fetch("/api/public/guest-chat", {
         method: "POST",
