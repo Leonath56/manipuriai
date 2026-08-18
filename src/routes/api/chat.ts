@@ -673,20 +673,37 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
 
           const stream = new ReadableStream({
             async start(controller) {
+              let closed = false;
+              const safeEnqueue = (chunk: Uint8Array) => {
+                if (closed || request.signal.aborted) return false;
+                try {
+                  controller.enqueue(chunk);
+                  return true;
+                } catch {
+                  closed = true;
+                  return false;
+                }
+              };
+              const safeClose = () => {
+                if (closed) return;
+                closed = true;
+                try {
+                  controller.close();
+                } catch {
+                  // already closed by client disconnect
+                }
+              };
+
               // Flush chatId frame IMMEDIATELY so the UI can show the typing
               // indicator and mount the streaming bubble while we're still
               // opening the upstream AI connection (saves the full request RTT
               // off perceived time-to-first-token).
-              controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+              safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
 
               let firstChunkSeen = false;
               const heartbeat = setInterval(() => {
                 if (!firstChunkSeen) {
-                  try {
-                    controller.enqueue(encoder.encode("\u200B"));
-                  } catch {
-                    clearInterval(heartbeat);
-                  }
+                  if (!safeEnqueue(encoder.encode("\u200B"))) clearInterval(heartbeat);
                 }
               }, 3000);
 
@@ -700,21 +717,18 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
                 }
-                const ctrl = new AbortController();
-                const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
-                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: ctrl.signal });
-                clearTimeout(timeout);
+                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: request.signal });
               } catch {
                 clearInterval(heartbeat);
-                controller.enqueue(encoder.encode("AI request failed. Please retry."));
-                controller.close();
+                safeEnqueue(encoder.encode("AI request failed. Please retry."));
+                safeClose();
                 return;
               }
               if (!upstream.ok || !upstream.body) {
                 clearInterval(heartbeat);
                 const t = await upstream.text().catch(() => "");
-                controller.enqueue(encoder.encode(t.slice(0, 300) || "AI request failed"));
-                controller.close();
+                safeEnqueue(encoder.encode(t.slice(0, 300) || "AI request failed"));
+                safeClose();
                 return;
               }
 
