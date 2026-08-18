@@ -204,22 +204,28 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             },
           ];
 
-          const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
+          const ep = chatCompletionsEndpoint("google/gemini-2.0-flash");
+          
+          const ctrl = new AbortController();
+          const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
+
           const upstream = await fetch(ep.url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${ep.apiKey}`,
             },
+            signal: ctrl.signal,
             body: JSON.stringify({
               model: ep.model,
               messages,
               stream: true,
             }),
           });
+          clearTimeout(timeout);
 
           if (!upstream.ok || !upstream.body) {
-            const t = await upstream.text();
+            const t = await upstream.text().catch(() => "");
             return new Response(
               JSON.stringify({ error: t.slice(0, 300) || "AI request failed" }),
               { status: 500, headers: { "Content-Type": "application/json" } },
