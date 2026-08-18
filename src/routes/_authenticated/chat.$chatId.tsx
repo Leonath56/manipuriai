@@ -183,9 +183,7 @@ function ChatView() {
         const withoutOptimisticUser = rows.filter((m) => !(m.id.startsWith("opt-") && m.role === "user" && m.content === stored));
         return [
           ...withoutOptimisticUser,
-          ...(withoutOptimisticUser.some((m) => m.role === "user" && m.content === stored)
-            ? []
-            : [{ id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now }]),
+          { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
           { id: `a-${Date.now()}`, role: "assistant" as const, content: result.reply, created_at: now },
         ];
       });
