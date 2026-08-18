@@ -18,13 +18,13 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.0-flash", 
+  instant: "google/gemini-2.5-flash", 
   think: "google/gemini-2.5-pro",
 } as const;
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.0-flash",
+  instant: "google/gemini-2.5-flash",
   think: "google/gemini-2.5-pro",
 } as const;
 
