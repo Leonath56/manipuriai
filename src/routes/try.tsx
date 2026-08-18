@@ -178,8 +178,9 @@ function TryPage() {
             if (word) {
               setMessages((m) => {
                 const next = [...m];
-                const last = next[next.length - 1];
-                next[next.length - 1] = { ...last, content: (last.content || "") + word };
+                const lastIdx = next.length - 1;
+                const last = next[lastIdx];
+                next[lastIdx] = { ...last, content: (last.content || "") + word };
                 return next;
               });
               await new Promise(r => setTimeout(r, 10 + Math.random() * 15));
@@ -190,8 +191,9 @@ function TryPage() {
       if (contentBuffer) {
         setMessages((m) => {
           const next = [...m];
-          const last = next[next.length - 1];
-          next[next.length - 1] = { ...last, content: (last.content || "") + contentBuffer };
+          const lastIdx = next.length - 1;
+          const last = next[lastIdx];
+          next[lastIdx] = { ...last, content: (last.content || "") + contentBuffer };
           return next;
         });
       }
