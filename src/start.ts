@@ -1,6 +1,7 @@
 import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
+import { isClientAbort } from "./lib/client-abort";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 /**
@@ -9,18 +10,6 @@ import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
  * client to answer, so we must NOT log it or render the 500 error page
  * (rendering it is what produced the "blank screen" runtime error report).
  */
-const isClientAbort = (error: unknown) => {
-  const e = error as { name?: string; code?: string; message?: string } | null;
-  if (!e || typeof e !== "object") return false;
-  return (
-    e.name === "AbortError" ||
-    e.code === "ECONNRESET" ||
-    e.code === "ERR_STREAM_PREMATURE_CLOSE" ||
-    e.message === "aborted" ||
-    /aborted|premature close|connection reset/i.test(e.message ?? "")
-  );
-};
-
 /**
  * Node's HTTP server emits `Error: aborted` from `abortIncoming` when a socket
  * closes mid-request. That is emitted outside any request handler, so the
