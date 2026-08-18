@@ -180,7 +180,13 @@ function ChatView() {
       const now = new Date().toISOString();
       qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
         const rows = old ?? [];
-        const withoutOptimisticUser = rows.filter((m) => !(m.id.startsWith("opt-") && m.role === "user" && m.content === stored));
+        // Only remove the EXACT optimistic user message we just sent, to avoid
+        // accidentally deduplicating earlier identical messages (like multiple "hi"s).
+        const withoutOptimisticUser = [...rows];
+        const optIdx = withoutOptimisticUser.findLastIndex((m) => m.id.startsWith("opt-") && m.role === "user" && m.content === stored);
+        if (optIdx !== -1) {
+          withoutOptimisticUser.splice(optIdx, 1);
+        }
         return [
           ...withoutOptimisticUser,
           { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
