@@ -641,15 +641,11 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               let full = "";
               let toolCalls: any[] = [];
               const reader = upstream.body.getReader();
+              const onAbort = () => reader.cancel();
+              request.signal.addEventListener("abort", onAbort);
               try {
                 while (true) {
-                  const { done, value } = await Promise.race([
-                    reader.read(),
-                    new Promise<never>((_, reject) => {
-                      // Abort if the client disconnects
-                      request.signal.addEventListener("abort", () => reject(new Error("Client aborted")));
-                    })
-                  ]);
+                  const { done, value } = await reader.read();
                   if (done) break;
                   buffer += decoder.decode(value, { stream: true });
                   const lines = buffer.split("\n");
