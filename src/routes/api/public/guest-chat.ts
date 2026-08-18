@@ -206,13 +206,18 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             const encoder = new TextEncoder();
             const stream = new ReadableStream({
               async start(controller) {
-                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
-                const words = fastGreeting.split(" ");
-                for (let i = 0; i < words.length; i++) {
-                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
-                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                try {
+                  // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                  const words = fastGreeting.split(" ");
+                  for (let i = 0; i < words.length; i++) {
+                    if (request.signal.aborted) break;
+                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                  }
+                  controller.close();
+                } catch {
+                  // client disconnected mid-stream
                 }
-                controller.close();
 
                 // Persist in background
                 void persistGuestTurn({
@@ -265,23 +270,19 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
           const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
           
-          const ctrl = new AbortController();
-          const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
-
           const upstream = await fetch(ep.url, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${ep.apiKey}`,
             },
-            signal: ctrl.signal,
+            signal: request.signal,
             body: JSON.stringify({
               model: ep.model,
               messages,
               stream: true,
             }),
           });
-          clearTimeout(timeout);
 
           if (!upstream.ok || !upstream.body) {
             const t = await upstream.text().catch(() => "");
@@ -298,8 +299,24 @@ export const Route = createFileRoute("/api/public/guest-chat")({
           const stream = new ReadableStream({
             async start(controller) {
               let buffer = "";
+              let closed = false;
+              const safeEnqueue = (chunk: Uint8Array) => {
+                if (closed || request.signal.aborted) return false;
+                try {
+                  controller.enqueue(chunk);
+                  return true;
+                } catch {
+                  closed = true;
+                  return false;
+                }
+              };
+              const safeClose = () => {
+                if (closed) return;
+                closed = true;
+                try { controller.close(); } catch {}
+              };
               const reader = upstream.body!.getReader();
-              const onAbort = () => reader.cancel();
+              const onAbort = () => { reader.cancel().catch(() => {}); };
               request.signal.addEventListener("abort", onAbort);
               try {
                 while (true) {
@@ -320,11 +337,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                       if (delta) {
                         const fixed = delta.replace(/pangbageda/gi, "mateng pangjouge");
                         assistantAcc += fixed;
-                        try {
-                          controller.enqueue(encoder.encode(fixed));
-                        } catch (e) {
-                          // Client disconnected
-                          reader.cancel();
+                        if (!safeEnqueue(encoder.encode(fixed))) {
+                          await reader.cancel().catch(() => {});
                           return;
                         }
                       }
@@ -334,8 +348,15 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                   }
                 }
               } catch (err) {
-                controller.error(err);
+                if (request.signal.aborted || closed || (err as Error)?.name === "AbortError") {
+                  safeClose();
+                  return;
+                }
+                try { controller.error(err); } catch {}
+                closed = true;
                 return;
+              } finally {
+                request.signal.removeEventListener("abort", onAbort);
               }
 
               if (assistantAcc) {
@@ -351,7 +372,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 });
               }
 
-              controller.close();
+              safeClose();
             },
           });
 

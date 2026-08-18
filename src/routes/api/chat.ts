@@ -366,14 +366,19 @@ export const Route = createFileRoute("/api/chat")({
             const nowIso = new Date().toISOString();
             const stream = new ReadableStream({
               async start(controller) {
-                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
-                const words = fastGreeting.split(" ");
-                for (let i = 0; i < words.length; i++) {
-                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
-                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                try {
+                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                  const words = fastGreeting.split(" ");
+                  for (let i = 0; i < words.length; i++) {
+                    if (request.signal.aborted) break;
+                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                  }
+                  controller.close();
+                } catch {
+                  // client disconnected mid-stream — nothing to do
                 }
-                controller.close();
 
                 // Persist in background
                 if (finalChatId !== "temp") {
@@ -491,9 +496,13 @@ export const Route = createFileRoute("/api/chat")({
             const finalChatId = chatId;
             const imageStream = new ReadableStream({
               start(controller) {
-                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                controller.enqueue(encoder.encode(assistantContent));
-                controller.close();
+                try {
+                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  controller.enqueue(encoder.encode(assistantContent));
+                  controller.close();
+                } catch {
+                  // client disconnected before the image reply was flushed
+                }
 
                 void (async () => {
                   try {
@@ -668,20 +677,37 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
 
           const stream = new ReadableStream({
             async start(controller) {
+              let closed = false;
+              const safeEnqueue = (chunk: Uint8Array) => {
+                if (closed || request.signal.aborted) return false;
+                try {
+                  controller.enqueue(chunk);
+                  return true;
+                } catch {
+                  closed = true;
+                  return false;
+                }
+              };
+              const safeClose = () => {
+                if (closed) return;
+                closed = true;
+                try {
+                  controller.close();
+                } catch {
+                  // already closed by client disconnect
+                }
+              };
+
               // Flush chatId frame IMMEDIATELY so the UI can show the typing
               // indicator and mount the streaming bubble while we're still
               // opening the upstream AI connection (saves the full request RTT
               // off perceived time-to-first-token).
-              controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+              safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
 
               let firstChunkSeen = false;
               const heartbeat = setInterval(() => {
                 if (!firstChunkSeen) {
-                  try {
-                    controller.enqueue(encoder.encode("\u200B"));
-                  } catch {
-                    clearInterval(heartbeat);
-                  }
+                  if (!safeEnqueue(encoder.encode("\u200B"))) clearInterval(heartbeat);
                 }
               }, 3000);
 
@@ -695,21 +721,18 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
                 }
-                const ctrl = new AbortController();
-                const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
-                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: ctrl.signal });
-                clearTimeout(timeout);
+                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: request.signal });
               } catch {
                 clearInterval(heartbeat);
-                controller.enqueue(encoder.encode("AI request failed. Please retry."));
-                controller.close();
+                safeEnqueue(encoder.encode("AI request failed. Please retry."));
+                safeClose();
                 return;
               }
               if (!upstream.ok || !upstream.body) {
                 clearInterval(heartbeat);
                 const t = await upstream.text().catch(() => "");
-                controller.enqueue(encoder.encode(t.slice(0, 300) || "AI request failed"));
-                controller.close();
+                safeEnqueue(encoder.encode(t.slice(0, 300) || "AI request failed"));
+                safeClose();
                 return;
               }
 
@@ -753,11 +776,9 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                       if (delta) {
                         firstChunkSeen = true;
                         full += delta;
-                        try {
-                          controller.enqueue(encoder.encode(delta));
-                        } catch (e) {
-                          // Stream might be closed by client abort
-                          reader.cancel();
+                        if (!safeEnqueue(encoder.encode(delta))) {
+                          await reader.cancel().catch(() => {});
+                          clearInterval(heartbeat);
                           return;
                         }
                       }
@@ -778,7 +799,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                     if (mcpTool) {
                       try {
                         // Indicate tool usage to the user
-                        controller.enqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
+                        safeEnqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
                         const result = await callMcpTool(mcpTool.serverUrl, name, args, mcpTool.apiKey || undefined);
                         toolResults.push({
                           role: "tool",
@@ -829,7 +850,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
-                              controller.enqueue(encoder.encode(delta));
+                              safeEnqueue(encoder.encode(delta));
                             }
                           } catch {}
                         }
@@ -839,8 +860,18 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                 }
               } catch (err) {
                 clearInterval(heartbeat);
-                controller.error(err);
+                // Client disconnects abort the reader — that is not a server error.
+                if (request.signal.aborted || closed || (err as Error)?.name === "AbortError") {
+                  safeClose();
+                  return;
+                }
+                try {
+                  controller.error(err);
+                } catch {}
+                closed = true;
                 return;
+              } finally {
+                request.signal.removeEventListener("abort", onAbort);
               }
               clearInterval(heartbeat);
 
@@ -855,7 +886,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                     const content: string = j.choices?.[0]?.message?.content ?? "";
                     if (content) {
                       full = content;
-                      controller.enqueue(encoder.encode(content));
+                      safeEnqueue(encoder.encode(content));
                     }
                   }
                 } catch {
@@ -866,7 +897,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               if (!full.trim()) {
                 const msg = "Sorry, deep thinking didn't return a reply. Please try again or switch to Instant reply.";
                 full = msg;
-                controller.enqueue(encoder.encode(msg));
+                safeEnqueue(encoder.encode(msg));
               }
 
               // vocab correction
@@ -886,7 +917,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                 // best-effort persistence; keep the visible streamed reply intact
               }
 
-              controller.close();
+              safeClose();
 
 
               // Fire-and-forget memory extraction (do not block stream close)
