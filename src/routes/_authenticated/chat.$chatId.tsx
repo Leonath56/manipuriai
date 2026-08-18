@@ -333,7 +333,11 @@ function ChatView() {
   const renderedMessages =
     activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
-  const showCarryover = activeForChat;
+
+  // CRITICAL: Prevent the "ThinkingLoader" from appearing in previous chat rows.
+  // This happens when the active stream store is not cleared correctly, causing
+  // another chatId to pick up a 'stray' active stream.
+  const showCarryover = activeForChat && activeForChat.chatId === chatId;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-black">
