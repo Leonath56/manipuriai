@@ -58,6 +58,11 @@ function ChatView() {
   const activeForChat = active && active.chatId === chatId ? active : null;
   const inflight = activeForChat && !activeForChat.done ? activeForChat : null;
 
+  // Number of persisted rows when the current turn started. Used to decide when
+  // the turn has landed in the database — never content matching, which hid
+  // earlier identical messages (e.g. repeated "hi").
+  const turnBaseRef = useRef<number | null>(null);
+
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
     queryFn: async (): Promise<Msg[]> => {
@@ -65,32 +70,21 @@ function ChatView() {
         .from("messages")
         .select("id, role, content, created_at")
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .order("role", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Msg[];
     },
   });
 
-  // Once the database has the completed turn, wait briefly before dropping the
-  // store. Optimistic cache rows are intentionally ignored here; clearing from
-  // those fake rows is what made long answers disappear until refresh.
+  // Once the database has the completed turn, drop the cross-route store.
   useEffect(() => {
     if (!activeForChat?.done) return;
     const timer = window.setTimeout(() => {
       const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
-      let activeTurnStart = -1;
-      for (let i = rows.length - 1; i >= 0; i -= 1) {
-        if (rows[i].role === "user" && rows[i].content === activeForChat.userText) {
-          activeTurnStart = i;
-          break;
-        }
-      }
-      const hasPersistedReply =
-        activeTurnStart >= 0 &&
-        isPersistedMessageId(rows[activeTurnStart].id) &&
-        rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant" && isPersistedMessageId(m.id));
-      if (hasPersistedReply) setActiveStream(null);
-    }, 1800);
+      const base = turnBaseRef.current;
+      if (base === null || rows.length > base) setActiveStream(null);
+    }, 1200);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
 
@@ -98,6 +92,7 @@ function ChatView() {
     if (!activeForChat?.done) return;
     void qc.invalidateQueries({ queryKey: ["messages", chatId] });
   }, [activeForChat?.done, chatId, qc]);
+
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -143,7 +138,7 @@ function ChatView() {
     const hasImages = imgs.length > 0;
     const cached = null; // getCachedResponse(text) disabled per user request
 
-
+    turnBaseRef.current = (qc.getQueryData<Msg[]>(["messages", chatId]) ?? []).length;
     setActiveStream({
       chatId,
       timestamp: Date.now(),
@@ -318,34 +313,20 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Only the *trailing* unanswered user message belongs to the in-flight turn.
-  // Matching by content alone hid an earlier identical message (e.g. a previous
-  // "hi"), which made repeated greetings look like a single message whose reply
-  // kept changing.
-  let activeTurnStart = -1;
-  let turnAlreadyPersisted = false;
-  if (activeForChat) {
-    // Only a trailing user row with no assistant reply after it can be the
-    // in-flight turn; anything earlier is real history and must stay visible.
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      const m = messages[i];
-      if (m.role === "assistant") {
-        // The newest turn already has its reply in the list. Once the stream is
-        // finished, that row set replaces the carryover bubble.
-        turnAlreadyPersisted = activeForChat.done;
-        break;
-      }
-      if (m.role === "user" && m.content === activeForChat.userText) {
-        activeTurnStart = i;
-        break;
-      }
-    }
+  // Every persisted row always renders — repeated identical messages must each
+  // stay visible with their own reply. The in-flight turn is tracked purely by
+  // row count, never by content matching.
+  if (!activeForChat) {
+    turnBaseRef.current = null;
+  } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
+    turnBaseRef.current = messages.length;
   }
-  const renderedMessages =
-    activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
+  const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
+  const renderedMessages = messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
-  const showCarryover = activeForChat && !turnAlreadyPersisted ? activeForChat : null;
+  const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
+
 
 
 
