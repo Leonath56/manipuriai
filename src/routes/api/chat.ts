@@ -339,11 +339,13 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const hasImages = (body.images?.length ?? 0) > 0;
+          let chatId = body.chatId;
 
           // FAST GREETING PATH
           const fastGreeting = !hasImages ? getFastGreeting(body.message, displayName) : null;
           if (fastGreeting) {
             let finalChatId = chatId;
+
             if (!finalChatId) {
               const { data: newChat } = await supabase
                 .from("chats")
