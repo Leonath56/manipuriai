@@ -240,6 +240,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             async start(controller) {
               let buffer = "";
               const reader = upstream.body!.getReader();
+              const onAbort = () => reader.cancel();
+              request.signal.addEventListener("abort", onAbort);
               try {
                 while (true) {
                   const { done, value } = await reader.read();
