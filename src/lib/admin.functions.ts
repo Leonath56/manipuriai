@@ -3,9 +3,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const { getOptionalAdminStatus } = await import("./admin.server");
-    return getOptionalAdminStatus();
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    return { isAdmin: !error && Boolean(data) };
   });
 
 export const getAdminOverview = createServerFn({ method: "GET" })
