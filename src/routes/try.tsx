@@ -180,7 +180,7 @@ function TryPage() {
                 const next = [...m];
                 const lastIdx = next.length - 1;
                 const last = next[lastIdx];
-                next[lastIdx] = { ...last, content: (last.content || "") + word };
+                next[lastIdx] = { ...last, content: last.content + word };
                 return next;
               });
               await new Promise(r => setTimeout(r, 10 + Math.random() * 15));
