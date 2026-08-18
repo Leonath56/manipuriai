@@ -182,7 +182,7 @@ function TryPage() {
                 next[next.length - 1] = { ...last, content: (last.content || "") + word };
                 return next;
               });
-              await new Promise(r => setTimeout(r, 25 + Math.random() * 25));
+              await new Promise(r => setTimeout(r, 10 + Math.random() * 15));
             }
           }
         }
