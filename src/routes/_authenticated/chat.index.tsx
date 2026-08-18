@@ -151,7 +151,12 @@ function NewChat() {
         ]);
         qc.invalidateQueries({ queryKey: ["chats"] });
         updateActiveStream({ done: true });
-        navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
+        
+        // Use a small delay before navigation to ensure the state is fully 
+        // committed and avoid a "double blink" during transition.
+        setTimeout(() => {
+          navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
+        }, 10);
       } else {
         updateActiveStream({ done: true });
       }
