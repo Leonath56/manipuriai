@@ -21,6 +21,26 @@ const isClientAbort = (error: unknown) => {
   );
 };
 
+/**
+ * Node's HTTP server emits `Error: aborted` from `abortIncoming` when a socket
+ * closes mid-request. That is emitted outside any request handler, so the
+ * middleware below can never see it — it bubbles up as an uncaught exception
+ * and gets reported as a runtime error / blank screen. Swallow only that
+ * specific case, once per process.
+ */
+declare const process: { on?: (e: string, cb: (err: unknown) => void) => void; __abortGuard?: boolean } | undefined;
+if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
+  process.__abortGuard = true;
+  process.on("uncaughtException", (err: unknown) => {
+    if (isClientAbort(err)) return;
+    console.error(err);
+  });
+  process.on("unhandledRejection", (err: unknown) => {
+    if (isClientAbort(err)) return;
+    console.error(err);
+  });
+}
+
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Internal /lovable/* routes authenticate themselves — never intercept them.
   if (request && new URL(request.url).pathname.startsWith("/lovable/")) {
