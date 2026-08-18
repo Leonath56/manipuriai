@@ -138,7 +138,7 @@ function ChatView() {
     const hasImages = imgs.length > 0;
     const cached = null; // getCachedResponse(text) disabled per user request
 
-
+    turnBaseRef.current = (qc.getQueryData<Msg[]>(["messages", chatId]) ?? []).length;
     setActiveStream({
       chatId,
       timestamp: Date.now(),
