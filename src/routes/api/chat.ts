@@ -496,9 +496,13 @@ export const Route = createFileRoute("/api/chat")({
             const finalChatId = chatId;
             const imageStream = new ReadableStream({
               start(controller) {
-                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                controller.enqueue(encoder.encode(assistantContent));
-                controller.close();
+                try {
+                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  controller.enqueue(encoder.encode(assistantContent));
+                  controller.close();
+                } catch {
+                  // client disconnected before the image reply was flushed
+                }
 
                 void (async () => {
                   try {
@@ -913,7 +917,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                 // best-effort persistence; keep the visible streamed reply intact
               }
 
-              controller.close();
+              safeClose();
 
 
               // Fire-and-forget memory extraction (do not block stream close)
