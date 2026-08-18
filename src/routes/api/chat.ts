@@ -28,6 +28,23 @@ const VISION_MODEL_BY_MODE = {
   think: "google/gemini-2.5-pro",
 } as const;
 
+const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungairibra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
+const FAST_GREETINGS = [
+  "{name} Nungairibra? Kari mateng panggani?",
+  "Hi {name}, Nungairibra? Kari wari leige?",
+  "Khurumjari {name}! Nungairibra? Kari mateng pangjouge?",
+  "Hello {name}! Nungai-nungai leibra? Kari mateng pangjouge?",
+  "{name}, Nungairibra? Kari mateng panggani?",
+];
+
+function getFastGreeting(msg: string, name: string): string | null {
+  if (msg.length > 20) return null;
+  if (!GREETING_REGEX.test(msg.trim())) return null;
+  const template = FAST_GREETINGS[Math.floor(Math.random() * FAST_GREETINGS.length)];
+  return template.replace("{name}", name ? ` ${name}` : "").trim();
+}
+
+
 function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
   if (aspect === "16:9") return "1536x1024";
   if (aspect === "9:16") return "1024x1536";
@@ -322,7 +339,59 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const hasImages = (body.images?.length ?? 0) > 0;
+          let chatId = body.chatId;
+
+          // FAST GREETING PATH
+          const fastGreeting = !hasImages ? getFastGreeting(body.message, displayName) : null;
+          if (fastGreeting) {
+            let finalChatId = chatId;
+
+            if (!finalChatId) {
+              const { data: newChat } = await supabase
+                .from("chats")
+                .insert({ user_id: userId, title: body.message.slice(0, 60) })
+                .select("id")
+                .single();
+              finalChatId = newChat?.id || "temp";
+            }
+            const encoder = new TextEncoder();
+            const nowIso = new Date().toISOString();
+            const stream = new ReadableStream({
+              async start(controller) {
+                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                const words = fastGreeting.split(" ");
+                for (let i = 0; i < words.length; i++) {
+                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                }
+                controller.close();
+
+                // Persist in background
+                if (finalChatId !== "temp") {
+                  void (async () => {
+                    try {
+                      await supabase.from("messages").insert([
+                        { chat_id: finalChatId, user_id: userId, role: "user", content: body.message },
+                        { chat_id: finalChatId, user_id: userId, role: "assistant", content: fastGreeting },
+                      ]);
+                      await supabase.from("chats").update({ updated_at: nowIso }).eq("id", finalChatId);
+                    } catch {}
+                  })();
+                }
+              }
+            });
+            return new Response(stream, {
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+              },
+            });
+          }
+
           // Text saved to DB for the user turn — embed images as markdown so
+
           // the UI can render thumbnails on reload/refetch.
           const imgMarkdown = hasImages ? body.images!.map((u) => `![image](${u})`).join("\n") : "";
           const storedUserText = body.message
@@ -334,7 +403,6 @@ export const Route = createFileRoute("/api/chat")({
           const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
 
           // ensure chat
-          let chatId = body.chatId;
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase

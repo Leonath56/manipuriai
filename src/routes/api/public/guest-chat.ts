@@ -127,6 +127,23 @@ const SYSTEM_PROMPT = `You are Manipuri AI — a NATIVE Meiteilon (Manipuri) spe
 # GUEST MODE
 - Answer helpfully and fully — essays, explanations, code, lists — whatever is asked. Do NOT artificially shorten. Do NOT invent facts about the user.`;
 
+const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungaithengbra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
+const FAST_GREETINGS = [
+  "{name} Nungairibra? Kari mateng panggani?",
+  "Hi {name}, Nungairibra? Kari wari leige?",
+  "Khurumjari {name}! Nungairibra? Kari mateng pangjouge?",
+  "Hello {name}! Nungai-nungai leibra? Kari mateng pangjouge?",
+  "{name}, Nungairibra? Kari mateng panggani?",
+];
+
+function getFastGreeting(msg: string, name: string): string | null {
+  if (msg.length > 20) return null;
+  if (!GREETING_REGEX.test(msg.trim())) return null;
+  const template = FAST_GREETINGS[Math.floor(Math.random() * FAST_GREETINGS.length)];
+  return template.replace("{name}", name ? ` ${name}` : "").trim();
+}
+
+
 export const Route = createFileRoute("/api/public/guest-chat")({
   server: {
     handlers: {
@@ -175,6 +192,40 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               { status: 429, headers: { "Content-Type": "application/json" } },
             );
           }
+          // FAST GREETING PATH
+          const fastGreeting = !(body.images?.length) ? getFastGreeting(body.message, body.name) : null;
+          if (fastGreeting) {
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+              async start(controller) {
+                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                const words = fastGreeting.split(" ");
+                for (let i = 0; i < words.length; i++) {
+                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                }
+                controller.close();
+
+                // Persist in background
+                void persistGuestTurn({
+                  guestId: body.guestId,
+                  name: body.name,
+                  userAgent: ua,
+                  ipHint,
+                  userMessage: body.message,
+                  assistantMessage: fastGreeting,
+                });
+              }
+            });
+            return new Response(stream, {
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+              },
+            });
+          }
+
 
           const languageHint =
             body.language === "mni"
