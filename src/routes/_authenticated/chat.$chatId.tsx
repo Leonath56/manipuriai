@@ -183,9 +183,7 @@ function ChatView() {
         const withoutOptimisticUser = rows.filter((m) => !(m.id.startsWith("opt-") && m.role === "user" && m.content === stored));
         return [
           ...withoutOptimisticUser,
-          ...(withoutOptimisticUser.some((m) => m.role === "user" && m.content === stored)
-            ? []
-            : [{ id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now }]),
+          { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
           { id: `a-${Date.now()}`, role: "assistant" as const, content: result.reply, created_at: now },
         ];
       });
@@ -317,15 +315,11 @@ function ChatView() {
       }
     }
   }
-  const renderedMessages = activeForChat
-    ? messages.filter((m) => {
-        const idx = messages.indexOf(m);
-        if (activeTurnStart >= 0 && idx >= activeTurnStart) return false;
-        if (m.role === "user" && m.content === activeForChat.userText) return false;
-        if (m.role === "assistant" && m.content === activeForChat.streaming) return false;
-        return true;
-      })
-    : messages;
+  // Only hide the CURRENT turn (the last matching user row and everything after
+  // it). Earlier messages with identical text — e.g. saying "hi" several times —
+  // must stay visible.
+  const renderedMessages =
+    activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
   const showCarryover = activeForChat;
 
