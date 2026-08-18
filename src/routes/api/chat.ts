@@ -28,13 +28,20 @@ const VISION_MODEL_BY_MODE = {
   think: "google/gemini-2.5-pro",
 } as const;
 
-const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungairibra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
+const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungairibra|khurumjari|nungaithengbra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
 const FAST_GREETINGS = [
-  "{name} Nungairibra? Kari mateng panggani?",
+  "{name} Nungairibra? Kari mateng pangjouge?",
   "Hi {name}, Nungairibra? Kari wari leige?",
   "Khurumjari {name}! Nungairibra? Kari mateng pangjouge?",
-  "Hello {name}! Nungai-nungai leibra? Kari mateng pangjouge?",
-  "{name}, Nungairibra? Kari mateng panggani?",
+  "Hello {name}! Nungai-nungaina leiribra? Kari mateng pangjouge?",
+  "{name}, Ngasi Kari kari khangningba lei ei mateng panjage?",
+  "{name}, ngasi eina kari mateng touba yagani adomgi?",
+  "{name}, kari search touningba lei? Hairaku yagani.",
+  "Hello {name}! Kari issue leige, hairak-u mateng panjage.",
+  "Hi {name}! Kari khangningbano hairaku, mateng panjage.",
+  "{name}, Nungairibra? Ngasi kari thabak leige?",
+  "Khurumjari {name}! Ngasi ebani kari wari sanage khalliba?",
+  "Khurumjari {name}! Nungairibra? Kari wari leige?",
 ];
 
 function getFastGreeting(msg: string, name: string): string | null {
