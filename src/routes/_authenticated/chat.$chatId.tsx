@@ -58,6 +58,11 @@ function ChatView() {
   const activeForChat = active && active.chatId === chatId ? active : null;
   const inflight = activeForChat && !activeForChat.done ? activeForChat : null;
 
+  // Number of persisted rows when the current turn started. Used to decide when
+  // the turn has landed in the database — never content matching, which hid
+  // earlier identical messages (e.g. repeated "hi").
+  const turnBaseRef = useRef<number | null>(null);
+
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
     queryFn: async (): Promise<Msg[]> => {
@@ -65,32 +70,21 @@ function ChatView() {
         .from("messages")
         .select("id, role, content, created_at")
         .eq("chat_id", chatId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .order("role", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Msg[];
     },
   });
 
-  // Once the database has the completed turn, wait briefly before dropping the
-  // store. Optimistic cache rows are intentionally ignored here; clearing from
-  // those fake rows is what made long answers disappear until refresh.
+  // Once the database has the completed turn, drop the cross-route store.
   useEffect(() => {
     if (!activeForChat?.done) return;
     const timer = window.setTimeout(() => {
       const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
-      let activeTurnStart = -1;
-      for (let i = rows.length - 1; i >= 0; i -= 1) {
-        if (rows[i].role === "user" && rows[i].content === activeForChat.userText) {
-          activeTurnStart = i;
-          break;
-        }
-      }
-      const hasPersistedReply =
-        activeTurnStart >= 0 &&
-        isPersistedMessageId(rows[activeTurnStart].id) &&
-        rows.slice(activeTurnStart + 1).some((m) => m.role === "assistant" && isPersistedMessageId(m.id));
-      if (hasPersistedReply) setActiveStream(null);
-    }, 1800);
+      const base = turnBaseRef.current;
+      if (base === null || rows.length > base) setActiveStream(null);
+    }, 1200);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
 
@@ -98,6 +92,7 @@ function ChatView() {
     if (!activeForChat?.done) return;
     void qc.invalidateQueries({ queryKey: ["messages", chatId] });
   }, [activeForChat?.done, chatId, qc]);
+
 
   useEffect(() => {
     inputRef.current?.focus();
