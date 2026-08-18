@@ -1,51 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertAdmin } from "./admin.server";
 import { z } from "zod";
 
 export const isAdmin = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { getRequest } = await import("@tanstack/react-start/server");
-    const req = getRequest();
-    const authHeader = req?.headers.get("authorization") || req?.headers.get("Authorization");
-    
-    if (!authHeader?.startsWith("Bearer ")) {
-      return { isAdmin: false };
-    }
-    
-    const token = authHeader.slice("Bearer ".length).trim();
-    if (!token || token === "undefined" || token.split(".").length !== 3) {
-      return { isAdmin: false };
-    }
-
-    try {
-      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-      
-      if (authError || !user) {
-        return { isAdmin: false };
-      }
-
-      const { data: roleRow, error: roleError } = await supabaseAdmin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-        
-      if (roleError) {
-        return { isAdmin: false };
-      }
-
-      return { isAdmin: !!roleRow };
-    } catch (e) {
-      return { isAdmin: false };
-    }
+    const { getOptionalAdminStatus } = await import("./admin.server");
+    return getOptionalAdminStatus();
   });
 
 export const getAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -93,6 +59,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ search: z.string().optional(), limit: z.number().optional() }).optional().parse(d ?? {}))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const limit = Math.min(data?.limit ?? 100, 500);
@@ -142,6 +109,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 export const listAdminCorrections = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
@@ -157,6 +125,7 @@ export const getAdminUserConversations = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ userId: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -190,6 +159,7 @@ export const getAdminUserConversations = createServerFn({ method: "GET" })
 export const listGuestTrialSessions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
@@ -205,6 +175,7 @@ export const getGuestTrialMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ sessionId: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: session }, { data: messages }] = await Promise.all([
@@ -226,6 +197,7 @@ export const getGuestTrialMessages = createServerFn({ method: "GET" })
 export const listMcpServers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await supabaseAdmin
@@ -245,6 +217,7 @@ export const addMcpServer = createServerFn({ method: "POST" })
     description: z.string().optional(),
   }).parse(d))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: server, error } = await supabaseAdmin
@@ -260,6 +233,7 @@ export const toggleMcpServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string(), is_active: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
@@ -274,6 +248,7 @@ export const deleteMcpServer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ data, context }) => {
+    const { assertAdmin } = await import("./admin.server");
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
