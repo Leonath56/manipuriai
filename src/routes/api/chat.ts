@@ -51,7 +51,7 @@ function getFastGreeting(msg: string, name: string): string | null {
   if (!GREETING_REGEX.test(clean)) return null;
   // Deterministic-ish random based on greeting text + name to avoid
   // showing the exact same template if they spam the exact same "hi"
-  const seed = clean.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + (name.length * 7) + Date.now();
+  const seed = clean.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + (name.length * 7) + (Date.now() % 10000);
   const template = FAST_GREETINGS[seed % FAST_GREETINGS.length];
   return template.replace("{name}", name ? ` ${name}` : "").trim();
 }

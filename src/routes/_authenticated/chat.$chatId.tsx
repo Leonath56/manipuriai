@@ -180,7 +180,18 @@ function ChatView() {
       const now = new Date().toISOString();
       qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
         const rows = old ?? [];
-        const withoutOptimisticUser = rows.filter((m) => !(m.id.startsWith("opt-") && m.role === "user" && m.content === stored));
+        const withoutOptimisticUser = [...rows];
+        let optIdx = -1;
+        for (let i = withoutOptimisticUser.length - 1; i >= 0; i--) {
+          const m = withoutOptimisticUser[i];
+          if (m.id.startsWith("opt-") && m.role === "user" && m.content === stored) {
+            optIdx = i;
+            break;
+          }
+        }
+        if (optIdx !== -1) {
+          withoutOptimisticUser.splice(optIdx, 1);
+        }
         return [
           ...withoutOptimisticUser,
           { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
