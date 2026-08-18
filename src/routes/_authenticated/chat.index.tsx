@@ -80,7 +80,7 @@ function NewChat() {
     setInput("");
     setImages([]);
     setActiveStream({
-      chatId: null,
+      chatId: "pending", // Mark as pending to differentiate from null/stale
       userText: stored,
       userImages: sentImages,
       streaming: cached || "",

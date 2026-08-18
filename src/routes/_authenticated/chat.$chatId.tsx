@@ -337,7 +337,7 @@ function ChatView() {
   // CRITICAL: Prevent the "ThinkingLoader" from appearing in previous chat rows.
   // This happens when the active stream store is not cleared correctly, causing
   // another chatId to pick up a 'stray' active stream.
-  const showCarryover = activeForChat && activeForChat.chatId === chatId ? activeForChat : null;
+  const showCarryover = activeForChat && (activeForChat.chatId === chatId || activeForChat.chatId === "pending") ? activeForChat : null;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-black">
