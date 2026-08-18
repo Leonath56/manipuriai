@@ -28,6 +28,23 @@ const VISION_MODEL_BY_MODE = {
   think: "google/gemini-2.5-pro",
 } as const;
 
+const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungairibra|how are you|good morning|good evening|good afternoon)(\!|\?|\.)*$/i;
+const FAST_GREETINGS = [
+  "{name} Nungairibra? Kari mateng panggani?",
+  "Hi {name}, Nungairibra? Kari wari leige?",
+  "Khurumjari {name}! Nungairibra? Kari mateng pangjouge?",
+  "Hello {name}! Nungai-nungai leibra? Kari mateng pangjouge?",
+  "{name}, Nungairibra? Kari mateng panggani?",
+];
+
+function getFastGreeting(msg: string, name: string): string | null {
+  if (msg.length > 20) return null;
+  if (!GREETING_REGEX.test(msg.trim())) return null;
+  const template = FAST_GREETINGS[Math.floor(Math.random() * FAST_GREETINGS.length)];
+  return template.replace("{name}", name ? ` ${name}` : "").trim();
+}
+
+
 function imageSizeFor(aspect: "1:1" | "16:9" | "9:16") {
   if (aspect === "16:9") return "1536x1024";
   if (aspect === "9:16") return "1024x1536";
