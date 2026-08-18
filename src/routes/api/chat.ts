@@ -403,7 +403,6 @@ export const Route = createFileRoute("/api/chat")({
           const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
 
           // ensure chat
-          let chatId = body.chatId;
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
