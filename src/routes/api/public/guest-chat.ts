@@ -192,6 +192,40 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               { status: 429, headers: { "Content-Type": "application/json" } },
             );
           }
+          // FAST GREETING PATH
+          const fastGreeting = !(body.images?.length) ? getFastGreeting(body.message, body.name) : null;
+          if (fastGreeting) {
+            const encoder = new TextEncoder();
+            const stream = new ReadableStream({
+              async start(controller) {
+                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                const words = fastGreeting.split(" ");
+                for (let i = 0; i < words.length; i++) {
+                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                }
+                controller.close();
+
+                // Persist in background
+                void persistGuestTurn({
+                  guestId: body.guestId,
+                  name: body.name,
+                  userAgent: ua,
+                  ipHint,
+                  userMessage: body.message,
+                  assistantMessage: fastGreeting,
+                });
+              }
+            });
+            return new Response(stream, {
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+              },
+            });
+          }
+
 
           const languageHint =
             body.language === "mni"
