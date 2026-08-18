@@ -643,7 +643,13 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               const reader = upstream.body.getReader();
               try {
                 while (true) {
-                  const { done, value } = await reader.read();
+                  const { done, value } = await Promise.race([
+                    reader.read(),
+                    new Promise<never>((_, reject) => {
+                      // Abort if the client disconnects
+                      request.signal.addEventListener("abort", () => reject(new Error("Client aborted")));
+                    })
+                  ]);
                   if (done) break;
                   buffer += decoder.decode(value, { stream: true });
                   const lines = buffer.split("\n");
