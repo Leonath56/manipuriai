@@ -772,11 +772,9 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                       if (delta) {
                         firstChunkSeen = true;
                         full += delta;
-                        try {
-                          controller.enqueue(encoder.encode(delta));
-                        } catch (e) {
-                          // Stream might be closed by client abort
-                          reader.cancel();
+                        if (!safeEnqueue(encoder.encode(delta))) {
+                          await reader.cancel().catch(() => {});
+                          clearInterval(heartbeat);
                           return;
                         }
                       }
@@ -797,7 +795,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                     if (mcpTool) {
                       try {
                         // Indicate tool usage to the user
-                        controller.enqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
+                        safeEnqueue(encoder.encode(`\n\n> [Tool: ${name}]\n\n`));
                         const result = await callMcpTool(mcpTool.serverUrl, name, args, mcpTool.apiKey || undefined);
                         toolResults.push({
                           role: "tool",
@@ -848,7 +846,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
-                              controller.enqueue(encoder.encode(delta));
+                              safeEnqueue(encoder.encode(delta));
                             }
                           } catch {}
                         }
@@ -858,8 +856,18 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                 }
               } catch (err) {
                 clearInterval(heartbeat);
-                controller.error(err);
+                // Client disconnects abort the reader — that is not a server error.
+                if (request.signal.aborted || closed || (err as Error)?.name === "AbortError") {
+                  safeClose();
+                  return;
+                }
+                try {
+                  controller.error(err);
+                } catch {}
+                closed = true;
                 return;
+              } finally {
+                request.signal.removeEventListener("abort", onAbort);
               }
               clearInterval(heartbeat);
 
@@ -874,7 +882,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                     const content: string = j.choices?.[0]?.message?.content ?? "";
                     if (content) {
                       full = content;
-                      controller.enqueue(encoder.encode(content));
+                      safeEnqueue(encoder.encode(content));
                     }
                   }
                 } catch {
@@ -885,7 +893,7 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               if (!full.trim()) {
                 const msg = "Sorry, deep thinking didn't return a reply. Please try again or switch to Instant reply.";
                 full = msg;
-                controller.enqueue(encoder.encode(msg));
+                safeEnqueue(encoder.encode(msg));
               }
 
               // vocab correction
