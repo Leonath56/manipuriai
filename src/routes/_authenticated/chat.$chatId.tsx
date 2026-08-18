@@ -317,7 +317,8 @@ function ChatView() {
   }
   // Only hide the CURRENT turn (the last matching user row and everything after
   // it). Earlier messages with identical text — e.g. saying "hi" several times —
-  // must stay visible.
+  // must stay visible. We use index-based slicing to ensure that only the very
+  // last occurrence of the message triggers the carryover/streaming view.
   const renderedMessages =
     activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");

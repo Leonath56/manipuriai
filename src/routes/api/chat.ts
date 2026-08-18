@@ -47,8 +47,12 @@ const FAST_GREETINGS = [
 
 function getFastGreeting(msg: string, name: string): string | null {
   if (msg.length > 20) return null;
-  if (!GREETING_REGEX.test(msg.trim())) return null;
-  const template = FAST_GREETINGS[Math.floor(Math.random() * FAST_GREETINGS.length)];
+  const clean = msg.trim().toLowerCase();
+  if (!GREETING_REGEX.test(clean)) return null;
+  // Deterministic-ish random based on greeting text + name to avoid
+  // showing the exact same template if they spam the exact same "hi"
+  const seed = clean.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + (name.length * 7) + Date.now();
+  const template = FAST_GREETINGS[seed % FAST_GREETINGS.length];
   return template.replace("{name}", name ? ` ${name}` : "").trim();
 }
 
@@ -67,7 +71,7 @@ CRITICAL: You are an expert in all fields. If a user asks for coding, write prod
 
 
 STRICT INSTRUCTION FOR "HI" / GREETINGS:
-When a user says "hi", "hello", "hey", or any simple greeting, reply with a warm, natural Manipuri greeting like "Khurumjari! Nungairibra?" or "Hello! Nungairibra? Kari mateng panggani?". DO NOT give long, robotic, or nonsensical explanations. Be human and concise.
+When a user says "hi", "hello", "hey", or any simple greeting, reply with a warm, natural Manipuri greeting like "Khurumjari! Nungairibra?" or "Hello! Nungairibra? Kari mateng panggani?". DO NOT give long, robotic, or nonsensical explanations. Be human and concise. VARIETY IS KEY: If the user says "hi" multiple times, vary your greeting slightly each time while keeping it natural (e.g., "Nungairibra?", "Kari wari leige?", "Ngasi kari thabak leige?").
 
 For Romanized Manipuri generation:
 1. STRICT SOV STRUCTURE: Always place the verb at the very end of the sentence.
