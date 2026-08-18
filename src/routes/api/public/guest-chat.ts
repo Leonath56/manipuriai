@@ -204,7 +204,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             },
           ];
 
-          const ep = chatCompletionsEndpoint("google/gemini-2.0-flash");
+          const ep = chatCompletionsEndpoint("google/gemini-2.5-flash");
           
           const ctrl = new AbortController();
           const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
