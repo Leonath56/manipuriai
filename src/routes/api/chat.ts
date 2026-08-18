@@ -367,18 +367,39 @@ export const Route = createFileRoute("/api/chat")({
             const stream = new ReadableStream({
               async start(controller) {
                 try {
-                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  const encoder = new TextEncoder();
+                  let closed = false;
+                  const safeEnqueue = (chunk: Uint8Array) => {
+                    if (closed || request.signal.aborted) return false;
+                    try {
+                      controller.enqueue(chunk);
+                      return true;
+                    } catch {
+                      closed = true;
+                      return false;
+                    }
+                  };
+                  const safeClose = () => {
+                    if (closed) return;
+                    closed = true;
+                    try { controller.close(); } catch {}
+                  };
+
+                  safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
                   const words = fastGreeting.split(" ");
                   for (let i = 0; i < words.length; i++) {
-                    if (request.signal.aborted) break;
-                    controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                    if (request.signal.aborted || closed) break;
+                    if (!safeEnqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")))) {
+                      break;
+                    }
                     await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
                   }
-                  controller.close();
+                  safeClose();
                 } catch {
                   // client disconnected mid-stream — nothing to do
                 }
+
 
                 // Persist in background
                 if (finalChatId !== "temp") {
@@ -496,13 +517,31 @@ export const Route = createFileRoute("/api/chat")({
             const finalChatId = chatId;
             const imageStream = new ReadableStream({
               start(controller) {
+                let closed = false;
+                const safeEnqueue = (chunk: Uint8Array) => {
+                  if (closed || request.signal.aborted) return false;
+                  try {
+                    controller.enqueue(chunk);
+                    return true;
+                  } catch {
+                    closed = true;
+                    return false;
+                  }
+                };
+                const safeClose = () => {
+                  if (closed) return;
+                  closed = true;
+                  try { controller.close(); } catch {}
+                };
+
                 try {
-                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                  controller.enqueue(encoder.encode(assistantContent));
-                  controller.close();
+                  safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  safeEnqueue(encoder.encode(assistantContent));
+                  safeClose();
                 } catch {
                   // client disconnected before the image reply was flushed
                 }
+
 
                 void (async () => {
                   try {
@@ -837,6 +876,10 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                       while (true) {
                         const { done, value } = await finalReader.read();
                         if (done) break;
+                        if (request.signal.aborted || closed) {
+                          await finalReader.cancel().catch(() => {});
+                          break;
+                        }
                         finalBuffer += decoder.decode(value, { stream: true });
                         const finalLines = finalBuffer.split("\n");
                         finalBuffer = finalLines.pop() ?? "";
@@ -850,12 +893,16 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
-                              safeEnqueue(encoder.encode(delta));
+                              if (!safeEnqueue(encoder.encode(delta))) {
+                                await finalReader.cancel().catch(() => {});
+                                break;
+                              }
                             }
                           } catch {}
                         }
                       }
                     }
+
                   }
                 }
               } catch (err) {
