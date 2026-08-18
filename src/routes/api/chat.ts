@@ -517,13 +517,31 @@ export const Route = createFileRoute("/api/chat")({
             const finalChatId = chatId;
             const imageStream = new ReadableStream({
               start(controller) {
+                let closed = false;
+                const safeEnqueue = (chunk: Uint8Array) => {
+                  if (closed || request.signal.aborted) return false;
+                  try {
+                    controller.enqueue(chunk);
+                    return true;
+                  } catch {
+                    closed = true;
+                    return false;
+                  }
+                };
+                const safeClose = () => {
+                  if (closed) return;
+                  closed = true;
+                  try { controller.close(); } catch {}
+                };
+
                 try {
-                  controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
-                  controller.enqueue(encoder.encode(assistantContent));
-                  controller.close();
+                  safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                  safeEnqueue(encoder.encode(assistantContent));
+                  safeClose();
                 } catch {
                   // client disconnected before the image reply was flushed
                 }
+
 
                 void (async () => {
                   try {
