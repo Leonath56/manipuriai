@@ -313,34 +313,20 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Only the *trailing* unanswered user message belongs to the in-flight turn.
-  // Matching by content alone hid an earlier identical message (e.g. a previous
-  // "hi"), which made repeated greetings look like a single message whose reply
-  // kept changing.
-  let activeTurnStart = -1;
-  let turnAlreadyPersisted = false;
-  if (activeForChat) {
-    // Only a trailing user row with no assistant reply after it can be the
-    // in-flight turn; anything earlier is real history and must stay visible.
-    for (let i = messages.length - 1; i >= 0; i -= 1) {
-      const m = messages[i];
-      if (m.role === "assistant") {
-        // The newest turn already has its reply in the list. Once the stream is
-        // finished, that row set replaces the carryover bubble.
-        turnAlreadyPersisted = activeForChat.done;
-        break;
-      }
-      if (m.role === "user" && m.content === activeForChat.userText) {
-        activeTurnStart = i;
-        break;
-      }
-    }
+  // Every persisted row always renders — repeated identical messages must each
+  // stay visible with their own reply. The in-flight turn is tracked purely by
+  // row count, never by content matching.
+  if (!activeForChat) {
+    turnBaseRef.current = null;
+  } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
+    turnBaseRef.current = messages.length;
   }
-  const renderedMessages =
-    activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
+  const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
+  const renderedMessages = messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
-  const showCarryover = activeForChat && !turnAlreadyPersisted ? activeForChat : null;
+  const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
+
 
 
 
