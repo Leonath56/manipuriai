@@ -601,9 +601,13 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               let firstChunkSeen = false;
               const heartbeat = setInterval(() => {
                 if (!firstChunkSeen) {
-                  try { controller.enqueue(encoder.encode("\u200B")); } catch { /* closed */ }
+                  try {
+                    controller.enqueue(encoder.encode("\u200B"));
+                  } catch {
+                    clearInterval(heartbeat);
+                  }
                 }
-              }, 6000);
+              }, 3000);
 
               // Open the upstream AI connection AFTER response headers are
               // already on the wire.
@@ -615,7 +619,10 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
                 }
-                upstream = await fetchChatCompletion(modelId, aiPayload);
+                const ctrl = new AbortController();
+                const timeout = setTimeout(() => ctrl.abort(), 60000); // 60s timeout
+                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: ctrl.signal });
+                clearTimeout(timeout);
               } catch {
                 clearInterval(heartbeat);
                 controller.enqueue(encoder.encode("AI request failed. Please retry."));
@@ -634,6 +641,8 @@ Write like a real Imphal native speaking to a friend, NOT like a translator.
               let full = "";
               let toolCalls: any[] = [];
               const reader = upstream.body.getReader();
+              const onAbort = () => reader.cancel();
+              request.signal.addEventListener("abort", onAbort);
               try {
                 while (true) {
                   const { done, value } = await reader.read();
