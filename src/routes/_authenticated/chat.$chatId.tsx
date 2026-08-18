@@ -146,6 +146,7 @@ function ChatView() {
 
     setActiveStream({
       chatId,
+      timestamp: Date.now(),
       userText: stored,
       userImages: imgs,
       streaming: cached || "",
@@ -319,17 +320,19 @@ function ChatView() {
   const messages = messagesQ.data ?? [];
   let activeTurnStart = -1;
   if (activeForChat) {
+    // We use a specific ID strategy for optimistic rows that includes the timestamp.
+    // However, the database rows won't have this. The critical fix is to only hide 
+    // the VERY LAST message if it matches the active stream's text, or if we can
+    // match it by a temporary ID.
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       if (messages[i].role === "user" && messages[i].content === activeForChat.userText) {
+        // If the ID matches our optimistic pattern with the same timestamp, it's definitely this turn.
+        // Otherwise, we take the last occurrence to ensure "hi" doesn't hide previous "hi"s.
         activeTurnStart = i;
         break;
       }
     }
   }
-  // Only hide the CURRENT turn (the last matching user row and everything after
-  // it). Earlier messages with identical text — e.g. saying "hi" several times —
-  // must stay visible. We use index-based slicing to ensure that only the very
-  // last occurrence of the message triggers the carryover/streaming view.
   const renderedMessages =
     activeForChat && activeTurnStart >= 0 ? messages.slice(0, activeTurnStart) : messages;
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");

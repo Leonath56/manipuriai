@@ -81,6 +81,7 @@ function NewChat() {
     setImages([]);
     setActiveStream({
       chatId: "pending", // Mark as pending to differentiate from null/stale
+      timestamp: Date.now(),
       userText: stored,
       userImages: sentImages,
       streaming: cached || "",
