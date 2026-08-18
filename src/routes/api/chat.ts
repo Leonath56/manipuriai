@@ -339,7 +339,57 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const hasImages = (body.images?.length ?? 0) > 0;
+
+          // FAST GREETING PATH
+          const fastGreeting = !hasImages ? getFastGreeting(body.message, displayName) : null;
+          if (fastGreeting) {
+            let finalChatId = chatId;
+            if (!finalChatId) {
+              const { data: newChat } = await supabase
+                .from("chats")
+                .insert({ user_id: userId, title: body.message.slice(0, 60) })
+                .select("id")
+                .single();
+              finalChatId = newChat?.id || "temp";
+            }
+            const encoder = new TextEncoder();
+            const nowIso = new Date().toISOString();
+            const stream = new ReadableStream({
+              async start(controller) {
+                controller.enqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
+                // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
+                const words = fastGreeting.split(" ");
+                for (let i = 0; i < words.length; i++) {
+                  controller.enqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")));
+                  await new Promise(r => setTimeout(r, 15 + Math.random() * 15));
+                }
+                controller.close();
+
+                // Persist in background
+                if (finalChatId !== "temp") {
+                  void (async () => {
+                    try {
+                      await supabase.from("messages").insert([
+                        { chat_id: finalChatId, user_id: userId, role: "user", content: body.message },
+                        { chat_id: finalChatId, user_id: userId, role: "assistant", content: fastGreeting },
+                      ]);
+                      await supabase.from("chats").update({ updated_at: nowIso }).eq("id", finalChatId);
+                    } catch {}
+                  })();
+                }
+              }
+            });
+            return new Response(stream, {
+              headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "X-Accel-Buffering": "no",
+              },
+            });
+          }
+
           // Text saved to DB for the user turn — embed images as markdown so
+
           // the UI can render thumbnails on reload/refetch.
           const imgMarkdown = hasImages ? body.images!.map((u) => `![image](${u})`).join("\n") : "";
           const storedUserText = body.message
