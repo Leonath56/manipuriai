@@ -651,7 +651,7 @@ function MessageRow({
 
   return (
     <>
-      <div className={`my-8 flex w-full flex-col ${isUser ? "items-end" : "items-start"} msg-pop group/row`}>
+      <div className={`my-8 flex w-full flex-col ${isUser ? "items-end" : "items-start"} group/row`}>
         <div className={`flex max-w-[90%] gap-3 md:gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
           <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-bold uppercase tracking-tighter ${isUser ? "bg-neutral-800 text-neutral-400" : "bg-neutral-900 text-neutral-500"}`}>
             {isUser ? "You" : <span className="text-[14px]">ꯃ</span>}
