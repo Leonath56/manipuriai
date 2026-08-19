@@ -379,7 +379,7 @@ function ChatView() {
                 const assistant = renderedMessages[i + 1];
                 if (assistant) {
                   elements.push(
-                    <div key={`turn-${user.id}`} className="flex flex-col-reverse">
+                    <div key={`turn-${user.id}`} className="flex flex-col">
                       <MessageRow message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
                       <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
                     </div>
@@ -392,6 +392,24 @@ function ChatView() {
             })()}
             {showCarryover && (
               <div className="msg-pop">
+                {/* User message first in carryover */}
+                <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
+                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
+                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
+                    {showCarryover.userImages && showCarryover.userImages.length > 0 && (
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        {showCarryover.userImages.map((src, i) => (
+                          <div key={i} className="h-16 w-16 overflow-hidden rounded-lg border border-white/10">
+                            <img src={src} alt="" className="h-full w-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
+                  </div>
+                </div>
+
+                {/* Assistant response below user prompt in carryover */}
                 <div className="my-8 flex items-start gap-3 md:gap-6">
                   <Avatar assistant />
                   <div className="min-w-0 flex-1 pt-0.5">
@@ -404,22 +422,6 @@ function ChatView() {
                     ) : (
                         <ThinkingLoader />
                     )}
-                  </div>
-                </div>
-                <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
-                    {/* Preserve image thumbnails in carryover */}
-                    {showCarryover.userImages && showCarryover.userImages.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-2">
-                        {showCarryover.userImages.map((src, i) => (
-                          <div key={i} className="h-16 w-16 overflow-hidden rounded-lg border border-white/10">
-                            <img src={src} alt="" className="h-full w-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
                   </div>
                 </div>
               </div>
