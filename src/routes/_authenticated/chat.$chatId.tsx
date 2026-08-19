@@ -376,22 +376,13 @@ function ChatView() {
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {(() => {
               const elements: React.ReactNode[] = [];
-              for (let i = 0; i < renderedMessages.length; i += 2) {
-                const user = renderedMessages[i];
-                const assistant = renderedMessages[i + 1];
-                if (user && user.role === "user") {
-                  elements.push(
-                    <div key={`turn-${user.id}`} className="flex flex-col">
-                      <MessageRow message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-                      {assistant && assistant.role === "assistant" && (
-                        <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-                      )}
-                    </div>
-                  );
-                } else if (user) {
-                  // Fallback for unexpected message sequence (e.g. assistant message without user)
-                  elements.push(<MessageRow key={user.id} message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
-                }
+              for (let i = 0; i < renderedMessages.length; i++) {
+                const msg = renderedMessages[i];
+                elements.push(
+                  <div key={`msg-${msg.id}`} className="flex flex-col">
+                    <MessageRow message={msg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                  </div>
+                );
               }
               return elements;
             })()}
