@@ -143,7 +143,9 @@ function ChatView() {
     const hasImages = imgs.length > 0;
     const cached = null; // getCachedResponse(text) disabled per user request
 
-    turnBaseRef.current = (qc.getQueryData<Msg[]>(["messages", chatId]) ?? []).length;
+    const startMessages = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
+    turnBaseRef.current = startMessages.length;
+    
     setActiveStream({
       chatId,
       timestamp: Date.now(),
@@ -153,6 +155,12 @@ function ChatView() {
       generatingImage: false,
       done: Boolean(cached),
     });
+
+    // Optimistic user update
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
+      ...(old ?? []),
+      { id: `opt-${Date.now()}`, role: "user" as const, content: stored, created_at: new Date().toISOString() },
+    ]);
 
     if (cached) {
       setStreaming(cached);
