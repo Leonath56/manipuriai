@@ -372,11 +372,26 @@ function ChatView() {
         onScroll={checkScroll}
       >
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-            {renderedMessages.map((m) => (
-              <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-            ))}
+            {/* Render in reverse: AI response above the prompt question */}
+            {renderedMessages.reduce((acc, _, i, arr) => {
+              if (i % 2 === 0) {
+                const userMsg = arr[i];
+                const aiMsg = arr[i + 1];
+                if (aiMsg) {
+                  acc.push(
+                    <div key={`turn-${userMsg.id}`} className="flex flex-col-reverse">
+                      <MessageRow message={userMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      <MessageRow message={aiMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                    </div>
+                  );
+                } else {
+                  acc.push(<MessageRow key={userMsg.id} message={userMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
+                }
+              }
+              return acc;
+            }, [] as React.ReactNode[])}
             {showCarryover && (
-              <div className="msg-pop">
+              <div className="msg-pop flex flex-col-reverse">
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
