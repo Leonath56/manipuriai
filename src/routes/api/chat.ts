@@ -354,7 +354,7 @@ export const Route = createFileRoute("/api/chat")({
           let chatId = body.chatId;
 
           // FAST GREETING PATH
-          const fastGreeting = null; // DISABLED: Causing logic issues with message tracking and history visibility
+          const fastGreeting = null; // !hasImages ? getFastGreeting(body.message, displayName) : null;
           if (fastGreeting) {
             let finalChatId = chatId;
 
