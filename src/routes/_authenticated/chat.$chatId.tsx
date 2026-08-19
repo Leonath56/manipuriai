@@ -213,6 +213,12 @@ function ChatView() {
       // finishing and the DB refetch completing.
       setTimeout(() => {
         setStreaming("");
+        // Also clear the active stream if we are finished and the DB has the data
+        const currentMsgs = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
+        if (turnBaseRef.current !== null && currentMsgs.length > turnBaseRef.current) {
+          setActiveStream(null);
+          turnBaseRef.current = null;
+        }
       }, 50);
 
 
