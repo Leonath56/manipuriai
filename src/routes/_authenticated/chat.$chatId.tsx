@@ -180,48 +180,18 @@ function ChatView() {
       if (!cached && result.reply) {
         setCachedResponse(text, result.reply);
       }
-      const now = new Date().toISOString();
-      qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
-        const rows = old ?? [];
-        const withoutOptimisticUser = [...rows];
-        let optIdx = -1;
-        for (let i = withoutOptimisticUser.length - 1; i >= 0; i--) {
-          const m = withoutOptimisticUser[i];
-          if (m.id.startsWith("opt-") && m.role === "user" && m.content === stored) {
-            optIdx = i;
-            break;
-          }
-        }
-        if (optIdx !== -1) {
-          withoutOptimisticUser.splice(optIdx, 1);
-        }
-        return [
-          ...withoutOptimisticUser,
-          { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
-          { id: `a-${Date.now()}`, role: "assistant" as const, content: result.reply, created_at: now },
-        ];
-      });
+      // Mark the turn finished. The carryover keeps rendering the completed
+      // reply (no blink) and is cleared by the effect above only once the
+      // persisted rows for this turn are in the query cache.
       updateActiveStream({ done: true, streaming: result.reply });
-      
-      // Invalidate queries so the background cache reflects the new turn.
+
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["messages", chatId] }),
         qc.invalidateQueries({ queryKey: ["chats"] }),
       ]);
-      
-      // Wait for a few frames to ensure the newly fetched DB rows are rendered
-      // and the component has stabilized before clearing the local streaming state.
-      // This eliminates the "blink" where the reply briefly disappears between
-      // finishing and the DB refetch completing.
-      setTimeout(() => {
-        setStreaming("");
-        // Also clear the active stream if we are finished and the DB has the data
-        const currentMsgs = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
-        if (turnBaseRef.current !== null && currentMsgs.length > turnBaseRef.current) {
-          setActiveStream(null);
-          turnBaseRef.current = null;
-        }
-      }, 50);
+
+      setStreaming("");
+
 
 
     } catch (err) {
