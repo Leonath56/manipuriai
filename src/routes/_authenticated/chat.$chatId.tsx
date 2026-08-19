@@ -88,10 +88,8 @@ function ChatView() {
   }, [activeForChat, messagesQ.data]);
 
 
-  useEffect(() => {
-    if (!activeForChat?.done) return;
-    void qc.invalidateQueries({ queryKey: ["messages", chatId] });
-  }, [activeForChat?.done, chatId, qc]);
+  // (No extra invalidate here — runSend already refreshes the message list once.
+  // A second invalidate caused an extra refetch and a visible flash.)
 
 
   useEffect(() => {
