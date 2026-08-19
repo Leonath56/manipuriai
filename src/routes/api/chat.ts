@@ -354,8 +354,8 @@ export const Route = createFileRoute("/api/chat")({
           let chatId = body.chatId;
 
           // FAST GREETING PATH
-          const fastGreeting = null; // !hasImages ? getFastGreeting(body.message, displayName) : null;
-          if (fastGreeting) {
+          const fastGreeting = (!hasImages ? getFastGreeting(body.message, displayName) : null) as string | null;
+          if (false && fastGreeting) {
             let finalChatId = chatId;
 
             if (!finalChatId) {
