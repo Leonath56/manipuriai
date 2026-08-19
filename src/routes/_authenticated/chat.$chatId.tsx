@@ -58,10 +58,10 @@ function ChatView() {
   const activeForChat = active && active.chatId === chatId ? active : null;
   const inflight = activeForChat && !activeForChat.done ? activeForChat : null;
 
-  // Number of persisted rows when the current turn started. Used to decide when
-  // the turn has landed in the database — never content matching, which hid
-  // earlier identical messages (e.g. repeated "hi").
-  const turnBaseRef = useRef<number | null>(null);
+  // Turn bookkeeping lives in the cross-route active-stream store (see
+  // `baseCount`), never in a ref — a ref resets on remount/navigation and used
+  // to make the finished turn render twice (DB row + carryover).
+
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
