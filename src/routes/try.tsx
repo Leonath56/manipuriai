@@ -280,7 +280,7 @@ function TryPage() {
               
               if (assistant) {
                 elements.push(
-                  <div key={`turn-${i}`} className="flex flex-col space-y-4">
+                  <div key={`turn-${i}`} className="flex flex-col">
                     {/* User prompt first */}
                     <div className="flex justify-end">
                       <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">

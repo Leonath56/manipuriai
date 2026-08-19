@@ -353,8 +353,8 @@ export const Route = createFileRoute("/api/chat")({
           const hasImages = (body.images?.length ?? 0) > 0;
           let chatId = body.chatId;
 
-          // FAST GREETING PATH
-          const fastGreeting = !hasImages ? getFastGreeting(body.message, displayName) : null;
+          // Fast greeting path disabled as it was causing logic issues with turn persistence and history visibility.
+          const fastGreeting = null;
           if (fastGreeting) {
             let finalChatId = chatId;
 
@@ -391,7 +391,7 @@ export const Route = createFileRoute("/api/chat")({
 
                   safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
-                  const words = fastGreeting.split(" ");
+                  const words = (fastGreeting as string).split(" ");
                   for (let i = 0; i < words.length; i++) {
                     if (request.signal.aborted || closed) break;
                     if (!safeEnqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")))) {
