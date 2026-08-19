@@ -354,7 +354,7 @@ function ChatView() {
   // renderedMessages are the ones from the database. 
   // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
   const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
-    ? messages.slice(0, turnBaseRef.current)
+    ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
     : messages;
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
