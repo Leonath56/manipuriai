@@ -139,11 +139,15 @@ function ChatView() {
     const cached = null; // getCachedResponse(text) disabled per user request
 
     const startMessages = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
-    turnBaseRef.current = startMessages.length;
-    
+    const baseCount = startMessages.filter((m) => isPersistedMessageId(m.id)).length;
+
+    // The carryover block below is the single source of truth for this turn's
+    // user bubble + assistant reply. No optimistic rows are pushed into the
+    // query cache, so the persisted rows can never render alongside it.
     setActiveStream({
       chatId,
       timestamp: Date.now(),
+      baseCount,
       userText: stored,
       userImages: imgs,
       streaming: cached || "",
@@ -151,11 +155,6 @@ function ChatView() {
       done: Boolean(cached),
     });
 
-    // Optimistic user update
-    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
-      ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user" as const, content: stored, created_at: new Date().toISOString() },
-    ]);
 
     if (cached) {
       setStreaming(cached);
