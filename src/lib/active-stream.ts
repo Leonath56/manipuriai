@@ -10,6 +10,8 @@ export type ActiveStream = {
   streaming: string;     // partial assistant reply (grows over time)
   generatingImage: boolean;
   done: boolean;
+  baseCount: number;     // persisted DB row count when this turn started
+
 };
 
 let state: ActiveStream | null = null;
