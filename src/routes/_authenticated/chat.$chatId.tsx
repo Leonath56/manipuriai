@@ -71,7 +71,7 @@ function ChatView() {
         .select("id, role, content, created_at")
         .eq("chat_id", chatId)
         .order("created_at", { ascending: true })
-        .order("role", { ascending: false });
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Msg[];
     },
@@ -376,8 +376,16 @@ function ChatView() {
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {(() => {
               const elements: React.ReactNode[] = [];
-              for (let i = 0; i < renderedMessages.length; i++) {
-                const msg = renderedMessages[i];
+              const sortedMessages = [...renderedMessages].sort((a, b) => {
+                const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                if (timeA !== timeB) return timeA - timeB;
+                // If timestamps are identical, role sorting: user (higher) before assistant (lower)
+                return a.role === "user" ? -1 : 1;
+              });
+              
+              for (let i = 0; i < sortedMessages.length; i++) {
+                const msg = sortedMessages[i];
                 elements.push(
                   <div key={`msg-${msg.id}`} className="flex flex-col">
                     <MessageRow message={msg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
