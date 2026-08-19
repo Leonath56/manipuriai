@@ -391,7 +391,7 @@ export const Route = createFileRoute("/api/chat")({
 
                   safeEnqueue(encoder.encode(`__META__${JSON.stringify({ chatId: finalChatId })}\n`));
                   // Word-by-word streaming for the fast greeting to keep the "feeling" consistent
-                  const words = fastGreeting.split(" ");
+                  const words = fastGreeting!.split(" ");
                   for (let i = 0; i < words.length; i++) {
                     if (request.signal.aborted || closed) break;
                     if (!safeEnqueue(encoder.encode(words[i] + (i === words.length - 1 ? "" : " ")))) {
