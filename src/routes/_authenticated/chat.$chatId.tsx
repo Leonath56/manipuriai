@@ -332,10 +332,7 @@ function ChatView() {
   } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
     // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
     // we assume the last turn might be the one we are streaming if it has no assistant reply.
-    // We check if the last message in DB matches the active turn's text or images.
     const lastMsg = messages[messages.length - 1];
-    // Check if the last message in DB matches the active turn's text or images.
-    // If it does, and it's a user message, we know it's a turn in progress.
     const isMatchingUser = lastMsg && lastMsg.role === "user" && 
       (lastMsg.content === activeForChat.userText || 
        (activeForChat.userImages?.length && lastMsg.content.includes("![image](")));
@@ -348,19 +345,23 @@ function ChatView() {
   }
 
   // A turn is "persisted" if the database has more messages than the count when we started.
-  // We strictly check the message count here.
   const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
   
   // renderedMessages are the ones from the database. 
-  // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
-  const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
+  // We strictly slice them if we are actively streaming a turn that hasn't landed in the DB yet.
+  const baseMsgs = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
     ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
     : messages;
+
+  // Deduplicate by ID to prevent "blink" or "double" messages during refetch
+  const allMessagesMap = new Map<string, Msg>();
+  baseMsgs.forEach(m => allMessagesMap.set(m.id, m));
+  
+  const renderedMessages = Array.from(allMessagesMap.values());
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
   // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
-  // We use the activeForChat object which contains the userText and userImages.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
 
 
