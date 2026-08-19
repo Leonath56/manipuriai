@@ -675,126 +675,127 @@ function MessageRow({
   };
 
   return (
-    <div className={`my-8 flex w-full flex-col ${isUser ? "items-end" : "items-start"} msg-pop group/row`}>
-      <div className={`flex max-w-[90%] gap-3 md:gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-bold uppercase tracking-tighter ${isUser ? "bg-neutral-800 text-neutral-400" : "bg-neutral-900 text-neutral-500"}`}>
-          {isUser ? "You" : <span className="text-[14px]">ꯃ</span>}
-        </div>
-        
-        <div className="flex min-w-0 flex-col gap-2">
-          <div className={`relative group/msg inline-block rounded-2xl px-4 py-3 shadow-sm ${isUser ? "rounded-tr-md bg-neutral-900 text-white" : "rounded-tl-md bg-transparent text-white"}`}>
-            {editing ? (
-              <div className="w-full min-w-[300px] space-y-3 rounded-2xl bg-secondary p-3 shadow-md border border-border/40">
-                <Textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  rows={Math.min(10, Math.max(2, draft.split("\n").length))}
-                  className="min-h-[80px] resize-none border-0 bg-transparent p-0 text-[15px] leading-relaxed text-secondary-foreground focus-visible:ring-0"
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void saveEdit();
-                    } else if (e.key === "Escape") {
-                      e.preventDefault();
-                      cancelEdit();
-                    }
-                  }}
-                />
-                <div className="flex justify-end gap-2">
-                  <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-8 text-xs">
-                    Cancel
-                  </Button>
-                  <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-8 text-xs px-4">
-                    Save & Submit
-                  </Button>
-                </div>
-              </div>
-            ) : isUser ? (
-              <>
-                <UserContent content={message.content} />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={startEdit} 
-                  disabled={disabled}
-                  className="absolute -left-10 top-0 h-8 w-8 rounded-full opacity-100 md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity"
-                  title="Edit message"
-                >
-                  <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                </Button>
-              </>
-            ) : (() => {
-              const imgMeta = parseImageMessage(message.content);
-              if (imgMeta) {
-                return (
-                  <ImageResultCard
-                    prompt={imgMeta.prompt}
-                    images={imgMeta.images}
-                    onRegenerate={async () => {
-                      try {
-                        await generateImages({
-                          chatId,
-                          prompt: imgMeta.prompt,
-                          aspectRatio: imgMeta.aspectRatio,
-                          quality: imgMeta.quality,
-                          count: imgMeta.images.length,
-                          style: imgMeta.style,
-                        });
-                        window.location.reload();
-                      } catch (e) {
-                        toast.error(e instanceof Error ? e.message : "Regeneration failed");
+    <>
+      <div className={`my-8 flex w-full flex-col ${isUser ? "items-end" : "items-start"} msg-pop group/row`}>
+        <div className={`flex max-w-[90%] gap-3 md:gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+          <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-bold uppercase tracking-tighter ${isUser ? "bg-neutral-800 text-neutral-400" : "bg-neutral-900 text-neutral-500"}`}>
+            {isUser ? "You" : <span className="text-[14px]">ꯃ</span>}
+          </div>
+          
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className={`relative group/msg inline-block rounded-2xl px-4 py-3 shadow-sm ${isUser ? "rounded-tr-md bg-neutral-900 text-white" : "rounded-tl-md bg-transparent text-white"}`}>
+              {editing ? (
+                <div className="w-full min-w-[300px] space-y-3 rounded-2xl bg-secondary p-3 shadow-md border border-border/40">
+                  <Textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    rows={Math.min(10, Math.max(2, draft.split("\n").length))}
+                    className="min-h-[80px] resize-none border-0 bg-transparent p-0 text-[15px] leading-relaxed text-secondary-foreground focus-visible:ring-0"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        void saveEdit();
+                      } else if (e.key === "Escape") {
+                        e.preventDefault();
+                        cancelEdit();
                       }
                     }}
                   />
-                );
-              }
-              return <ChatMarkdown content={message.content} />;
-            })()}
-          </div>
-          
-          {!editing && (
-            <div className={`flex items-center gap-2 px-1 text-[11px] text-neutral-500 ${isUser ? "justify-end" : "justify-start"}`}>
-              <div className={`flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
-                {!isUser && (
-                  <>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white" onClick={copy} title="Copy response">
-                      {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                  <div className="flex justify-end gap-2">
+                    <Button size="sm" variant="ghost" onClick={cancelEdit} className="h-8 text-xs">
+                      Cancel
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
-                      onClick={speak}
-                      disabled={ttsState === "loading"}
-                      title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
-                    >
-                      {ttsState === "loading" ? (
-                        <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                      ) : ttsState === "playing" ? (
-                        <Square className="h-3.5 w-3.5" />
-                      ) : (
-                        <Volume2 className="h-3.5 w-3.5" />
-                      )}
+                    <Button size="sm" onClick={saveEdit} disabled={disabled} className="h-8 text-xs px-4">
+                      Save & Submit
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
-                      onClick={openCorrection}
-                      title="Suggest a Manipuri correction"
-                    >
-                      <Wand2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </>
-                )}
-              </div>
-              <span>{formatTime(message.created_at)}</span>
+                  </div>
+                </div>
+              ) : isUser ? (
+                <>
+                  <UserContent content={message.content} />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={startEdit} 
+                    disabled={disabled}
+                    className="absolute -left-10 top-0 h-8 w-8 rounded-full opacity-100 md:opacity-0 md:group-hover/msg:opacity-100 transition-opacity"
+                    title="Edit message"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                  </Button>
+                </>
+              ) : (() => {
+                const imgMeta = parseImageMessage(message.content);
+                if (imgMeta) {
+                  return (
+                    <ImageResultCard
+                      prompt={imgMeta.prompt}
+                      images={imgMeta.images}
+                      onRegenerate={async () => {
+                        try {
+                          await generateImages({
+                            chatId,
+                            prompt: imgMeta.prompt,
+                            aspectRatio: imgMeta.aspectRatio,
+                            quality: imgMeta.quality,
+                            count: imgMeta.images.length,
+                            style: imgMeta.style,
+                          });
+                          window.location.reload();
+                        } catch (e) {
+                          toast.error(e instanceof Error ? e.message : "Regeneration failed");
+                        }
+                      }}
+                    />
+                  );
+                }
+                return <ChatMarkdown content={message.content} />;
+              })()}
             </div>
-          )}
+            
+            {!editing && (
+              <div className={`flex items-center gap-2 px-1 text-[11px] text-neutral-500 ${isUser ? "justify-end" : "justify-start"}`}>
+                <div className={`flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
+                  {!isUser && (
+                    <>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white" onClick={copy} title="Copy response">
+                        {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
+                        onClick={speak}
+                        disabled={ttsState === "loading"}
+                        title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
+                      >
+                        {ttsState === "loading" ? (
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                        ) : ttsState === "playing" ? (
+                          <Square className="h-3.5 w-3.5" />
+                        ) : (
+                          <Volume2 className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
+                        onClick={openCorrection}
+                        title="Suggest a Manipuri correction"
+                      >
+                        <Wand2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <span>{formatTime(message.created_at)}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
       <Dialog open={correctOpen} onOpenChange={setCorrectOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -838,6 +839,6 @@ function MessageRow({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
