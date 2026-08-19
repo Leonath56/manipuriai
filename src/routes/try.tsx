@@ -274,12 +274,13 @@ function TryPage() {
           )}
           {(() => {
             const elements: React.ReactNode[] = [];
+            // Strictly linear flow
             for (let i = 0; i < messages.length; i++) {
               const msg = messages[i];
               
               if (msg.role === "user") {
                 elements.push(
-                  <div key={`msg-${i}`} className="flex justify-end my-4">
+                  <div key={`msg-u-${i}`} className="flex justify-end my-4">
                     <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
                       <div className="space-y-2">
                         {msg.images && msg.images.length > 0 && (
@@ -296,7 +297,7 @@ function TryPage() {
                 );
               } else {
                 elements.push(
-                  <div key={`msg-${i}`} className="flex justify-start my-4">
+                  <div key={`msg-a-${i}`} className="flex justify-start my-4">
                     <div className="max-w-[95%] text-sm">
                       {msg.content ? (
                         <Suspense fallback={<span className="whitespace-pre-wrap">{msg.content}</span>}>
