@@ -354,7 +354,7 @@ function ChatView() {
   // renderedMessages are the ones from the database. 
   // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
   const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
-    ? messages.slice(0, turnBaseRef.current)
+    ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
     : messages;
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
@@ -376,22 +376,36 @@ function ChatView() {
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {(() => {
               const elements: React.ReactNode[] = [];
+              
+              // 1. Sort messages chronologically
               const sortedMessages = [...renderedMessages].sort((a, b) => {
                 const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
                 const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                
                 if (timeA !== timeB) return timeA - timeB;
-                // If timestamps are identical, role sorting: user (higher) before assistant (lower)
-                return a.role === "user" ? -1 : 1;
+                
+                // User always before Assistant if timestamps match
+                if (a.role !== b.role) return a.role === "user" ? -1 : 1;
+                
+                // Final tie-breaker: sort by ID string to be deterministic
+                return a.id.localeCompare(b.id);
               });
               
-              for (let i = 0; i < sortedMessages.length; i++) {
-                const msg = sortedMessages[i];
+              // 2. Render sorted messages
+              for (const msg of sortedMessages) {
                 elements.push(
                   <div key={`msg-${msg.id}`} className="flex flex-col">
-                    <MessageRow message={msg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                    <MessageRow 
+                      message={msg} 
+                      chatId={chatId} 
+                      lang={lang} 
+                      onEdit={editAndResend} 
+                      disabled={sending} 
+                    />
                   </div>
                 );
               }
+              
               return elements;
             })()}
             {showCarryover && (
