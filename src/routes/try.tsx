@@ -278,11 +278,10 @@ function TryPage() {
               const user = messages[i];
               const assistant = messages[i + 1];
               
-              if (assistant) {
+              if (user && user.role === "user") {
                 elements.push(
                   <div key={`turn-${i}`} className="flex flex-col">
-                    {/* User prompt first */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end my-4">
                       <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
                         <div className="space-y-2">
                           {user.images && user.images.length > 0 && (
@@ -296,34 +295,24 @@ function TryPage() {
                         </div>
                       </div>
                     </div>
-                    {/* Assistant response below */}
-                    <div className="flex justify-start">
-                      <div className="max-w-[95%] text-sm">
-                        {assistant.content ? (
-                          <Suspense fallback={<span className="whitespace-pre-wrap">{assistant.content}</span>}>
-                            <ChatMarkdown content={assistant.content} />
-                          </Suspense>
-                        ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {assistant && assistant.role === "assistant" && (
+                      <div className="flex justify-start my-4">
+                        <div className="max-w-[95%] text-sm">
+                          {assistant.content ? (
+                            <Suspense fallback={<span className="whitespace-pre-wrap">{assistant.content}</span>}>
+                              <ChatMarkdown content={assistant.content} />
+                            </Suspense>
+                          ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
-              } else {
-                // ... same single message logic ...
-                // Single message (e.g. just user prompt while waiting)
+              } else if (user) {
                 elements.push(
-                  <div key={`turn-${i}`} className="flex justify-end">
-                    <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
-                      <div className="space-y-2">
-                        {user.images && user.images.length > 0 && (
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {user.images.map((img, idx) => (
-                              <img key={idx} src={img} alt="Uploaded" className="h-20 w-20 object-cover rounded-lg border border-border/50" />
-                            ))}
-                          </div>
-                        )}
-                        <span className="whitespace-pre-wrap">{user.content}</span>
-                      </div>
+                  <div key={`msg-${i}`} className={`flex ${user.role === "user" ? "justify-end" : "justify-start"} my-4`}>
+                    <div className={`max-w-[95%] text-sm ${user.role === "user" ? "inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2" : ""}`}>
+                      <span className="whitespace-pre-wrap">{user.content}</span>
                     </div>
                   </div>
                 );
