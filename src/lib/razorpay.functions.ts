@@ -105,7 +105,35 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     if (!paymentRow) throw new Error("Order not found");
 
-    const plan = paymentRow.plan as Plan;
+    // Independently confirm the captured amount with Razorpay; never trust the DB row alone.
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const payResp = await fetch(
+      `https://api.razorpay.com/v1/payments/${encodeURIComponent(data.razorpay_payment_id)}`,
+      { headers: { Authorization: `Basic ${auth}` } },
+    );
+    if (!payResp.ok) throw new Error("Could not verify payment with the payment provider.");
+    const payment = (await payResp.json()) as {
+      order_id?: string;
+      amount?: number;
+      currency?: string;
+      status?: string;
+    };
+
+    if (
+      payment.order_id !== data.razorpay_order_id ||
+      (payment.status !== "captured" && payment.status !== "authorized") ||
+      payment.currency !== "INR"
+    ) {
+      throw new Error("Payment could not be verified.");
+    }
+
+    // Derive the plan from the amount actually paid, not from the stored row.
+    const paidAmount = payment.amount ?? 0;
+    const plan = (["max", "pro"] as Plan[]).find(
+      (p) => PLAN_LIMITS[p].priceInPaise === paidAmount,
+    );
+    if (!plan) throw new Error("Paid amount does not match any plan.");
+
 
     await supabaseAdmin
       .from("payments")
