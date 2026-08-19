@@ -18,14 +18,14 @@ const BodySchema = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash-lite", 
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-3.7-flash",
+  think: "google/gemini-3.1-pro-preview",
 } as const;
 
 // Vision-capable models used when images are attached
 const VISION_MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash-lite",
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-3.7-flash",
+  think: "google/gemini-3.1-pro-preview",
 } as const;
 
 const GREETING_REGEX = /^(hi|hello|hey|khurumjari|nungairibra|khurumjari|nungaithengbra|how are you|good morning|good evening|good afternoon|kari leirage)(\!|\?|\.)*$/i;
