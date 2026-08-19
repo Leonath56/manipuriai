@@ -72,8 +72,9 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((i: unknown) => VerifyInput.parse(i))
   .handler(async ({ data, context }) => {
+    const keyId = process.env.RAZORPAY_KEY_ID;
     const keySecret = process.env.RAZORPAY_KEY_SECRET;
-    if (!keySecret) throw new Error("Payments are not configured.");
+    if (!keyId || !keySecret) throw new Error("Payments are not configured.");
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
