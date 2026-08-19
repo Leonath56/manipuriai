@@ -58,10 +58,10 @@ function ChatView() {
   const activeForChat = active && active.chatId === chatId ? active : null;
   const inflight = activeForChat && !activeForChat.done ? activeForChat : null;
 
-  // Number of persisted rows when the current turn started. Used to decide when
-  // the turn has landed in the database — never content matching, which hid
-  // earlier identical messages (e.g. repeated "hi").
-  const turnBaseRef = useRef<number | null>(null);
+  // Turn bookkeeping lives in the cross-route active-stream store (see
+  // `baseCount`), never in a ref — a ref resets on remount/navigation and used
+  // to make the finished turn render twice (DB row + carryover).
+
 
   const messagesQ = useQuery({
     queryKey: ["messages", chatId],
@@ -80,18 +80,13 @@ function ChatView() {
   // Once the database has the completed turn, drop the cross-route store.
   useEffect(() => {
     if (!activeForChat?.done) return;
-    const timer = window.setTimeout(() => {
-      const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
-      const base = turnBaseRef.current;
-      // If we are showing history (base is null) or we've seen more rows than we started with,
-      // it's safe to clear the local carryover.
-      if (base === null || rows.length > base) {
-        setActiveStream(null);
-        turnBaseRef.current = null;
-      }
-    }, 1200);
+    const rows = messagesQ.data ?? [];
+    const persistedCount = rows.filter((m) => isPersistedMessageId(m.id)).length;
+    if (persistedCount <= activeForChat.baseCount) return;
+    const timer = window.setTimeout(() => setActiveStream(null), 60);
     return () => window.clearTimeout(timer);
-  }, [activeForChat, chatId, messagesQ.data, qc]);
+  }, [activeForChat, messagesQ.data]);
+
 
   useEffect(() => {
     if (!activeForChat?.done) return;
@@ -144,11 +139,15 @@ function ChatView() {
     const cached = null; // getCachedResponse(text) disabled per user request
 
     const startMessages = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
-    turnBaseRef.current = startMessages.length;
-    
+    const baseCount = startMessages.filter((m) => isPersistedMessageId(m.id)).length;
+
+    // The carryover block below is the single source of truth for this turn's
+    // user bubble + assistant reply. No optimistic rows are pushed into the
+    // query cache, so the persisted rows can never render alongside it.
     setActiveStream({
       chatId,
       timestamp: Date.now(),
+      baseCount,
       userText: stored,
       userImages: imgs,
       streaming: cached || "",
@@ -156,11 +155,6 @@ function ChatView() {
       done: Boolean(cached),
     });
 
-    // Optimistic user update
-    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
-      ...(old ?? []),
-      { id: `opt-${Date.now()}`, role: "user" as const, content: stored, created_at: new Date().toISOString() },
-    ]);
 
     if (cached) {
       setStreaming(cached);
@@ -186,48 +180,18 @@ function ChatView() {
       if (!cached && result.reply) {
         setCachedResponse(text, result.reply);
       }
-      const now = new Date().toISOString();
-      qc.setQueryData<Msg[]>(["messages", chatId], (old) => {
-        const rows = old ?? [];
-        const withoutOptimisticUser = [...rows];
-        let optIdx = -1;
-        for (let i = withoutOptimisticUser.length - 1; i >= 0; i--) {
-          const m = withoutOptimisticUser[i];
-          if (m.id.startsWith("opt-") && m.role === "user" && m.content === stored) {
-            optIdx = i;
-            break;
-          }
-        }
-        if (optIdx !== -1) {
-          withoutOptimisticUser.splice(optIdx, 1);
-        }
-        return [
-          ...withoutOptimisticUser,
-          { id: `u-${Date.now()}`, role: "user" as const, content: stored, created_at: now },
-          { id: `a-${Date.now()}`, role: "assistant" as const, content: result.reply, created_at: now },
-        ];
-      });
+      // Mark the turn finished. The carryover keeps rendering the completed
+      // reply (no blink) and is cleared by the effect above only once the
+      // persisted rows for this turn are in the query cache.
       updateActiveStream({ done: true, streaming: result.reply });
-      
-      // Invalidate queries so the background cache reflects the new turn.
+
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["messages", chatId] }),
         qc.invalidateQueries({ queryKey: ["chats"] }),
       ]);
-      
-      // Wait for a few frames to ensure the newly fetched DB rows are rendered
-      // and the component has stabilized before clearing the local streaming state.
-      // This eliminates the "blink" where the reply briefly disappears between
-      // finishing and the DB refetch completing.
-      setTimeout(() => {
-        setStreaming("");
-        // Also clear the active stream if we are finished and the DB has the data
-        const currentMsgs = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
-        if (turnBaseRef.current !== null && currentMsgs.length > turnBaseRef.current) {
-          setActiveStream(null);
-          turnBaseRef.current = null;
-        }
-      }, 50);
+
+      setStreaming("");
+
 
 
     } catch (err) {
@@ -332,51 +296,34 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Logic to handle in-flight vs persisted turns.
-  // When a stream starts, we record the message count. 
-  // We only hide messages from the DB list if they represent the turn that is currently active in our stream store.
-  if (!activeForChat) {
-    turnBaseRef.current = null;
-  } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
-    // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
-    // we assume the last turn might be the one we are streaming if it has no assistant reply.
-    const lastMsg = messages[messages.length - 1];
-    const isMatchingUser = lastMsg && lastMsg.role === "user" && 
-      (lastMsg.content === activeForChat.userText || 
-       (activeForChat.userImages?.length && lastMsg.content.includes("![image](")));
 
-    if (isMatchingUser) {
-      turnBaseRef.current = messages.length - 1;
-    } else {
-      turnBaseRef.current = messages.length;
-    }
-  }
+  // Persisted rows only (never the transient image-generation optimistic row).
+  const persistedRows = messages.filter((m) => isPersistedMessageId(m.id));
 
-  // A turn is "persisted" if the database has more messages than the count when we started.
-  const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
-  
-  // renderedMessages are the ones from the database. 
-  // We strictly slice them if we are actively streaming a turn that hasn't landed in the DB yet.
-  const baseMsgs = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
-    ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
-    : messages;
+  // A turn has landed once the database holds more rows than when it started.
+  // `baseCount` lives in the cross-route store, so this stays correct across
+  // remounts/navigation — the old ref-based version reset to null on remount
+  // and let the persisted reply render *and* the carryover render.
+  const turnPersisted = !activeForChat || persistedRows.length > activeForChat.baseCount;
 
-  // Deduplicate by ID and content for the current turn to prevent "blink" or "double" messages during refetch.
-  // We also filter out any optimistic messages if we are NOT in active streaming mode.
-  const allMessagesMap = new Map<string, Msg>();
-  baseMsgs.forEach(m => {
-    // Only keep optimistic messages if they are the very last things and we don't have a DB match.
-    // However, our `baseMsgs` slice already handles the turn boundary.
-    allMessagesMap.set(m.id, m);
-  });
-  
-  const renderedMessages = Array.from(allMessagesMap.values())
-    .filter(m => !m.id.startsWith("opt-") || (activeForChat && !turnPersisted));
+  // While a turn is in flight, the carryover owns it; the DB list is truncated
+  // to the rows that existed before the turn (identical past messages stay).
+  const baseMsgs = turnPersisted
+    ? messages
+    : persistedRows.slice(0, activeForChat.baseCount);
+
+  // Deduplicate strictly by message id.
+  const byId = new Map<string, Msg>();
+  baseMsgs.forEach((m) => byId.set(m.id, m));
+
+  const renderedMessages = Array.from(byId.values())
+    .filter((m) => !m.id.startsWith("opt-") || sending);
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
-  // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
+  // Only show the carryover while the turn is not yet persisted.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
+
 
 
 

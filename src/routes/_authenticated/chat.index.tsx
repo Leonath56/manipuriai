@@ -82,6 +82,8 @@ function NewChat() {
     setActiveStream({
       chatId: "pending", // Mark as pending to differentiate from null/stale
       timestamp: Date.now(),
+      baseCount: 0, // brand-new chat: no persisted rows yet
+
       userText: stored,
       userImages: sentImages,
       streaming: cached || "",
