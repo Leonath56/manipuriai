@@ -298,14 +298,14 @@ function TryPage() {
                 elements.push(
                   <div key={`msg-${i}`} className="flex justify-start my-4">
                     <div className="max-w-[95%] text-sm">
-                      {msg.content || loading && i === messages.length - 1 ? (
+                      {msg.content ? (
                         <Suspense fallback={<span className="whitespace-pre-wrap">{msg.content}</span>}>
                           <ChatMarkdown content={msg.content} />
                         </Suspense>
                       ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground animate-pulse">
+                        <div className="flex items-center gap-2 text-muted-foreground">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Thinking...</span>
+                          <span className="animate-pulse">Thinking...</span>
                         </div>
                       )}
                     </div>
