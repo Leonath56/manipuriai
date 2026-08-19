@@ -313,18 +313,35 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Every persisted row always renders — repeated identical messages must each
-  // stay visible with their own reply. The in-flight turn is tracked purely by
-  // row count, never by content matching.
+  // Logic to handle in-flight vs persisted turns.
+  // When a stream starts, we record the message count. 
+  // We only hide messages from the DB list if they represent the turn that is currently active in our stream store.
   if (!activeForChat) {
     turnBaseRef.current = null;
   } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
-    turnBaseRef.current = messages.length;
+    // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
+    // we assume the last turn might be the one we are streaming if it has no assistant reply.
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === "user" && lastMsg.content === activeForChat.userText) {
+      turnBaseRef.current = messages.length - 1;
+    } else {
+      turnBaseRef.current = messages.length;
+    }
   }
+
+  // A turn is "persisted" if the database has more messages than the count when we started.
+  // However, we must be careful: if we open a history, turnBaseRef should be null and everything should show.
   const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
-  const renderedMessages = messages;
+  
+  // renderedMessages are the ones from the database. 
+  // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
+  const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
+    ? messages.slice(0, turnBaseRef.current)
+    : messages;
+
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
+  // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
 
 
