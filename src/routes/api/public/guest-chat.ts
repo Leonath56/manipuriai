@@ -145,12 +145,8 @@ const FAST_GREETINGS = [
 ];
 
 function getFastGreeting(msg: string, name: string): string | null {
-  if (msg.length > 20) return null;
-  const clean = msg.trim().toLowerCase();
-  if (!GREETING_REGEX.test(clean)) return null;
-  const seed = clean.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + (name.length * 7) + (Date.now() % 10000);
-  const template = FAST_GREETINGS[seed % FAST_GREETINGS.length];
-  return template.replace("{name}", name ? ` ${name}` : "").trim();
+  // FAST GREETING SYSTEM DISABLED
+  return null;
 }
 
 
