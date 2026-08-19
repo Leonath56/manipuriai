@@ -372,9 +372,24 @@ function ChatView() {
         onScroll={checkScroll}
       >
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-            {renderedMessages.map((m) => (
-              <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-            ))}
+            {(() => {
+              const elements: React.ReactNode[] = [];
+              for (let i = 0; i < renderedMessages.length; i += 2) {
+                const user = renderedMessages[i];
+                const assistant = renderedMessages[i + 1];
+                if (assistant) {
+                  elements.push(
+                    <div key={`turn-${user.id}`} className="flex flex-col-reverse">
+                      <MessageRow message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                    </div>
+                  );
+                } else {
+                  elements.push(<MessageRow key={user.id} message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
+                }
+              }
+              return elements;
+            })()}
             {showCarryover && (
               <div className="msg-pop">
                 <div className="my-8 flex items-start gap-3 md:gap-6">
