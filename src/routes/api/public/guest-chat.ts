@@ -301,7 +301,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
             },
           ];
 
-          const ep = chatCompletionsEndpoint("google/gemini-2.5-flash-lite");
+          const ep = chatCompletionsEndpoint("google/gemini-3.7-flash");
           
           const upstream = await fetch(ep.url, {
             method: "POST",
