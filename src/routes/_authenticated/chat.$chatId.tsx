@@ -675,13 +675,15 @@ function MessageRow({
   };
 
   return (
-    <div className="msg-pop group/row">
-      <div className={`my-8 flex items-start gap-3 md:gap-6 ${isUser ? "flex-row-reverse" : ""}`}>
-        <Avatar assistant={!isUser} />
-        <div className={`min-w-0 flex-1 ${isUser ? "flex flex-col items-end" : "pt-0.5"}`}>
-          <div className={isUser ? "relative group/msg inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-secondary/80 px-4 py-3 text-secondary-foreground shadow-sm hover:bg-secondary transition-colors" : ""}>
-          {isUser ? (
-            editing ? (
+    <div className={`my-8 flex w-full flex-col ${isUser ? "items-end" : "items-start"} msg-pop group/row`}>
+      <div className={`flex max-w-[90%] gap-3 md:gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+        <div className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[10px] font-bold uppercase tracking-tighter ${isUser ? "bg-neutral-800 text-neutral-400" : "bg-neutral-900 text-neutral-500"}`}>
+          {isUser ? "You" : <span className="text-[14px]">ꯃ</span>}
+        </div>
+        
+        <div className="flex min-w-0 flex-col gap-2">
+          <div className={`relative group/msg inline-block rounded-2xl px-4 py-3 shadow-sm ${isUser ? "rounded-tr-md bg-neutral-900 text-white" : "rounded-tl-md bg-transparent text-white"}`}>
+            {editing ? (
               <div className="w-full min-w-[300px] space-y-3 rounded-2xl bg-secondary p-3 shadow-md border border-border/40">
                 <Textarea
                   value={draft}
@@ -708,7 +710,7 @@ function MessageRow({
                   </Button>
                 </div>
               </div>
-            ) : (
+            ) : isUser ? (
               <>
                 <UserContent content={message.content} />
                 <Button 
@@ -722,48 +724,47 @@ function MessageRow({
                   <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                 </Button>
               </>
-            )
-          ) : (() => {
-            const imgMeta = parseImageMessage(message.content);
-            if (imgMeta) {
-              return (
-                <ImageResultCard
-                  prompt={imgMeta.prompt}
-                  images={imgMeta.images}
-                  onRegenerate={async () => {
-                    try {
-                      await generateImages({
-                        chatId,
-                        prompt: imgMeta.prompt,
-                        aspectRatio: imgMeta.aspectRatio,
-                        quality: imgMeta.quality,
-                        count: imgMeta.images.length,
-                        style: imgMeta.style,
-                      });
-                      window.location.reload();
-                    } catch (e) {
-                      toast.error(e instanceof Error ? e.message : "Regeneration failed");
-                    }
-                  }}
-                />
-              );
-            }
-            return <ChatMarkdown content={message.content} />;
-          })()}
-        </div>
+            ) : (() => {
+              const imgMeta = parseImageMessage(message.content);
+              if (imgMeta) {
+                return (
+                  <ImageResultCard
+                    prompt={imgMeta.prompt}
+                    images={imgMeta.images}
+                    onRegenerate={async () => {
+                      try {
+                        await generateImages({
+                          chatId,
+                          prompt: imgMeta.prompt,
+                          aspectRatio: imgMeta.aspectRatio,
+                          quality: imgMeta.quality,
+                          count: imgMeta.images.length,
+                          style: imgMeta.style,
+                        });
+                        window.location.reload();
+                      } catch (e) {
+                        toast.error(e instanceof Error ? e.message : "Regeneration failed");
+                      }
+                    }}
+                  />
+                );
+              }
+              return <ChatMarkdown content={message.content} />;
+            })()}
+          </div>
+          
           {!editing && (
-            <div className={`mt-3 flex items-center gap-3 text-[10px] uppercase tracking-wider font-medium text-muted-foreground/60 ${isUser ? "flex-row-reverse" : ""}`}>
-              <span>{formatTime(message.created_at)}</span>
+            <div className={`flex items-center gap-2 px-1 text-[11px] text-neutral-500 ${isUser ? "justify-end" : "justify-start"}`}>
               <div className={`flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover/row:opacity-100 transition-opacity ${isUser ? "flex-row-reverse" : ""}`}>
                 {!isUser && (
                   <>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors" onClick={copy} title="Copy response">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white" onClick={copy} title="Copy response">
                       {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors"
+                      className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
                       onClick={speak}
                       disabled={ttsState === "loading"}
                       title={ttsState === "playing" ? "Stop" : "Read aloud in Manipuri"}
@@ -779,7 +780,7 @@ function MessageRow({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-full hover:bg-muted/50 transition-colors"
+                      className="h-6 w-6 rounded-md hover:bg-neutral-900 hover:text-white"
                       onClick={openCorrection}
                       title="Suggest a Manipuri correction"
                     >
@@ -788,10 +789,12 @@ function MessageRow({
                   </>
                 )}
               </div>
+              <span>{formatTime(message.created_at)}</span>
             </div>
           )}
         </div>
       </div>
+    </div>
       <Dialog open={correctOpen} onOpenChange={setCorrectOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
