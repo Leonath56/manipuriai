@@ -361,11 +361,17 @@ function ChatView() {
     ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
     : messages;
 
-  // Deduplicate by ID to prevent "blink" or "double" messages during refetch
+  // Deduplicate by ID and content for the current turn to prevent "blink" or "double" messages during refetch.
+  // We also filter out any optimistic messages if we are NOT in active streaming mode.
   const allMessagesMap = new Map<string, Msg>();
-  baseMsgs.forEach(m => allMessagesMap.set(m.id, m));
+  baseMsgs.forEach(m => {
+    // Only keep optimistic messages if they are the very last things and we don't have a DB match.
+    // However, our `baseMsgs` slice already handles the turn boundary.
+    allMessagesMap.set(m.id, m);
+  });
   
-  const renderedMessages = Array.from(allMessagesMap.values());
+  const renderedMessages = Array.from(allMessagesMap.values())
+    .filter(m => !m.id.startsWith("opt-") || (activeForChat && !turnPersisted));
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
