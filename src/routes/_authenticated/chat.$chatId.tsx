@@ -143,7 +143,9 @@ function ChatView() {
     const hasImages = imgs.length > 0;
     const cached = null; // getCachedResponse(text) disabled per user request
 
-    turnBaseRef.current = (qc.getQueryData<Msg[]>(["messages", chatId]) ?? []).length;
+    const startMessages = qc.getQueryData<Msg[]>(["messages", chatId]) ?? [];
+    turnBaseRef.current = startMessages.length;
+    
     setActiveStream({
       chatId,
       timestamp: Date.now(),
@@ -153,6 +155,12 @@ function ChatView() {
       generatingImage: false,
       done: Boolean(cached),
     });
+
+    // Optimistic user update
+    qc.setQueryData<Msg[]>(["messages", chatId], (old) => [
+      ...(old ?? []),
+      { id: `opt-${Date.now()}`, role: "user" as const, content: stored, created_at: new Date().toISOString() },
+    ]);
 
     if (cached) {
       setStreaming(cached);
@@ -332,10 +340,7 @@ function ChatView() {
   } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
     // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
     // we assume the last turn might be the one we are streaming if it has no assistant reply.
-    // We check if the last message in DB matches the active turn's text or images.
     const lastMsg = messages[messages.length - 1];
-    // Check if the last message in DB matches the active turn's text or images.
-    // If it does, and it's a user message, we know it's a turn in progress.
     const isMatchingUser = lastMsg && lastMsg.role === "user" && 
       (lastMsg.content === activeForChat.userText || 
        (activeForChat.userImages?.length && lastMsg.content.includes("![image](")));
@@ -348,19 +353,29 @@ function ChatView() {
   }
 
   // A turn is "persisted" if the database has more messages than the count when we started.
-  // We strictly check the message count here.
   const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
   
   // renderedMessages are the ones from the database. 
-  // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
-  const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
+  // We strictly slice them if we are actively streaming a turn that hasn't landed in the DB yet.
+  const baseMsgs = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
     ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
     : messages;
+
+  // Deduplicate by ID and content for the current turn to prevent "blink" or "double" messages during refetch.
+  // We also filter out any optimistic messages if we are NOT in active streaming mode.
+  const allMessagesMap = new Map<string, Msg>();
+  baseMsgs.forEach(m => {
+    // Only keep optimistic messages if they are the very last things and we don't have a DB match.
+    // However, our `baseMsgs` slice already handles the turn boundary.
+    allMessagesMap.set(m.id, m);
+  });
+  
+  const renderedMessages = Array.from(allMessagesMap.values())
+    .filter(m => !m.id.startsWith("opt-") || (activeForChat && !turnPersisted));
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
   // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
-  // We use the activeForChat object which contains the userText and userImages.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
 
 

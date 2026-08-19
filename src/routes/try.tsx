@@ -123,10 +123,13 @@ function TryPage() {
         ? `${m.content}\n\n[attached image]` 
         : m.content
     }));
+    const assistantIdx = messages.length + 1;
     setMessages((m) => [...m, userMsg, { role: "assistant", content: "" }]);
     setInput("");
     setImages([]);
     setLoading(true);
+
+    let assistantAcc = "";
 
     try {
       const resp = await fetch("/api/public/guest-chat", {
@@ -178,11 +181,13 @@ function TryPage() {
             if (word) {
               setMessages((m) => {
                 const next = [...m];
-                const lastIdx = next.length - 1;
-                const last = next[lastIdx];
-                next[lastIdx] = { ...last, content: last.content + word };
+                const last = next[assistantIdx];
+                if (last) {
+                  next[assistantIdx] = { ...last, content: last.content + word };
+                }
                 return next;
               });
+              assistantAcc += word;
               await new Promise(r => setTimeout(r, 10 + Math.random() * 15));
             }
           }
@@ -191,11 +196,13 @@ function TryPage() {
       if (contentBuffer) {
         setMessages((m) => {
           const next = [...m];
-          const lastIdx = next.length - 1;
-          const last = next[lastIdx];
-          next[lastIdx] = { ...last, content: (last.content || "") + contentBuffer };
+          const last = next[assistantIdx];
+          if (last) {
+            next[assistantIdx] = { ...last, content: (last.content || "") + contentBuffer };
+          }
           return next;
         });
+        assistantAcc += contentBuffer;
       }
 
       const newCount = count + 1;
@@ -275,9 +282,11 @@ function TryPage() {
           {(() => {
             const elements: React.ReactNode[] = [];
             // Strictly linear flow
-            for (let i = 0; i < messages.length; i++) {
-              const msg = messages[i];
-              
+            // Strictly linear flow with stable keying
+            const rendered = messages.map((m, i) => ({ ...m, index: i }));
+            
+            for (const msg of rendered) {
+              const i = msg.index;
               if (msg.role === "user") {
                 elements.push(
                   <div key={`msg-u-${i}`} className="flex justify-end my-4">
@@ -299,7 +308,7 @@ function TryPage() {
                 elements.push(
                   <div key={`msg-a-${i}`} className="flex justify-start my-4">
                     <div className="max-w-[95%] text-sm">
-                      {msg.content ? (
+                      {msg.content || (loading && i === messages.length - 1) ? (
                         <Suspense fallback={<span className="whitespace-pre-wrap">{msg.content}</span>}>
                           <ChatMarkdown content={msg.content} />
                         </Suspense>
