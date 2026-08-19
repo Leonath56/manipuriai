@@ -83,7 +83,12 @@ function ChatView() {
     const timer = window.setTimeout(() => {
       const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
       const base = turnBaseRef.current;
-      if (base === null || rows.length > base) setActiveStream(null);
+      // If we are showing history (base is null) or we've seen more rows than we started with,
+      // it's safe to clear the local carryover.
+      if (base === null || rows.length > base) {
+        setActiveStream(null);
+        turnBaseRef.current = null;
+      }
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
