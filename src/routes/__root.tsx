@@ -215,15 +215,11 @@ function RootComponent() {
   const hideReport = pathname.startsWith("/chat") || pathname.startsWith("/try");
 
   useEffect(() => {
-    // Initial session check to ensure state is synced
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        queryClient.invalidateQueries();
-      }
-    });
-
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      // INITIAL_SESSION and TOKEN_REFRESHED are routine background events.
+      // Invalidating the router for either remounts the active chat and makes
+      // the whole page visibly flash after a streamed response.
+      if (event === "SIGNED_IN" || event === "USER_UPDATED") {
         router.invalidate();
         queryClient.invalidateQueries();
       }
