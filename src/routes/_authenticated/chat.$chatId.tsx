@@ -391,7 +391,7 @@ function ChatView() {
               return acc;
             }, [] as React.ReactNode[])}
             {showCarryover && (
-              <div className="msg-pop">
+              <div className="msg-pop flex flex-col-reverse">
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
