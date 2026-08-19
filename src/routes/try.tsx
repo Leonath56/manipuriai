@@ -279,9 +279,9 @@ function TryPage() {
               const assistant = messages[i + 1];
               
               if (assistant) {
-                // Assistant (response) above User (prompt)
                 elements.push(
-                  <div key={`turn-${i}`} className="flex flex-col-reverse space-y-4 space-y-reverse">
+                  <div key={`turn-${i}`} className="flex flex-col space-y-4">
+                    {/* User prompt first */}
                     <div className="flex justify-end">
                       <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
                         <div className="space-y-2">
@@ -296,6 +296,7 @@ function TryPage() {
                         </div>
                       </div>
                     </div>
+                    {/* Assistant response below */}
                     <div className="flex justify-start">
                       <div className="max-w-[95%] text-sm">
                         {assistant.content ? (
@@ -308,6 +309,7 @@ function TryPage() {
                   </div>
                 );
               } else {
+                // ... same single message logic ...
                 // Single message (e.g. just user prompt while waiting)
                 elements.push(
                   <div key={`turn-${i}`} className="flex justify-end">
