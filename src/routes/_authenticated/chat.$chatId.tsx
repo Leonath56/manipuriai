@@ -340,7 +340,7 @@ function ChatView() {
   }
 
   // A turn is "persisted" if the database has more messages than the count when we started.
-  // However, we must be careful: if we open a history, turnBaseRef should be null and everything should show.
+  // We strictly check the message count here.
   const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
   
   // renderedMessages are the ones from the database. 
@@ -352,6 +352,7 @@ function ChatView() {
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
   // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
+  // We use the activeForChat object which contains the userText and userImages.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
 
 
