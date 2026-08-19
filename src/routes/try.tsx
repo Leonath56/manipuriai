@@ -272,36 +272,63 @@ function TryPage() {
               <p className="text-sm mt-1">Kari haiba pambano? Ask me anything in Manipuri or English.</p>
             </div>
           )}
-          {messages.map((m, i) => (
-            <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-              <div
-                className={
-                  m.role === "user"
-                    ? "inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm"
-                    : "max-w-[95%] text-sm"
-                }
-              >
-                {m.role === "assistant" ? (
-                  m.content ? (
-                    <Suspense fallback={<span className="whitespace-pre-wrap">{m.content}</span>}>
-                      <ChatMarkdown content={m.content} />
-                    </Suspense>
-                  ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                ) : (
-                  <div className="space-y-2">
-                    {m.images && m.images.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {m.images.map((img, idx) => (
-                          <img key={idx} src={img} alt="Uploaded" className="h-20 w-20 object-cover rounded-lg border border-border/50" />
-                        ))}
+          {(() => {
+            const elements: React.ReactNode[] = [];
+            for (let i = 0; i < messages.length; i += 2) {
+              const user = messages[i];
+              const assistant = messages[i + 1];
+              
+              if (assistant) {
+                // Assistant (response) above User (prompt)
+                elements.push(
+                  <div key={`turn-${i}`} className="flex flex-col-reverse space-y-4 space-y-reverse">
+                    <div className="flex justify-end">
+                      <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
+                        <div className="space-y-2">
+                          {user.images && user.images.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {user.images.map((img, idx) => (
+                                <img key={idx} src={img} alt="Uploaded" className="h-20 w-20 object-cover rounded-lg border border-border/50" />
+                              ))}
+                            </div>
+                          )}
+                          <span className="whitespace-pre-wrap">{user.content}</span>
+                        </div>
                       </div>
-                    )}
-                    <span className="whitespace-pre-wrap">{m.content}</span>
+                    </div>
+                    <div className="flex justify-start">
+                      <div className="max-w-[95%] text-sm">
+                        {assistant.content ? (
+                          <Suspense fallback={<span className="whitespace-pre-wrap">{assistant.content}</span>}>
+                            <ChatMarkdown content={assistant.content} />
+                          </Suspense>
+                        ) : <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            </div>
-          ))}
+                );
+              } else {
+                // Single message (e.g. just user prompt while waiting)
+                elements.push(
+                  <div key={`turn-${i}`} className="flex justify-end">
+                    <div className="inline-block max-w-[85%] rounded-2xl bg-secondary px-4 py-2 text-sm">
+                      <div className="space-y-2">
+                        {user.images && user.images.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {user.images.map((img, idx) => (
+                              <img key={idx} src={img} alt="Uploaded" className="h-20 w-20 object-cover rounded-lg border border-border/50" />
+                            ))}
+                          </div>
+                        )}
+                        <span className="whitespace-pre-wrap">{user.content}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            }
+            return elements;
+          })()}
         </div>
       </div>
 

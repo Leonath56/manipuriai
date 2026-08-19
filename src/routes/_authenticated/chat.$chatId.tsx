@@ -372,11 +372,40 @@ function ChatView() {
         onScroll={checkScroll}
       >
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
-            {renderedMessages.map((m) => (
-              <MessageRow key={m.id} message={m} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-            ))}
+            {(() => {
+              const elements: React.ReactNode[] = [];
+              for (let i = 0; i < renderedMessages.length; i += 2) {
+                const user = renderedMessages[i];
+                const assistant = renderedMessages[i + 1];
+                if (assistant) {
+                  elements.push(
+                    <div key={`turn-${user.id}`} className="flex flex-col-reverse">
+                      <MessageRow message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                    </div>
+                  );
+                } else {
+                  elements.push(<MessageRow key={user.id} message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
+                }
+              }
+              return elements;
+            })()}
             {showCarryover && (
               <div className="msg-pop">
+                <div className="my-8 flex items-start gap-3 md:gap-6">
+                  <Avatar assistant />
+                  <div className="min-w-0 flex-1 pt-0.5">
+                    {showCarryover.generatingImage ? (
+                      <ImageGeneratingAnimation />
+                    ) : (showCarryover.streaming || showCarryover.done || streaming) ? (
+                      <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
+                        <StreamingAssistantContent content={showCarryover.streaming || streaming} />
+                      </Suspense>
+                    ) : (
+                        <ThinkingLoader />
+                    )}
+                  </div>
+                </div>
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
@@ -391,20 +420,6 @@ function ChatView() {
                       </div>
                     )}
                     <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
-                  </div>
-                </div>
-                <div className="my-8 flex items-start gap-3 md:gap-6">
-                  <Avatar assistant />
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    {showCarryover.generatingImage ? (
-                      <ImageGeneratingAnimation />
-                    ) : (showCarryover.streaming || showCarryover.done || streaming) ? (
-                      <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
-                        <StreamingAssistantContent content={showCarryover.streaming || streaming} />
-                      </Suspense>
-                    ) : (
-                        <ThinkingLoader />
-                    )}
                   </div>
                 </div>
               </div>
