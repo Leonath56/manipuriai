@@ -326,8 +326,13 @@ function ChatView() {
   } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
     // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
     // we assume the last turn might be the one we are streaming if it has no assistant reply.
+    // We check if the last message in DB matches the active turn's text or images.
     const lastMsg = messages[messages.length - 1];
-    if (lastMsg && lastMsg.role === "user" && lastMsg.content === activeForChat.userText) {
+    const isMatchingTurn = lastMsg && lastMsg.role === "user" && 
+      (lastMsg.content === activeForChat.userText || 
+       (activeForChat.userImages?.length && lastMsg.content.includes("![image](")));
+
+    if (isMatchingTurn) {
       turnBaseRef.current = messages.length - 1;
     } else {
       turnBaseRef.current = messages.length;
