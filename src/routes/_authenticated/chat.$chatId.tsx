@@ -296,51 +296,34 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Logic to handle in-flight vs persisted turns.
-  // When a stream starts, we record the message count. 
-  // We only hide messages from the DB list if they represent the turn that is currently active in our stream store.
-  if (!activeForChat) {
-    turnBaseRef.current = null;
-  } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
-    // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
-    // we assume the last turn might be the one we are streaming if it has no assistant reply.
-    const lastMsg = messages[messages.length - 1];
-    const isMatchingUser = lastMsg && lastMsg.role === "user" && 
-      (lastMsg.content === activeForChat.userText || 
-       (activeForChat.userImages?.length && lastMsg.content.includes("![image](")));
 
-    if (isMatchingUser) {
-      turnBaseRef.current = messages.length - 1;
-    } else {
-      turnBaseRef.current = messages.length;
-    }
-  }
+  // Persisted rows only (never the transient image-generation optimistic row).
+  const persistedRows = messages.filter((m) => isPersistedMessageId(m.id));
 
-  // A turn is "persisted" if the database has more messages than the count when we started.
-  const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
-  
-  // renderedMessages are the ones from the database. 
-  // We strictly slice them if we are actively streaming a turn that hasn't landed in the DB yet.
-  const baseMsgs = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
-    ? messages.slice(0, Math.min(turnBaseRef.current, messages.length))
-    : messages;
+  // A turn has landed once the database holds more rows than when it started.
+  // `baseCount` lives in the cross-route store, so this stays correct across
+  // remounts/navigation — the old ref-based version reset to null on remount
+  // and let the persisted reply render *and* the carryover render.
+  const turnPersisted = !activeForChat || persistedRows.length > activeForChat.baseCount;
 
-  // Deduplicate by ID and content for the current turn to prevent "blink" or "double" messages during refetch.
-  // We also filter out any optimistic messages if we are NOT in active streaming mode.
-  const allMessagesMap = new Map<string, Msg>();
-  baseMsgs.forEach(m => {
-    // Only keep optimistic messages if they are the very last things and we don't have a DB match.
-    // However, our `baseMsgs` slice already handles the turn boundary.
-    allMessagesMap.set(m.id, m);
-  });
-  
-  const renderedMessages = Array.from(allMessagesMap.values())
-    .filter(m => !m.id.startsWith("opt-") || (activeForChat && !turnPersisted));
+  // While a turn is in flight, the carryover owns it; the DB list is truncated
+  // to the rows that existed before the turn (identical past messages stay).
+  const baseMsgs = turnPersisted
+    ? messages
+    : persistedRows.slice(0, activeForChat.baseCount);
+
+  // Deduplicate strictly by message id.
+  const byId = new Map<string, Msg>();
+  baseMsgs.forEach((m) => byId.set(m.id, m));
+
+  const renderedMessages = Array.from(byId.values())
+    .filter((m) => !m.id.startsWith("opt-") || sending);
 
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
-  // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
+  // Only show the carryover while the turn is not yet persisted.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
+
 
 
 
