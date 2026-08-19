@@ -398,50 +398,62 @@ function ChatView() {
             {showCarryover && (
               <div className="msg-pop">
                 {/* User message first in carryover */}
-                <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
-                  <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
-                  <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
-                    {showCarryover.userImages && showCarryover.userImages.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-2">
-                        {showCarryover.userImages.map((src, i) => (
-                          <div key={i} className="h-16 w-16 overflow-hidden rounded-lg border border-white/10">
-                            <img src={src} alt="" className="h-full w-full object-cover" />
+                <div className="my-8 flex w-full flex-col items-end">
+                  <div className="flex max-w-[90%] flex-row-reverse gap-3 md:gap-4">
+                    <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <div className="inline-block rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
+                        {showCarryover.userImages && showCarryover.userImages.length > 0 && (
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            {showCarryover.userImages.map((src, i) => (
+                              <div key={i} className="h-16 w-16 overflow-hidden rounded-lg border border-white/10">
+                                <img src={src} alt="" className="h-full w-full object-cover" />
+                              </div>
+                            ))}
                           </div>
-                        ))}
+                        )}
+                        <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
                       </div>
-                    )}
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Assistant response below user prompt in carryover */}
-                <div className="my-8 flex items-start gap-3 md:gap-6">
-                  <Avatar assistant />
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    {showCarryover.generatingImage ? (
-                      <ImageGeneratingAnimation />
-                    ) : (showCarryover.streaming || showCarryover.done || streaming) ? (
-                      <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
-                        <StreamingAssistantContent content={showCarryover.streaming || streaming} />
-                      </Suspense>
-                    ) : (
-                        <ThinkingLoader />
-                    )}
+                <div className="my-8 flex w-full flex-col items-start">
+                  <div className="flex max-w-[90%] gap-3 md:gap-4">
+                    <Avatar assistant />
+                    <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
+                      <div className="inline-block rounded-2xl rounded-tl-md px-4 py-3 text-white">
+                        {showCarryover.generatingImage ? (
+                          <ImageGeneratingAnimation />
+                        ) : (showCarryover.streaming || showCarryover.done || streaming) ? (
+                          <Suspense fallback={<div className="h-20 w-full animate-pulse rounded bg-muted/20" />}>
+                            <StreamingAssistantContent content={showCarryover.streaming || streaming} />
+                          </Suspense>
+                        ) : (
+                          <ThinkingLoader />
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
             {sending && !activeForChat && (
-              <div className="my-8 flex items-start gap-3 md:gap-6 msg-pop">
-                <Avatar assistant />
-                <div className="min-w-0 flex-1 pt-0.5">
-                  {generatingImage ? (
-                    <ImageGeneratingAnimation />
-                  ) : (streaming || (inflight?.done ?? false)) ? (
-                    <StreamingAssistantContent content={streaming} />
-                  ) : (
-                    <ThinkingLoader />
-                  )}
+              <div className="my-8 flex w-full flex-col items-start msg-pop">
+                <div className="flex max-w-[90%] gap-3 md:gap-4">
+                  <Avatar assistant />
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 pt-0.5">
+                    <div className="inline-block rounded-2xl rounded-tl-md px-4 py-3 text-white">
+                      {generatingImage ? (
+                        <ImageGeneratingAnimation />
+                      ) : (streaming || (inflight?.done ?? false)) ? (
+                        <StreamingAssistantContent content={streaming} />
+                      ) : (
+                        <ThinkingLoader />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
