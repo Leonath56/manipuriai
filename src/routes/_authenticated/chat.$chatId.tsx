@@ -374,21 +374,22 @@ function ChatView() {
           <div className="mx-auto max-w-3xl px-4 py-8 md:px-6">
             {/* Render in reverse: AI response above the prompt question */}
             {renderedMessages.reduce((acc, _, i, arr) => {
-              if (i % 2 === 0 && i + 1 < arr.length) {
+              if (i % 2 === 0) {
                 const userMsg = arr[i];
                 const aiMsg = arr[i + 1];
-                acc.push(
-                  <div key={`turn-${userMsg.id}`} className="flex flex-col-reverse">
-                    <MessageRow message={userMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-                    <MessageRow message={aiMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-                  </div>
-                );
-              } else if (i === arr.length - 1 && i % 2 === 0) {
-                // Last message is a user message without an AI reply yet (shouldn't happen with renderedMessages logic usually, but for safety)
-                acc.push(<MessageRow key={arr[i].id} message={arr[i]} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
+                if (aiMsg) {
+                  acc.push(
+                    <div key={`turn-${userMsg.id}`} className="flex flex-col-reverse">
+                      <MessageRow message={userMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      <MessageRow message={aiMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                    </div>
+                  );
+                } else {
+                  acc.push(<MessageRow key={userMsg.id} message={userMsg} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
+                }
               }
               return acc;
-            }, [] as JSX.Element[])}
+            }, [] as React.ReactNode[])}
             {showCarryover && (
               <div className="msg-pop">
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
