@@ -379,14 +379,17 @@ function ChatView() {
               for (let i = 0; i < renderedMessages.length; i += 2) {
                 const user = renderedMessages[i];
                 const assistant = renderedMessages[i + 1];
-                if (assistant) {
+                if (user && user.role === "user") {
                   elements.push(
                     <div key={`turn-${user.id}`} className="flex flex-col">
                       <MessageRow message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
-                      <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      {assistant && assistant.role === "assistant" && (
+                        <MessageRow message={assistant} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />
+                      )}
                     </div>
                   );
-                } else {
+                } else if (user) {
+                  // Fallback for unexpected message sequence (e.g. assistant message without user)
                   elements.push(<MessageRow key={user.id} message={user} chatId={chatId} lang={lang} onEdit={editAndResend} disabled={sending} />);
                 }
               }
