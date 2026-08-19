@@ -409,8 +409,16 @@ export const Route = createFileRoute("/api/chat")({
                 if (finalChatId !== "temp") {
                   void (async () => {
                     try {
+                      // Text saved to DB for the user turn — embed images as markdown if any
+                      const imgMarkdown = hasImages ? body.images!.map((u) => `![image](${u})`).join("\n") : "";
+                      const storedUserText = body.message
+                        ? hasImages
+                          ? `${imgMarkdown}\n\n${body.message}`
+                          : body.message
+                        : imgMarkdown;
+
                       await supabase.from("messages").insert([
-                        { chat_id: finalChatId, user_id: userId, role: "user", content: body.message },
+                        { chat_id: finalChatId, user_id: userId, role: "user", content: storedUserText },
                         { chat_id: finalChatId, user_id: userId, role: "assistant", content: fastGreeting },
                       ]);
                       await supabase.from("chats").update({ updated_at: nowIso }).eq("id", finalChatId);

@@ -83,7 +83,12 @@ function ChatView() {
     const timer = window.setTimeout(() => {
       const rows = qc.getQueryData<Msg[]>(["messages", chatId]) ?? messagesQ.data ?? [];
       const base = turnBaseRef.current;
-      if (base === null || rows.length > base) setActiveStream(null);
+      // If we are showing history (base is null) or we've seen more rows than we started with,
+      // it's safe to clear the local carryover.
+      if (base === null || rows.length > base) {
+        setActiveStream(null);
+        turnBaseRef.current = null;
+      }
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [activeForChat, chatId, messagesQ.data, qc]);
@@ -313,18 +318,35 @@ function ChatView() {
   };
 
   const messages = messagesQ.data ?? [];
-  // Every persisted row always renders — repeated identical messages must each
-  // stay visible with their own reply. The in-flight turn is tracked purely by
-  // row count, never by content matching.
+  // Logic to handle in-flight vs persisted turns.
+  // When a stream starts, we record the message count. 
+  // We only hide messages from the DB list if they represent the turn that is currently active in our stream store.
   if (!activeForChat) {
     turnBaseRef.current = null;
   } else if (turnBaseRef.current === null && messagesQ.isSuccess) {
-    turnBaseRef.current = messages.length;
+    // If we have an active stream but haven't set a base yet (e.g. page reload during stream),
+    // we assume the last turn might be the one we are streaming if it has no assistant reply.
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === "user" && lastMsg.content === activeForChat.userText) {
+      turnBaseRef.current = messages.length - 1;
+    } else {
+      turnBaseRef.current = messages.length;
+    }
   }
+
+  // A turn is "persisted" if the database has more messages than the count when we started.
+  // However, we must be careful: if we open a history, turnBaseRef should be null and everything should show.
   const turnPersisted = turnBaseRef.current !== null && messages.length > turnBaseRef.current;
-  const renderedMessages = messages;
+  
+  // renderedMessages are the ones from the database. 
+  // We only slice them if we are actively streaming a turn that hasn't landed in the DB yet.
+  const renderedMessages = (activeForChat && !turnPersisted && turnBaseRef.current !== null)
+    ? messages.slice(0, turnBaseRef.current)
+    : messages;
+
   const canRegenerate = !sending && !inflight && renderedMessages.some((m) => m.role === "assistant");
 
+  // Only show the carryover (optimistic/streaming UI) if it's actually active and not yet in the DB.
   const showCarryover = activeForChat && !turnPersisted ? activeForChat : null;
 
 
@@ -346,7 +368,17 @@ function ChatView() {
                 <div className="my-8 flex flex-row-reverse items-start gap-3 md:gap-4">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-tighter">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-3 text-white shadow-sm">
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                    {/* Preserve image thumbnails in carryover */}
+                    {showCarryover.userImages && showCarryover.userImages.length > 0 && (
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        {showCarryover.userImages.map((src, i) => (
+                          <div key={i} className="h-16 w-16 overflow-hidden rounded-lg border border-white/10">
+                            <img src={src} alt="" className="h-full w-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">{showCarryover.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (showCarryover.userImages?.length ? "" : "(image)")}</p>
                   </div>
                 </div>
                 <div className="my-8 flex items-start gap-3 md:gap-6">
