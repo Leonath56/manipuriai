@@ -384,10 +384,8 @@ function ChatView() {
                 
                 if (timeA !== timeB) return timeA - timeB;
                 
-                // Tie-breaker for identical timestamps: User before Assistant
-                if (a.role !== b.role) {
-                  return a.role === "user" ? -1 : 1;
-                }
+                // User always before Assistant if timestamps match
+                if (a.role !== b.role) return a.role === "user" ? -1 : 1;
                 
                 // Final tie-breaker: sort by ID string to be deterministic
                 return a.id.localeCompare(b.id);
