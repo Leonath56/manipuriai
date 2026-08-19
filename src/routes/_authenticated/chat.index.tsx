@@ -242,7 +242,17 @@ function NewChat() {
                 <div className="my-6 flex flex-row-reverse items-start gap-3">
                   <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-neutral-800 text-neutral-400 text-xs font-semibold">You</div>
                   <div className="inline-block max-w-[85%] rounded-2xl rounded-tr-md bg-neutral-900 px-4 py-2.5 text-white">
-                    <p className="whitespace-pre-wrap text-sm text-foreground/90">{pendingHere.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || "(image)"}</p>
+                    {/* User Images in pending preview */}
+                    {pendingHere.userImages && pendingHere.userImages.length > 0 && (
+                      <div className="mb-2 flex flex-wrap gap-1.5">
+                        {pendingHere.userImages.map((src, i) => (
+                          <div key={i} className="h-14 w-14 overflow-hidden rounded-lg border border-white/10">
+                            <img src={src} alt="" className="h-full w-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="whitespace-pre-wrap text-sm text-foreground/90">{pendingHere.userText.replace(/!\[[^\]]*\]\([^)]+\)\n?/g, "").trim() || (pendingHere.userImages?.length ? "" : "(image)")}</p>
                   </div>
                 </div>
                 <div className="my-6 flex items-start gap-3">
