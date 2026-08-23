@@ -7,6 +7,7 @@
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
 
 // SELF-HOST NOTE: to build for a Node VPS instead of Cloudflare Workers,
 // set env `SELF_HOSTED=1` when running `bun run build`. This switches the
@@ -29,6 +30,7 @@ export default defineConfig({
     },
   },
   vite: {
+    plugins: [mcpPlugin()],
     resolve: {
       alias: [
         {
