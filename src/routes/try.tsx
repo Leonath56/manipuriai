@@ -272,6 +272,7 @@ function TryPage() {
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-2xl space-y-4">
+          <h1 className="sr-only">Chat with Manipuri AI in Meiteilon or English</h1>
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               <div className="text-5xl mb-4" aria-hidden="true">ꯃ</div>
@@ -397,6 +398,7 @@ function TryPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => fileRef.current?.click()}
+                  aria-label="Attach an image"
                   disabled={loading || images.length >= 4}
                   className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
                 >
@@ -413,6 +415,7 @@ function TryPage() {
               <Button
                 type="submit"
                 size="icon"
+                aria-label="Send message"
                 disabled={loading || !input.trim()}
                 className="h-10 w-10 rounded-full bg-black text-white hover:bg-neutral-800"
               >
