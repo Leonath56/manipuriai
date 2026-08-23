@@ -86,7 +86,10 @@ function Landing() {
 
           <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
             <a href="#capabilities" className="transition-colors hover:text-foreground">Capabilities</a>
-            <a href="#trust" className="transition-colors hover:text-foreground">Why us</a>
+            <a href="#trust" className="transition-colors hover:text-foreground">'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''
+
+why</a>
+
 
           </nav>
 
