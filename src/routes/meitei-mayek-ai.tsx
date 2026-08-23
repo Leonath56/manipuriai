@@ -11,6 +11,7 @@ export const Route = createFileRoute("/meitei-mayek-ai")({
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://manipuriai.online/meitei-mayek-ai" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
       { name: "twitter:title", content: "Meitei Mayek AI — ꯃꯤꯇꯩ ꯃꯌꯦꯛ Chatbot" },
       { name: "twitter:description", content: "AI chatbot that natively replies in Meitei Mayek (ꯃꯤꯇꯩ ꯃꯌꯦꯛ) script." },
       { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
