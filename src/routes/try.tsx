@@ -398,6 +398,7 @@ function TryPage() {
                   variant="ghost"
                   size="icon"
                   onClick={() => fileRef.current?.click()}
+                  aria-label="Attach an image"
                   disabled={loading || images.length >= 4}
                   className="h-8 w-8 shrink-0 rounded-full text-black hover:bg-neutral-100"
                 >
