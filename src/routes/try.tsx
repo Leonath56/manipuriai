@@ -415,6 +415,7 @@ function TryPage() {
               <Button
                 type="submit"
                 size="icon"
+                aria-label="Send message"
                 disabled={loading || !input.trim()}
                 className="h-10 w-10 rounded-full bg-black text-white hover:bg-neutral-800"
               >
