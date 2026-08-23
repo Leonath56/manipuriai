@@ -26,12 +26,10 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
         ];
 
-        const today = new Date().toISOString().split("T")[0];
         const urls = entries.map((e) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${e.path === "/" ? "" : e.path}</loc>`,
-            `    <lastmod>${today}</lastmod>`,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,
