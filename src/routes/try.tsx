@@ -272,6 +272,7 @@ function TryPage() {
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         <div className="mx-auto max-w-2xl space-y-4">
+          <h1 className="sr-only">Chat with Manipuri AI in Meiteilon or English</h1>
           {messages.length === 0 && (
             <div className="text-center text-muted-foreground py-12">
               <div className="text-5xl mb-4" aria-hidden="true">ꯃ</div>
