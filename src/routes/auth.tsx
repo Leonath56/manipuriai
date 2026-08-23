@@ -14,6 +14,7 @@ import { Sparkles, Loader2, Send } from "lucide-react";
 const searchSchema = z.object({
   mode: z.enum(["signin", "signup", "forgot"]).optional(),
   redirect: z.string().optional(),
+  next: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth")({
@@ -40,6 +41,15 @@ function AuthPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"signin" | "signup" | "forgot">(search.mode ?? "signin");
+  // Same-origin relative path to return to after auth (used by the OAuth consent flow).
+  const nextPath =
+    typeof search.next === "string" && search.next.startsWith("/") && !search.next.startsWith("//")
+      ? search.next
+      : null;
+  const goNext = () => {
+    if (nextPath) window.location.replace(nextPath);
+    else navigate({ to: "/chat" });
+  };
   const [loading, setLoading] = useState(false);
 
   const [email, setEmail] = useState("");
@@ -57,14 +67,18 @@ function AuthPage() {
         const r = await supabase.auth.refreshSession();
         data = r.data;
       }
-      if (data.session) navigate({ to: "/chat", replace: true });
+      if (data.session) {
+        if (nextPath) window.location.replace(nextPath);
+        else navigate({ to: "/chat", replace: true });
+      }
     })().catch(() => {});
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, nextPath]);
 
   const handleGoogle = async () => {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", { 
-      redirect_uri: window.location.origin + "/auth",
+      redirect_uri: window.location.origin + "/auth" + (nextPath ? `?next=${encodeURIComponent(nextPath)}` : ""),
       extraParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -76,7 +90,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/chat" });
+    goNext();
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
@@ -86,7 +100,7 @@ function AuthPage() {
     setLoading(false);
     if (error) return toast.error(error.message);
     toast.success("Welcome back!");
-    navigate({ to: "/chat" });
+    goNext();
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -100,7 +114,7 @@ function AuthPage() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/chat`,
+        emailRedirectTo: `${window.location.origin}${nextPath ?? "/chat"}`,
         data: { full_name: fullName, username, age: ageNum },
       },
     });

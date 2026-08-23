@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ManipuriTranslatorRouteImport } from './routes/manipuri-translator'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MeiteiMayekAiRouteImport } from './routes/meitei-mayek-ai'
 import { Route as MeiteilonChatbotRouteImport } from './routes/meiteilon-chatbot'
 import { Route as PlansRouteImport } from './routes/plans'
@@ -21,6 +22,8 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TryRouteImport } from './routes/try'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -31,6 +34,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 import { Route as AuthenticatedChatIndexRouteImport } from './routes/_authenticated/chat.index'
 import { Route as AuthenticatedChatChatIdRouteImport } from './routes/_authenticated/chat.$chatId'
 import { Route as ApiPublicGuestChatRouteImport } from './routes/api/public/guest-chat'
@@ -53,6 +57,11 @@ const AuthRoute = AuthRouteImport.update({
 const ManipuriTranslatorRoute = ManipuriTranslatorRouteImport.update({
   id: '/manipuri-translator',
   path: '/manipuri-translator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeiteiMayekAiRoute = MeiteiMayekAiRouteImport.update({
@@ -95,6 +104,18 @@ const TryRoute = TryRouteImport.update({
   path: '/try',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -145,6 +166,12 @@ const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
   path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedChatIndexRoute = AuthenticatedChatIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -171,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
@@ -179,6 +207,8 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/try': typeof TryRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/chat': typeof AuthenticatedChatRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -189,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/chat/': typeof AuthenticatedChatIndexRoute
@@ -198,6 +229,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
@@ -206,6 +238,8 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/try': typeof TryRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/image': typeof AuthenticatedImageRoute
@@ -215,6 +249,7 @@ export interface FileRoutesByTo {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/chat': typeof AuthenticatedChatIndexRoute
@@ -226,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
+  '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
@@ -234,6 +270,8 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/try': typeof TryRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/chat': typeof AuthenticatedChatRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -244,6 +282,7 @@ export interface FileRoutesById {
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/chat/$chatId': typeof AuthenticatedChatChatIdRoute
   '/api/public/guest-chat': typeof ApiPublicGuestChatRoute
   '/_authenticated/chat/': typeof AuthenticatedChatIndexRoute
@@ -255,6 +294,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/manipuri-translator'
+    | '/mcp'
     | '/meitei-mayek-ai'
     | '/meiteilon-chatbot'
     | '/plans'
@@ -263,6 +303,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/try'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/chat'
     | '/dashboard'
@@ -273,6 +315,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/transcribe'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
     | '/chat/'
@@ -282,6 +325,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/manipuri-translator'
+    | '/mcp'
     | '/meitei-mayek-ai'
     | '/meiteilon-chatbot'
     | '/plans'
@@ -290,6 +334,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/try'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin'
     | '/dashboard'
     | '/image'
@@ -299,6 +345,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/transcribe'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/chat/$chatId'
     | '/api/public/guest-chat'
     | '/chat'
@@ -309,6 +356,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/manipuri-translator'
+    | '/mcp'
     | '/meitei-mayek-ai'
     | '/meiteilon-chatbot'
     | '/plans'
@@ -317,6 +365,8 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/try'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/_authenticated/admin'
     | '/_authenticated/chat'
     | '/_authenticated/dashboard'
@@ -327,6 +377,7 @@ export interface FileRouteTypes {
     | '/api/generate-image'
     | '/api/transcribe'
     | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/chat/$chatId'
     | '/api/public/guest-chat'
     | '/_authenticated/chat/'
@@ -338,6 +389,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ManipuriTranslatorRoute: typeof ManipuriTranslatorRoute
+  McpRoute: typeof McpRoute
   MeiteiMayekAiRoute: typeof MeiteiMayekAiRoute
   MeiteilonChatbotRoute: typeof MeiteilonChatbotRoute
   PlansRoute: typeof PlansRoute
@@ -346,10 +398,13 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TryRoute: typeof TryRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicGuestChatRoute: typeof ApiPublicGuestChatRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -382,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/manipuri-translator'
       fullPath: '/manipuri-translator'
       preLoaderRoute: typeof ManipuriTranslatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meitei-mayek-ai': {
@@ -438,6 +500,20 @@ declare module '@tanstack/react-router' {
       path: '/try'
       fullPath: '/try'
       preLoaderRoute: typeof TryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin': {
@@ -510,6 +586,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/chat/': {
       id: '/_authenticated/chat/'
       path: '/'
@@ -580,6 +663,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ManipuriTranslatorRoute: ManipuriTranslatorRoute,
+  McpRoute: McpRoute,
   MeiteiMayekAiRoute: MeiteiMayekAiRoute,
   MeiteilonChatbotRoute: MeiteilonChatbotRoute,
   PlansRoute: PlansRoute,
@@ -588,10 +672,14 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TryRoute: TryRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateImageRoute: ApiGenerateImageRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicGuestChatRoute: ApiPublicGuestChatRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
