@@ -9,7 +9,7 @@ import { z } from "zod";
 export const ToolSchema = z.object({
   name: z.string(),
   description: z.string(),
-  inputSchema: z.record(z.any()),
+  inputSchema: z.record(z.string(), z.any()),
 });
 
 export type Tool = z.infer<typeof ToolSchema>;
