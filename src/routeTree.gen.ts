@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ManipuriDictionaryRouteImport } from './routes/manipuri-dictionary'
 import { Route as ManipuriTranslatorRouteImport } from './routes/manipuri-translator'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MeiteiMayekAiRouteImport } from './routes/meitei-mayek-ai'
@@ -52,6 +53,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManipuriDictionaryRoute = ManipuriDictionaryRouteImport.update({
+  id: '/manipuri-dictionary',
+  path: '/manipuri-dictionary',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ManipuriTranslatorRoute = ManipuriTranslatorRouteImport.update({
@@ -197,6 +203,7 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
@@ -228,6 +235,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
@@ -293,6 +302,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
@@ -355,6 +366,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
@@ -388,6 +400,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ManipuriDictionaryRoute: typeof ManipuriDictionaryRoute
   ManipuriTranslatorRoute: typeof ManipuriTranslatorRoute
   McpRoute: typeof McpRoute
   MeiteiMayekAiRoute: typeof MeiteiMayekAiRoute
@@ -430,6 +443,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manipuri-dictionary': {
+      id: '/manipuri-dictionary'
+      path: '/manipuri-dictionary'
+      fullPath: '/manipuri-dictionary'
+      preLoaderRoute: typeof ManipuriDictionaryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/manipuri-translator': {
@@ -662,6 +682,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ManipuriDictionaryRoute: ManipuriDictionaryRoute,
   ManipuriTranslatorRoute: ManipuriTranslatorRoute,
   McpRoute: McpRoute,
   MeiteiMayekAiRoute: MeiteiMayekAiRoute,

@@ -44,6 +44,11 @@ function Page() {
           <li>Meitei Mayek output on request: ꯈꯨꯔꯨꯝꯖꯔꯤ</li>
         </ul>
 
+        <p className="mt-6 text-muted-foreground">
+          Looking up single words? Browse the{" "}
+          <Link to="/manipuri-dictionary" className="underline underline-offset-2">Manipuri dictionary</Link>.
+        </p>
+
         <div className="mt-10 flex gap-3">
           <Link to="/try" className="rounded-lg bg-primary px-5 py-3 font-semibold text-primary-foreground">Try free</Link>
           <Link to="/auth" className="rounded-lg border border-input px-5 py-3 font-semibold">Sign up</Link>

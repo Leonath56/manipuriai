@@ -19,18 +19,17 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/meitei-mayek-ai", changefreq: "weekly", priority: "0.9" },
           { path: "/manipuri-translator", changefreq: "weekly", priority: "0.9" },
           { path: "/meiteilon-chatbot", changefreq: "weekly", priority: "0.9" },
+          { path: "/manipuri-dictionary", changefreq: "weekly", priority: "0.9" },
           { path: "/auth", changefreq: "monthly", priority: "0.6" },
           { path: "/plans", changefreq: "monthly", priority: "0.7" },
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
         ];
 
-        const today = new Date().toISOString().split("T")[0];
         const urls = entries.map((e) =>
           [
             `  <url>`,
             `    <loc>${BASE_URL}${e.path === "/" ? "" : e.path}</loc>`,
-            `    <lastmod>${today}</lastmod>`,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,
