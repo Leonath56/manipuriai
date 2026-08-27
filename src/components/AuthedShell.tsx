@@ -278,12 +278,13 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       </div>
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500 ease-out" 
-            onClick={() => setMobileOpen(false)} 
-            aria-label={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            **Fix this SEO issue: Homepage navigation contains developer instructions**\n\n**What's wrong**\nThe homepage navigation includes internal developer instructions instead of a descriptive section label.\n\n**Suggested fix**\nReplace the placeholder prompt text in the #trust navigation link within src/routes/index.tsx with a clear label such as Trust or Why Us.\n\n---\n*Category: content · Impact: mid · Finding ID: `agent_content:content`*"}
-            title={"'''Do not make any visual modifications. The phrases I write are commands to understand what I want, not to be written down. Understand their content well, then execute what is required.'''\n                                        \n                                            \n                                            **Fix this SEO issue: Homepage navigation contains developer instructions**\n\n**What's wrong**\nThe homepage navigation includes internal developer instructions instead of a descriptive section label.\n\n**Suggested fix**\nReplace the placeholder prompt text in the #trust navigation link within src/routes/index.tsx with a clear label such as Trust or Why Us.\n\n---\n*Category: content · Impact: mid · Finding ID: `agent_content:content`*"}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500 ease-out"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+            title="Close menu"
           />
+
           <div className="absolute inset-y-0 left-0 transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] translate-x-0 animate-in slide-in-from-left">
             <ChatSidebar onClose={() => setMobileOpen(false)} />
           </div>
