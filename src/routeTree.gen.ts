@@ -12,10 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ManipuriAiRouteImport } from './routes/manipuri-ai'
 import { Route as ManipuriDictionaryRouteImport } from './routes/manipuri-dictionary'
 import { Route as ManipuriTranslatorRouteImport } from './routes/manipuri-translator'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MeiteiMayekAiRouteImport } from './routes/meitei-mayek-ai'
+import { Route as MeiteiMayekAlphabetRouteImport } from './routes/meitei-mayek-alphabet'
 import { Route as MeiteilonChatbotRouteImport } from './routes/meiteilon-chatbot'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -55,6 +57,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManipuriAiRoute = ManipuriAiRouteImport.update({
+  id: '/manipuri-ai',
+  path: '/manipuri-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ManipuriDictionaryRoute = ManipuriDictionaryRouteImport.update({
   id: '/manipuri-dictionary',
   path: '/manipuri-dictionary',
@@ -73,6 +80,11 @@ const McpRoute = McpRouteImport.update({
 const MeiteiMayekAiRoute = MeiteiMayekAiRouteImport.update({
   id: '/meitei-mayek-ai',
   path: '/meitei-mayek-ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeiteiMayekAlphabetRoute = MeiteiMayekAlphabetRouteImport.update({
+  id: '/meitei-mayek-alphabet',
+  path: '/meitei-mayek-alphabet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MeiteilonChatbotRoute = MeiteilonChatbotRouteImport.update({
@@ -203,10 +215,12 @@ const LovableEmailTransactionalPreviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-ai': typeof ManipuriAiRoute
   '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meitei-mayek-alphabet': typeof MeiteiMayekAlphabetRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -235,10 +249,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/manipuri-ai': typeof ManipuriAiRoute
   '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meitei-mayek-alphabet': typeof MeiteiMayekAlphabetRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -268,10 +284,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/manipuri-ai': typeof ManipuriAiRoute
   '/manipuri-dictionary': typeof ManipuriDictionaryRoute
   '/manipuri-translator': typeof ManipuriTranslatorRoute
   '/mcp': typeof McpRoute
   '/meitei-mayek-ai': typeof MeiteiMayekAiRoute
+  '/meitei-mayek-alphabet': typeof MeiteiMayekAlphabetRoute
   '/meiteilon-chatbot': typeof MeiteilonChatbotRoute
   '/plans': typeof PlansRoute
   '/privacy': typeof PrivacyRoute
@@ -302,10 +320,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/manipuri-ai'
     | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
+    | '/meitei-mayek-alphabet'
     | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
@@ -334,10 +354,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/manipuri-ai'
     | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
+    | '/meitei-mayek-alphabet'
     | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
@@ -366,10 +388,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/manipuri-ai'
     | '/manipuri-dictionary'
     | '/manipuri-translator'
     | '/mcp'
     | '/meitei-mayek-ai'
+    | '/meitei-mayek-alphabet'
     | '/meiteilon-chatbot'
     | '/plans'
     | '/privacy'
@@ -400,10 +424,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ManipuriAiRoute: typeof ManipuriAiRoute
   ManipuriDictionaryRoute: typeof ManipuriDictionaryRoute
   ManipuriTranslatorRoute: typeof ManipuriTranslatorRoute
   McpRoute: typeof McpRoute
   MeiteiMayekAiRoute: typeof MeiteiMayekAiRoute
+  MeiteiMayekAlphabetRoute: typeof MeiteiMayekAlphabetRoute
   MeiteilonChatbotRoute: typeof MeiteilonChatbotRoute
   PlansRoute: typeof PlansRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -445,6 +471,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manipuri-ai': {
+      id: '/manipuri-ai'
+      path: '/manipuri-ai'
+      fullPath: '/manipuri-ai'
+      preLoaderRoute: typeof ManipuriAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/manipuri-dictionary': {
       id: '/manipuri-dictionary'
       path: '/manipuri-dictionary'
@@ -471,6 +504,13 @@ declare module '@tanstack/react-router' {
       path: '/meitei-mayek-ai'
       fullPath: '/meitei-mayek-ai'
       preLoaderRoute: typeof MeiteiMayekAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meitei-mayek-alphabet': {
+      id: '/meitei-mayek-alphabet'
+      path: '/meitei-mayek-alphabet'
+      fullPath: '/meitei-mayek-alphabet'
+      preLoaderRoute: typeof MeiteiMayekAlphabetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meiteilon-chatbot': {
@@ -682,10 +722,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ManipuriAiRoute: ManipuriAiRoute,
   ManipuriDictionaryRoute: ManipuriDictionaryRoute,
   ManipuriTranslatorRoute: ManipuriTranslatorRoute,
   McpRoute: McpRoute,
   MeiteiMayekAiRoute: MeiteiMayekAiRoute,
+  MeiteiMayekAlphabetRoute: MeiteiMayekAlphabetRoute,
   MeiteilonChatbotRoute: MeiteilonChatbotRoute,
   PlansRoute: PlansRoute,
   PrivacyRoute: PrivacyRoute,

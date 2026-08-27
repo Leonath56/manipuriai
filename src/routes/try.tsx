@@ -34,10 +34,10 @@ export const Route = createFileRoute("/try")({
   head: () => ({
     links: [{ rel: "canonical", href: "https://manipuriai.online/try" }],
     meta: [
-      { title: "Try Manipuri AI — 3 free messages" },
-      { name: "description", content: "Try Manipuri AI for free — chat 3 times without signing up. The first bilingual AI for Meiteilon & English." },
-      { property: "og:title", content: "Try Manipuri AI — 3 free messages" },
-      { property: "og:description", content: "Try Manipuri AI for free — chat 3 times without signing up." },
+      { title: "Try Manipuri AI Free — Chat in Meiteilon, No Signup" },
+      { name: "description", content: "Chat with Manipuri AI right now — no account, no install. Ask anything in Meitei Mayek, romanized Manipuri or English and get instant replies in the same language." },
+      { property: "og:title", content: "Try Manipuri AI Free — Chat in Meiteilon, No Signup" },
+      { property: "og:description", content: "Chat in Manipuri or English instantly — no account needed." },
       { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Try Manipuri AI — 3 free messages" },

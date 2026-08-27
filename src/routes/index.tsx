@@ -246,6 +246,14 @@ function Landing() {
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/5">
         <div className="mx-auto max-w-7xl px-6 py-10">
+          <nav aria-label="Explore Manipuri AI" className="mb-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <Link to="/manipuri-ai" className="underline-offset-2 hover:underline">What is Manipuri AI</Link>
+            <Link to="/meiteilon-chatbot" className="underline-offset-2 hover:underline">Meiteilon chatbot</Link>
+            <Link to="/manipuri-translator" className="underline-offset-2 hover:underline">Manipuri translator</Link>
+            <Link to="/manipuri-dictionary" className="underline-offset-2 hover:underline">Manipuri dictionary</Link>
+            <Link to="/meitei-mayek-ai" className="underline-offset-2 hover:underline">Meitei Mayek AI</Link>
+            <Link to="/meitei-mayek-alphabet" className="underline-offset-2 hover:underline">Manipuri alphabet chart</Link>
+          </nav>
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="text-xs text-muted-foreground">
               © {new Date().getFullYear()} Manipuri AI ·{" "}
