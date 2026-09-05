@@ -31,6 +31,18 @@ export default defineConfig({
   },
   vite: {
     plugins: [mcpPlugin()],
+    // Keep the browser client configured in production builds as well as the
+    // Lovable preview. These values are public connection settings, while
+    // privileged credentials remain server-only.
+    define: {
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(serverEnv.VITE_SUPABASE_URL),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
+        serverEnv.VITE_SUPABASE_PUBLISHABLE_KEY,
+      ),
+      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(
+        serverEnv.VITE_SUPABASE_PROJECT_ID,
+      ),
+    },
     resolve: {
       alias: [
         {
