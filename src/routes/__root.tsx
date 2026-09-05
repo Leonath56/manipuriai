@@ -14,6 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 const ReportIssue = lazy(() => import("@/components/ReportIssue").then((m) => ({ default: m.ReportIssue })));
 import { supabase } from "@/integrations/supabase/client";
+import { isClientAbort } from "@/lib/client-abort";
+
 
 function NotFoundComponent() {
   return (
