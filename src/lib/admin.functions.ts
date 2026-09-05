@@ -2,18 +2,54 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-export const isAdmin = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+// Intentionally NOT using requireSupabaseAuth: this is called from the shell on
+// every page (including right after sign-out), where no bearer token exists.
+// Missing/invalid session simply means "not an admin", never a thrown 500.
+export const isAdmin = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const request = getRequest();
+    const authHeader = request?.headers?.get("authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) return { isAdmin: false };
+    const token = authHeader.slice(7);
+    if (token.split(".").length !== 3) return { isAdmin: false };
+
+    const { createClient } = await import("@supabase/supabase-js");
+    const url = process.env["SUPABASE_URL"];
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    if (!url || !key) return { isAdmin: false };
+
+    const client = createClient(url, key, {
+      global: {
+        fetch: (input, init) => {
+          const headers = new Headers(init?.headers);
+          if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
+            headers.delete("Authorization");
+          }
+          headers.set("apikey", key);
+          headers.set("Authorization", `Bearer ${token}`);
+          return fetch(input, { ...init, headers });
+        },
+      },
+      auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+    });
+
+    const { data: claims } = await client.auth.getClaims(token);
+    const userId = claims?.claims?.sub;
+    if (!userId) return { isAdmin: false };
+
+    const { data, error } = await client
       .from("user_roles")
       .select("role")
-      .eq("user_id", context.userId)
+      .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
 
     return { isAdmin: !error && Boolean(data) };
-  });
+  } catch {
+    return { isAdmin: false };
+  }
+});
 
 export const getAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
