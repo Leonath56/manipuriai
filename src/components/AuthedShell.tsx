@@ -202,7 +202,7 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
             ꯃ
           </span>
           <span className="truncate">Manipuri AI</span>
-          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.1</span>
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.2</span>
         </Link>
         {/*
           Collapse used to reach into the DOM with getElementById and set
@@ -703,7 +703,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
           <Link to="/chat" className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:justify-start">
             <span className="truncate font-display text-base font-semibold tracking-tight">Manipuri AI</span>
             <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">
-              v1.1
+              v1.2
             </span>
           </Link>
 
