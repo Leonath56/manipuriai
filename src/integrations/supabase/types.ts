@@ -412,10 +412,6 @@ export type Database = {
         Args: { _usage_date: string; _user_id: string }
         Returns: number
       }
-      refund_daily_usage: {
-        Args: { _usage_date: string; _user_id: string }
-        Returns: number
-      }
     }
     Enums: {
       app_role: "admin" | "user"
