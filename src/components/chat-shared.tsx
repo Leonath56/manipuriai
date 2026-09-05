@@ -135,7 +135,7 @@ export function StreamingAssistantContent({ content }: { content: string }) {
 
 export function Composer({
   input, setInput, images, setImages, onSubmit, sending, inputRef, lang, setLang, mode, setMode,
-  onStop,
+  onStop, containerRef,
 }: {
   input: string;
   setInput: (v: string) => void;
@@ -150,6 +150,8 @@ export function Composer({
   setMode: (v: "instant" | "think") => void;
   /** Cancels the in-flight reply. When provided, Send becomes Stop mid-stream. */
   onStop?: () => void;
+  /** Lets the chat measure the complete composer, including safe-area padding. */
+  containerRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -326,7 +328,7 @@ export function Composer({
     "button-click-feedback [&>svg:last-child]:hidden";
 
   return (
-    <div className="sticky bottom-0 z-20 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <div ref={containerRef} className="sticky bottom-0 z-20 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <form
         onSubmit={onSubmit}
         className="mx-auto max-w-3xl px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4"

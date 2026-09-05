@@ -1,4 +1,4 @@
-import { Suspense, useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import { Suspense, useState, useRef, useEffect, useMemo, useCallback, memo, type CSSProperties } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
@@ -79,6 +79,8 @@ function ChatView() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  const [composerHeight, setComposerHeight] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   // Synchronous double-send guard. `sending` is React state, so two clicks in
   // the same tick both read it as false — which started two turns claiming the
@@ -140,6 +142,18 @@ function ChatView() {
     inputRef.current?.focus();
   }, [chatId]);
 
+  // The composer grows with drafts and attachments. Keep the scroll tail tied
+  // to its real rendered height rather than assuming a one-line input.
+  useEffect(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
+    const measure = () => setComposerHeight(Math.ceil(composer.getBoundingClientRect().height));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(composer);
+    return () => observer.disconnect();
+  }, []);
+
 
   const checkScroll = () => {
     const container = scrollContainerRef.current;
@@ -150,14 +164,17 @@ function ChatView() {
   };
 
   useEffect(() => {
-    if (isFollowingLatest && (generatingImage || inflight?.streaming)) {
+    if (isFollowingLatest && (sending || generatingImage || inflight)) {
       const container = scrollContainerRef.current;
       if (container) {
-        // Use scrollTop instead of scrollIntoView to avoid window-level scrolling
-        container.scrollTop = container.scrollHeight;
+        // Wait for the new turn and measured tail spacer to enter layout, then
+        // pin the scroll container itself (never the browser window) to its end.
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
       }
     }
-  }, [generatingImage, inflight?.streaming, isFollowingLatest]);
+  }, [sending, generatingImage, inflight, inflight?.streaming, composerHeight, isFollowingLatest]);
 
   const scrollToBottom = () => {
     const container = scrollContainerRef.current;
@@ -316,6 +333,9 @@ function ChatView() {
     e.preventDefault();
     const text = input.trim();
     if ((!text && images.length === 0) || sending) return;
+    // Sending is an explicit request to follow the new turn. This overrides a
+    // previous manual scroll-up so the new message lands above the tail space.
+    setIsFollowingLatest(true);
     const sentImages = images;
     const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
@@ -615,8 +635,6 @@ function ChatView() {
             </div>
           )}
 
-          <div ref={bottomRef} />
-
           {canRegenerate && !failed && (
             <div className="mt-5 flex justify-center">
               <Button
@@ -629,6 +647,18 @@ function ChatView() {
               </Button>
             </div>
           )}
+
+          <div ref={bottomRef} />
+          {/*
+            A real scrollable tail, not page padding. On phones it combines the
+            measured composer with viewport-relative breathing room; the safe
+            area remains available even when the composer changes height.
+          */}
+          <div
+            aria-hidden="true"
+            className="h-[calc(var(--composer-height)+clamp(12rem,28svh,18rem)+env(safe-area-inset-bottom))] sm:h-[calc(var(--composer-height)+clamp(6rem,16svh,10rem))]"
+            style={{ "--composer-height": `${composerHeight}px` } as CSSProperties}
+          />
         </div>
       </div>
 
@@ -652,6 +682,7 @@ function ChatView() {
       )}
 
       <Composer
+        containerRef={composerRef}
         input={input}
         setInput={setInput}
         images={images}

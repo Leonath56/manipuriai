@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,6 +35,8 @@ function NewChat() {
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const composerRef = useRef<HTMLDivElement>(null);
+  const [composerHeight, setComposerHeight] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   // Synchronous double-send guard. `sending` is React state, so two submits in
   // the same tick both read it as false — which created two chats from one
@@ -49,6 +51,16 @@ function NewChat() {
   const pendingHere = active;
 
   useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    const composer = composerRef.current;
+    if (!composer) return;
+    const measure = () => setComposerHeight(Math.ceil(composer.getBoundingClientRect().height));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(composer);
+    return () => observer.disconnect();
+  }, []);
 
   // Keeps a half-written first message across navigation to /image, /voice or a
   // different chat and back.
@@ -70,13 +82,15 @@ function NewChat() {
   };
 
   useEffect(() => {
-    if (isFollowingLatest && (pendingHere?.streaming || pendingHere?.generatingImage)) {
+    if (isFollowingLatest && pendingHere) {
       const container = scrollContainerRef.current;
       if (container) {
-        container.scrollTop = container.scrollHeight;
+        requestAnimationFrame(() => {
+          container.scrollTop = container.scrollHeight;
+        });
       }
     }
-  }, [pendingHere?.streaming, pendingHere?.generatingImage, isFollowingLatest]);
+  }, [pendingHere, pendingHere?.streaming, pendingHere?.generatingImage, composerHeight, isFollowingLatest]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +98,7 @@ function NewChat() {
     if ((!text && images.length === 0) || sending) return;
     if (inFlightRef.current) return;
 
+    setIsFollowingLatest(true);
     const sentImages = images;
     // Instantly reflect the message in the UI and clear the composer.
     setInput("");
@@ -360,13 +375,19 @@ function NewChat() {
                   )}
                 </div>
               </div>
-              <div ref={bottomRef} className="h-4" />
+              <div ref={bottomRef} />
+              <div
+                aria-hidden="true"
+                className="h-[calc(var(--composer-height)+clamp(12rem,28svh,18rem)+env(safe-area-inset-bottom))] sm:h-[calc(var(--composer-height)+clamp(6rem,16svh,10rem))]"
+                style={{ "--composer-height": `${composerHeight}px` } as CSSProperties}
+              />
             </div>
           )}
         </div>
       </div>
 
       <Composer
+        containerRef={composerRef}
         input={input} setInput={setInput}
         images={images} setImages={setImages}
         onSubmit={submit} sending={sending} inputRef={inputRef}
