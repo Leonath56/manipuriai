@@ -78,7 +78,17 @@ export async function fetchChatCompletion(
 
   // Serialize once — the payload is the largest thing here (image data URLs make
   // it big), and the fallback path used to JSON.stringify it a second time.
-  const bodyFor = (ep: Endpoint) => JSON.stringify({ ...payload, model: ep.model });
+  const bodyFor = (ep: Endpoint) =>
+    JSON.stringify({
+      ...payload,
+      model: ep.model,
+      // Lovable AI Gateway fast lane: both chat models in use
+      // (google/gemini-3.7-flash, google/gemini-3.1-pro-preview) support
+      // priority serving, which lowers time-to-first-token without changing
+      // the model or the prompt. Ignored on the direct Gemini endpoint, so
+      // only send it to the gateway.
+      ...(ep.provider === "lovable" ? { service_tier: "priority" } : {}),
+    });
 
   /**
    * Guards only the wait for response *headers*. There was no timeout at all
