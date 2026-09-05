@@ -27,6 +27,15 @@ const BodySchema = z.object({
 const HISTORY_MESSAGE_LIMIT = 20;
 const HISTORY_CHAR_LIMIT = 2000;
 
+// Agent tools are powerful but discovering and serializing them on every ordinary
+// chat turn delays time-to-first-token. Only attach them when the user is
+// explicitly asking the assistant to perform an action that may need a tool.
+const MCP_INTENT_REGEX = /\b(use (a )?tool|agent|mcp|connect|integration|create|update|delete|rename|manage|list my|search my|open my)\b/i;
+
+function mayNeedMcpTools(message: string): boolean {
+  return MCP_INTENT_REGEX.test(message);
+}
+
 const MODEL_BY_MODE = {
   instant: "google/gemini-3.7-flash",
   think: "google/gemini-3.1-pro-preview",
@@ -128,6 +137,8 @@ STYLE:
 - SHORT natural sentences beat long clumsy ones.
 - End with polite particles: -ni (fact), -ne (soft), -ko (right?), -jouge (I will humble), -biyu (please).
 - Use markdown effectively (headings, bold, lists, tables). Use it for every response to improve readability.
+- Answer the user's CURRENT message directly. Never introduce football, training, Bible, coding, or any other topic unless the current message or a directly related user turn asks about it.
+- Saved MEMORY is background personalization only. Never volunteer, list, or guess topics from it. If a short message such as "what?" is ambiguous, briefly ask what the user means without suggesting unrelated topics.
 - Stay neutral on ethnic / political issues. Respectful of Meitei, Naga, Kuki, Pangal communities.
 
 ACCURACY GUARDRAILS (highest priority — inaccurate Meiteilon is a failure):
@@ -622,6 +633,7 @@ export const Route = createFileRoute("/api/chat")({
               })();
 
 
+          const shouldLoadMcpTools = mayNeedMcpTools(body.message);
           const [historyRes, webInfo, memoryRes, mcpTools] = await Promise.all([
             supabase
               .from("messages")
@@ -637,7 +649,7 @@ export const Route = createFileRoute("/api/chat")({
               .maybeSingle(),
             // Tool discovery is cached (see mcp-client.server) so this no longer
             // costs a live round-trip to every MCP server on every message.
-            loadMcpTools(),
+            shouldLoadMcpTools ? loadMcpTools() : Promise.resolve([]),
           ]);
           const omitIds = new Set(body.omitMessageIds);
           const history = (historyRes.data ?? [])
@@ -697,7 +709,9 @@ export const Route = createFileRoute("/api/chat")({
             if (memory?.interests?.length) bits.push(`likes=${memory.interests.slice(0, 6).join(",")}`);
             if (memory?.favorite_topics?.length) bits.push(`topics=${memory.favorite_topics.slice(0, 6).join(",")}`);
             if (memory?.notes?.length) bits.push(`notes=${memory.notes.slice(0, 4).join(" | ")}`);
-            return bits.length ? `\n\nMEMORY: ${bits.join("; ")}` : "";
+            return bits.length
+              ? `\n\nMEMORY (private background only; never mention or list these facts unless directly relevant to the current request): ${bits.join("; ")}`
+              : "";
           })();
           const recentChatsBlock = "";
 
