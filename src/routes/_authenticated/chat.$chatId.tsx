@@ -1,8 +1,11 @@
-import { lazy, Suspense, useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import { Suspense, useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
-const ChatMarkdown = lazy(() => import("@/components/ChatMarkdown").then(m => ({ default: m.ChatMarkdown })));
+// Static import: this module is already in the shared chunk via chat-shared,
+// and a lazy boundary here suspended the whole route when a finished stream
+// swapped to the saved message — the visible "page blink" after each answer.
+import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
