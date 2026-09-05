@@ -273,7 +273,7 @@ function NewChat() {
                 buttons twice in the DOM. Now the last two are hidden on small
                 screens by class instead.
               */}
-              <ul className="mt-7 grid gap-2 sm:mt-9 sm:grid-cols-2">
+              <ul className="mt-10 grid gap-2 sm:mt-9 sm:grid-cols-2">
                 {randomSuggestions.map((s, i) => (
                   <li key={s.title} className={i >= 2 ? "hidden sm:list-item" : undefined}>
                     <button
