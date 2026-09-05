@@ -20,6 +20,22 @@ const selfHosted = process.env.SELF_HOSTED === "1";
 const serverEnv = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
+// Lovable Cloud injects server variables at runtime, after Vite has already
+// produced the browser bundle. Keep the public client settings available at
+// build time when that environment does not expose their VITE_* aliases.
+const publicSupabaseUrl =
+  serverEnv.VITE_SUPABASE_URL ??
+  serverEnv.SUPABASE_URL ??
+  "https://juujypcbxguekiflhkns.supabase.co";
+const publicSupabaseKey =
+  serverEnv.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  serverEnv.SUPABASE_PUBLISHABLE_KEY ??
+  "sb_publishable_8Fk01pNocvAsQl7YJ_T_PQ_ZeOW00af";
+const publicSupabaseProjectId =
+  serverEnv.VITE_SUPABASE_PROJECT_ID ??
+  serverEnv.SUPABASE_PROJECT_ID ??
+  "juujypcbxguekiflhkns";
+
 export default defineConfig({
   nitro: selfHosted ? { preset: "node-server" } : undefined,
   tanstackStart: {
@@ -35,13 +51,9 @@ export default defineConfig({
     // Lovable preview. These values are public connection settings, while
     // privileged credentials remain server-only.
     define: {
-      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(serverEnv.VITE_SUPABASE_URL),
-      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(
-        serverEnv.VITE_SUPABASE_PUBLISHABLE_KEY,
-      ),
-      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(
-        serverEnv.VITE_SUPABASE_PROJECT_ID,
-      ),
+      "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(publicSupabaseUrl),
+      "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(publicSupabaseKey),
+      "import.meta.env.VITE_SUPABASE_PROJECT_ID": JSON.stringify(publicSupabaseProjectId),
     },
     resolve: {
       alias: [
