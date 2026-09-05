@@ -131,7 +131,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               document.head.appendChild(link);
             };
             addStyle('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=Noto+Sans+Meetei+Mayek:wght@400;500;600;700&display=swap');
-            addStyle('https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css', 'sha384-GvrOXuhMATgEsSwCs4smvzuFnHZ597igSIFeVIyB3umivRaHWKIQ3uuxXtQ8yFEz');
+            addStyle('https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css', 'sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn');
           }
           if (window.requestIdleCallback) {
             requestIdleCallback(loadDeferredStyles);
