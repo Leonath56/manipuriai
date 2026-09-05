@@ -98,6 +98,7 @@ function NewChat() {
     if ((!text && images.length === 0) || sending) return;
     if (inFlightRef.current) return;
 
+    setIsFollowingLatest(true);
     const sentImages = images;
     // Instantly reflect the message in the UI and clear the composer.
     setInput("");

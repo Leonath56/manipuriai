@@ -333,6 +333,9 @@ function ChatView() {
     e.preventDefault();
     const text = input.trim();
     if ((!text && images.length === 0) || sending) return;
+    // Sending is an explicit request to follow the new turn. This overrides a
+    // previous manual scroll-up so the new message lands above the tail space.
+    setIsFollowingLatest(true);
     const sentImages = images;
     const imgTags = sentImages.map((u) => `![image](${u})`).join("\n");
     const stored = text ? (imgTags ? `${imgTags}\n\n${text}` : text) : imgTags;
