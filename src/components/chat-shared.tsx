@@ -471,56 +471,8 @@ export function Composer({
                 )}
               </Button>
 
-              {/*
-                Manipuri language tools. Translation, script conversion and
-                writing correction are the reasons most people open a Meiteilon
-                assistant, and they were reachable only by knowing how to phrase
-                the request yourself.
-              */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={sending}
-                    aria-label="Manipuri language tools"
-                    title="Translate, change script, fix writing"
-                    className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
-                  >
-                    <Wand2 className="h-[18px] w-[18px]" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" side="top" sideOffset={8} className="w-[17rem]">
-                  {input.trim() ? (
-                    LANG_TOOL_GROUPS.map((group, gi) => (
-                      <DropdownMenuGroup key={group}>
-                        {gi > 0 && <DropdownMenuSeparator />}
-                        <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground">
-                          {group}
-                        </DropdownMenuLabel>
-                        {LANG_TOOLS.filter((t) => t.group === group).map((tool) => (
-                          <DropdownMenuItem
-                            key={tool.id}
-                            onSelect={() => applyTool(tool)}
-                            className="flex-col items-start gap-0.5 py-2"
-                          >
-                            <span className="text-sm">{tool.label}</span>
-                            <span className="text-[11px] leading-tight text-muted-foreground">
-                              {tool.hint}
-                            </span>
-                          </DropdownMenuItem>
-                        ))}
-                      </DropdownMenuGroup>
-                    ))
-                  ) : (
-                    <p className="px-2 py-3 text-xs leading-relaxed text-muted-foreground">
-                      Type or paste some Manipuri or English text, then pick what to do with it —
-                      translate, switch script, or fix the writing.
-                    </p>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+
+
 
               <Button
                 type="button"
