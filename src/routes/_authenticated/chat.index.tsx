@@ -258,7 +258,7 @@ function NewChat() {
                 {/* Greets in Meiteilon first, then English. The product's whole
                     reason to exist is the language; the landing screen is where
                     that should be visible, not a generic "How can I help you". */}
-                <h1 className="mt-4 font-display text-2xl font-semibold sm:text-3xl">
+                <h1 className="mt-3 font-display text-2xl font-semibold sm:mt-4 sm:text-3xl">
                   <span className="font-mayek">ꯈꯨꯔꯨꯝꯖꯔꯤ</span> — what can I help with?
                 </h1>
                 <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">
@@ -273,7 +273,7 @@ function NewChat() {
                 buttons twice in the DOM. Now the last two are hidden on small
                 screens by class instead.
               */}
-              <ul className="mt-10 grid gap-2 sm:mt-9 sm:grid-cols-2">
+              <ul className="mt-6 grid gap-2 sm:mt-9 sm:grid-cols-2">
                 {randomSuggestions.map((s, i) => (
                   <li key={s.title} className={i >= 2 ? "hidden sm:list-item" : undefined}>
                     <button
