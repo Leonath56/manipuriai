@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Send, Loader2, ArrowLeft, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ThinkingLoader } from "@/components/ThinkingLoader";
 
 const ChatMarkdown = lazy(() =>
   import("@/components/ChatMarkdown").then((m) => ({ default: m.ChatMarkdown })),
@@ -309,15 +310,12 @@ function TryPage() {
                 elements.push(
                   <div key={`msg-a-${i}`} className="flex justify-start my-4">
                     <div className="max-w-[95%] text-sm">
-                      {msg.content || (loading && i === messages.length - 1) ? (
+                      {msg.content ? (
                         <Suspense fallback={<span className="whitespace-pre-wrap">{msg.content}</span>}>
                           <ChatMarkdown content={msg.content} />
                         </Suspense>
                       ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="animate-pulse">Thinking...</span>
-                        </div>
+                        <ThinkingLoader />
                       )}
                     </div>
                   </div>
