@@ -245,7 +245,7 @@ function NewChat() {
   return (
     <div className="flex h-full flex-col">
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" onScroll={checkScroll}>
-        <div className={`mx-auto ${pendingHere || failed ? "" : "flex min-h-full flex-col justify-center"} max-w-3xl px-4 py-6 sm:py-10`}>
+        <div className={`mx-auto ${pendingHere || failed ? "" : "flex min-h-full flex-col justify-start sm:justify-center"} max-w-3xl px-4 py-4 pt-6 sm:py-10`}>
           {!pendingHere && !failed && (
             <>
               <div className="text-center">
