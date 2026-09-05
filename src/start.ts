@@ -38,6 +38,9 @@ if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
         (event === "uncaughtException" || event === "unhandledRejection") &&
         isClientAbort(args[0])
       ) {
+        // Record it so server.ts can still classify a response already
+        // swallowed by h3 as a client abort instead of a 500 error page.
+        recordCapturedError(args[0]);
         return true;
       }
       return originalEmit(event, ...args);
