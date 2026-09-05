@@ -120,7 +120,14 @@
       "Bash(git config *)",
       "Bash(git add *)",
       "Bash(echo \"ADD_EXIT:$?\")",
-      "Bash(grep -E \"node_modules|\\\\.output|\\\\.wrangler|^\\\\.env$|\\\\.bak$\")"
+      "Bash(grep -E \"node_modules|\\\\.output|\\\\.wrangler|^\\\\.env$|\\\\.bak$\")",
+      "Bash(grep -cE \"eyJ[A-Za-z0-9_-]{10,}\\\\.eyJ[A-Za-z0-9_-]{10,}\\\\.\")",
+      "Bash(grep -inE \"service_role_key\\\\s*=\\\\s*[A-Za-z0-9]|sk_live|sk_test|rzp_live_[A-Za-z0-9]|AIza[A-Za-z0-9_-]{30,}|sbp_[a-f0-9]{40}\")",
+      "Bash(grep -inE \"^\\\\+.*\\(SERVICE_ROLE_KEY|LOVABLE_API_KEY|GEMINI_API_KEY|RAZORPAY_KEY_SECRET|FIRECRAWL_API_KEY\\)\\\\s*[:=]\\\\s*[\\\\\"'][^\\\\\"']{8,}\")",
+      "Bash(grep -oE \"[\\\\\"'][A-Za-z0-9_-]{40,}[\\\\\"']\")",
+      "Bash(git commit *)",
+      "Bash(echo \"COMMIT_EXIT:$?\")",
+      "Bash(git ls-tree *)"
     ]
   }
 }
