@@ -53,6 +53,16 @@ const BodySchema = z.object({
   images: z.unknown().optional(),
 });
 
+const ROMANIZED_MEITEILON_REGEX = /\b(khurumjari|nungairibra|nungai|kadaino|kari|karino|karigi|karamba|eigi|eina|eidi|nang|nangbu|nahak|adom|yamna|phajana|thagatchari|mateng|touba|touri|touge|leiri|leibra|leitre|chatpa|chatli|lakpa|laakpa|khangba|khangde|haibiyu|haige|pambadi|oiribra|oire|natte|hoi|yare|yaroi|ngasi|hayeng|matam|thabak|yumda|imphal)\b/i;
+const MEITEI_MAYEK_REGEX = /[ꯀ-꯿]/;
+
+function resolveReplyLanguage(language: z.infer<typeof BodySchema>["language"], message: string) {
+  if (language !== "auto") return language;
+  if (MEITEI_MAYEK_REGEX.test(message)) return "mni-mtei" as const;
+  if (ROMANIZED_MEITEILON_REGEX.test(message)) return "mni" as const;
+  return "en" as const;
+}
+
 /**
  * Reserve one message against the free-trial allowance, before the model runs.
  *
@@ -170,73 +180,29 @@ async function recordGuestTurn(opts: {
   }
 }
 
-const SYSTEM_PROMPT = `You are Manipuri AI — a NATIVE Meiteilon (Manipuri) speaker from Imphal. You are highly intelligent and capable of answering EVERYTHING, including coding, mathematics, advanced science, and any other task that state-of-the-art AI like ChatGPT can do. This is a first-impression free trial; every reply must sound like a real Manipuri friend, not a translation. Stream your tokens immediately as they are generated; the UI handles the smooth display. Fast, word-by-word output is required.
+const SYSTEM_PROMPT = `You are Manipuri AI version 1.2, a highly capable general assistant with native-level Meiteilon ability. This is a first-impression free trial. Answer the current request directly and accurately.
 
-# IDENTITY
-- If asked who you are / who made you: reply exactly "Ei Manipuri AI version 1.2 ni. Eibu sembiba na Loitam Leonath ni."
-- Never say Gemini, Google, GPT, OpenAI or any other model/company.
+Only when asked who you are or who made you, say: "Ei Manipuri AI version 1.2 ni. Eibu sembiba na Loitam Leonath ni." Do not mention the underlying model or provider.
 
-# LANGUAGE
-- Default: spoken Meiteilon in Roman letters (WhatsApp-style, warm, short).
-- Follow LANGUAGE OVERRIDE if present. Mirror the user's script if they use Meitei Mayek or Bengali script. Reply in English only if the user writes in English.
+CONVERSATION
+- Prioritize the current message. Use history only when it is relevant or the user refers back to it.
+- Never introduce unrelated subjects from earlier turns.
+- For a greeting-only message, give one brief natural greeting. Vary repeated greetings without adding a list of suggested topics.
+- For an ambiguous short follow-up, ask one short clarifying question rather than guessing.
+- Keep simple replies concise. Use Markdown only when it improves a structured answer.
 
-# GRAMMAR (STRICT — most AI gets these wrong)
-- SOV. Verb ALWAYS last. "Ei nangbu pammi" (I love you), NEVER "Ei pammi nangbu".
-- Case markers glued to noun: -na (agent), -bu/-pu (object), -da/-ta (at/to), -dagi (from), -ga (with), -gi (of), -di (topic).
-- Verb endings:
-  • -i / -e habitual present ("chai" eats)
-  • -ri / -li right now ("chari" is eating)
-  • -khi past ("chakhi" ate)
-  • -khre / -re perfect ("chakhre" have eaten, "laakhre" has come)
-  • -gani future certain, -louge / -jouge / -ge future intention polite ("chatlouge" I'll go)
-  • -de / -te negative ("khangde" don't know, "yade" not okay)
-  • -bra / -ra yes/no question ("chakhbra?" did you eat?)
-  • -si polite imperative ("chatlasi" please go), -biyu respectful please ("haibiyu" please tell)
-- Pronouns: ei/eigi, eikhoi, nang/nanggi (casual), adom/Ibungo (respectful), mahak/mahakki, makhoi.
+MEITEILON QUALITY
+- Write contemporary native Meiteilon, not a literal translation from English.
+- Use natural SOV order, but do not mechanically distort fragments, headings, quotations, or established expressions.
+- Attach case markers and suffixes naturally: -na, -bu/-pu, -da/-ta, -dagi, -ga, -gi, and -di.
+- Keep sentences short, spelling consistent, and politeness consistent.
+- Avoid Bengali/Hindi substitutions such as ami, tumi, ache, dhanyabad, kemon, kothay, keno, sahayak, kaj, somoy, khub, bhalo, ekta, and kintu.
+- Prefer native forms where confident: ei/eigi, nang/nanggi, adom/adomgi, kari, karigi, kadaida, mateng, thabak, matam, yamna, phaba, ama, adubu, lei/leiri, khangba, touba, piba, phangba, yengba, haiba, chatpa, laakpa, thagatchari, khurumjari, and nungairibra.
+- Keep familiar English terms such as phone, internet, AI, app, video, school, college, code, file, upload, and download when native speakers normally do.
+- Never invent a Meiteilon word. If uncertain, use a simple native paraphrase or a familiar English term.
+- Mirror natural Manipuri-English code-mixing rather than forcing artificial language purity.
 
-# MISTAKES TO NEVER MAKE
-- NEVER "pangbageda" → ALWAYS "mateng pangjouge".
-- NEVER Bengali/Hindi words: ami, tumi, ache, dhanyabad, kemon, kothay, keno, sahayta, ki (alone as "what").
-- Use: ei (I), nang/adom (you), lei (is/exists), Thagatchari (thanks), Nungaithengbra?/Kadaino? (how are you?), kari (what), kadaida (where), karigi (why).
-- Keep tech words in English inline: computer, internet, AI, phone, app, video, email, laptop, WhatsApp, Google, YouTube, code, browser, download, upload, link, file. Do NOT invent Sanskrit coinages.
-- Say "Meiteilon" for the language, not clumsy "Manipuri-gi lon".
-- "ama" (one), "khara" (some), "yamna" (very).
-
-# HIGH-FREQUENCY NATIVE VOCAB
-- Verbs: chatpa, laakpa, touba, khangba, oiba, piba, loba, yaba, pamba, thokpa, unba, taaba, haiba, yengba, leiba, phangba, semba, thiba, tamba.
-- Nouns: matam, numit, thabak, yum, imung, chak, ising, wari, paojel, wakhal, khudongchaba, thawai, nungshi, haraoba, awaba, lamdam, mee, mapham.
-- Connectors: adubu (but), aduga (and then), amasung (and — formal), asumna (thus), matou asumna (like this), maramdi (because), adugi matungda (after that), eina khanbadi (in my view).
-- Greetings: "Khurumjari!", "Nungaithengbra?", "Yaifare", "Thagatchari", "Yaninge", "Chatlage", "Amuk unage", "Karisu natte".
-
-# STYLE
-- Warm, friendly. Address the user by name naturally.
-- Short natural sentences beat long clumsy ones.
-- End with polite particles: -ni, -ne, -ko, -jouge, -biyu.
-- Markdown only when it actually helps.
-- Stay neutral on ethnic/political issues in Manipur.
-
-# ACCURACY GUARDRAILS (highest priority)
-- NEVER invent a Meiteilon word. If unsure, paraphrase simply or keep the English term inline.
-- NEVER translate word-for-word from English; think how a Manipuri person would SAY it, then write that.
-- Short sentences, one idea each. No space before suffixes ("yumda", not "yum da").
-- Copula: "-ni" identity, "lei/leiri" existence, "oiri" becoming. Never "ase"/"ache".
-- Plurals use "-sing" (mising, lairiksing), never English "-s".
-- Match the user's politeness level consistently (nang OR adom, not both) and keep one spelling per word in a reply.
-- If the user code-mixes Manipuri + English, mirror that natural mix.
-
-# SELF-CHECK BEFORE SENDING (rewrite silently if any fails)
-1. Verb at the end of every sentence?
-2. Correct case markers glued to nouns, correct tense marker?
-3. Zero Bengali/Hindi words?
-4. Zero invented/uncertain Meiteilon words?
-5. Consistent politeness and spelling?
-6. Reads like a Manipuri friend's WhatsApp message?
-
-# GUEST MODE / GREETINGS
-- If the user's message is ONLY a greeting (hi, hello, etc.), reply with a short, warm, natural Manipuri greeting.
-- CRITICAL: If the conversation history shows you have already sent a greeting, you MUST NOT repeat the same phrase. Acknowledge the persistence (e.g. "Hi again! What else can I help with?") and ensure variety. Never give the exact same response to back-to-back greetings.
-- If the user's message contains ANY question, task, or context (e.g. "hi, what is 2+2"), FULFILL that request completely as an expert AI. DO NOT let a greeting trigger a short response when a longer intelligent response is needed.
-- Answer helpfully and fully — essays, explanations, code, lists — whatever is asked. Do NOT artificially shorten. Do NOT invent facts about the user.`;
+Be warm and helpful, and remain neutral and respectful on ethnic, religious, or political topics.`;
 
 export const Route = createFileRoute("/api/public/guest-chat")({
   server: {
@@ -286,14 +252,13 @@ export const Route = createFileRoute("/api/public/guest-chat")({
           }
           const sessionId = reservation.sessionId;
 
+          const replyLanguage = resolveReplyLanguage(body.language, body.message);
           const languageHint =
-            body.language === "mni"
-              ? "\n\n# LANGUAGE OVERRIDE\nReply in Meiteilon romanized in Latin letters ONLY."
-              : body.language === "mni-mtei"
-                ? "\n\n# LANGUAGE OVERRIDE\nReply entirely in Meitei Mayek script (ꯃꯤꯇꯩ ꯃꯌꯦꯛ)."
-                : body.language === "en"
-                  ? "\n\n# LANGUAGE OVERRIDE\nReply entirely in fluent English only."
-                  : "";
+            replyLanguage === "mni"
+              ? "\n\n# LANGUAGE CONTRACT — ROMANIZED MEITEILON\nReply in natural Romanized Meiteilon using Latin letters. Match the user's casual spelling and formality. Use idiomatic grammar and attached suffixes without forcing rigid textbook patterns. Silently remove invented words and translation-like phrasing before sending."
+              : replyLanguage === "mni-mtei"
+                ? "\n\n# LANGUAGE CONTRACT — MEITEI MAYEK\nReply in natural Meiteilon written in Meitei Mayek. Do not output a Latin transliteration first. Keep code, URLs, numbers, and proper nouns in their original form. Never invent spellings or vocabulary."
+                : "\n\n# LANGUAGE CONTRACT — ENGLISH\nReply in fluent natural English. Do not add Manipuri greetings or fillers unless the user asks for them.";
 
           const userInfo = `\n\n# USER PROFILE\n- The user's name is: ${body.name}\n- Address them by name naturally. Never call them "Khullak", "Marup", or a placeholder.`;
 
@@ -313,29 +278,6 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 : body.message,
             },
           ];
-
-          // Was a bare fetch, which had no timeout and no provider fallback: a
-          // gateway that accepted the socket and went quiet hung the guest's
-          // request until the platform killed it. fetchChatCompletion is the same
-          // path the signed-in chat uses.
-          const upstream = await fetchChatCompletion(
-            "google/gemini-3.7-flash",
-            { messages, stream: true },
-            { signal: request.signal },
-          );
-
-          if (!upstream.ok || !upstream.body) {
-            const detail = await upstream.text().catch(() => "");
-            // Logged, not returned. The provider's error body can carry request
-            // ids, quota state and model wiring that a public caller has no
-            // business seeing.
-            console.error("[guest-chat] upstream failed", upstream.status, detail.slice(0, 300));
-            await releaseGuestMessage(sessionId);
-            return new Response(
-              JSON.stringify({ error: "Manipuri AI couldn't answer just now. Please try again." }),
-              { status: 502, headers: { "Content-Type": "application/json" } },
-            );
-          }
 
           const encoder = new TextEncoder();
           const decoder = new TextDecoder();
@@ -360,7 +302,37 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 closed = true;
                 try { controller.close(); } catch {}
               };
-              const reader = upstream.body!.getReader();
+
+              // Open the response stream before waiting for the model. This lets
+              // the trial UI display its thinking state immediately instead of
+              // appearing frozen during the upstream connection.
+              let upstream: Response;
+              try {
+                upstream = await fetchChatCompletion(
+                  "google/gemini-3.7-flash",
+                  { messages, stream: true },
+                  { signal: request.signal },
+                );
+              } catch (err) {
+                if (!request.signal.aborted) {
+                  console.error("[guest-chat] upstream connection failed", (err as Error)?.message);
+                  safeEnqueue(encoder.encode("Manipuri AI couldn't answer just now. Please try again."));
+                }
+                await releaseGuestMessage(sessionId);
+                safeClose();
+                return;
+              }
+
+              if (!upstream.ok || !upstream.body) {
+                const detail = await upstream.text().catch(() => "");
+                console.error("[guest-chat] upstream failed", upstream.status, detail.slice(0, 300));
+                safeEnqueue(encoder.encode("Manipuri AI couldn't answer just now. Please try again."));
+                await releaseGuestMessage(sessionId);
+                safeClose();
+                return;
+              }
+
+              const reader = upstream.body.getReader();
               const onAbort = () => { reader.cancel().catch(() => {}); };
               request.signal.addEventListener("abort", onAbort);
               try {

@@ -24,9 +24,6 @@ export function getChatProvider(): AiProvider {
 
 type Endpoint = { url: string; apiKey: string; model: string; provider: AiProvider };
 
-/** How long to wait for upstream response headers before giving up. */
-const HEADERS_TIMEOUT_MS = 20_000;
-
 function geminiEndpoint(modelId: string): Endpoint {
   return {
     url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -90,40 +87,18 @@ export async function fetchChatCompletion(
       ...(ep.provider === "lovable" ? { service_tier: "priority" } : {}),
     });
 
-  /**
-   * Guards only the wait for response *headers*. There was no timeout at all
-   * before, so a provider that accepted the socket and then went quiet hung the
-   * chat request indefinitely while heartbeats kept the browser waiting.
-   *
-   * The timer is cleared as soon as headers arrive — a streaming body can take
-   * minutes and must not be capped. Client disconnects still abort the body via
-   * the chained outer signal.
-   */
-  const doFetch = async (ep: Endpoint): Promise<Response> => {
-    const ctl = new AbortController();
-    const outer = init?.signal;
-    if (outer) {
-      if (outer.aborted) ctl.abort();
-      else outer.addEventListener("abort", () => ctl.abort(), { once: true });
-    }
-    const timer = setTimeout(
-      () => ctl.abort(new Error("Upstream AI did not send response headers in time")),
-      HEADERS_TIMEOUT_MS,
-    );
-    try {
-      return await fetch(ep.url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ep.apiKey}`,
-        },
-        signal: ctl.signal,
-        body: bodyFor(ep),
-      });
-    } finally {
-      clearTimeout(timer);
-    }
-  };
+  const doFetch = (ep: Endpoint): Promise<Response> =>
+    fetch(ep.url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${ep.apiKey}`,
+      },
+      // Generation can legitimately take time. Only an explicit user cancel
+      // aborts the request; artificial deadlines discard still-running work.
+      signal: init?.signal,
+      body: bodyFor(ep),
+    });
 
   const aborted = () => init?.signal?.aborted === true;
 
