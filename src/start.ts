@@ -17,9 +17,32 @@ import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
  * and gets reported as a runtime error / blank screen. Swallow only that
  * specific case, once per process.
  */
-declare const process: { on?: (e: string, cb: (err: unknown) => void) => void; __abortGuard?: boolean } | undefined;
+declare const process:
+  | {
+      on?: (e: string, cb: (err: unknown) => void) => void;
+      emit?: (e: string, ...args: unknown[]) => boolean;
+      __abortGuard?: boolean;
+    }
+  | undefined;
 if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
   process.__abortGuard = true;
+
+  // Other listeners (Vite / the dev harness) already report uncaught
+  // exceptions as blank-screen runtime errors, and we cannot remove them.
+  // Intercept the emit itself so a client abort never reaches them.
+  const originalEmit = process.emit?.bind(process);
+  if (originalEmit) {
+    process.emit = (event: string, ...args: unknown[]) => {
+      if (
+        (event === "uncaughtException" || event === "unhandledRejection") &&
+        isClientAbort(args[0])
+      ) {
+        return true;
+      }
+      return originalEmit(event, ...args);
+    };
+  }
+
   process.on("uncaughtException", (err: unknown) => {
     if (isClientAbort(err)) return;
     console.error(err);
@@ -29,6 +52,7 @@ if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
     console.error(err);
   });
 }
+
 
 const errorMiddleware = createMiddleware().server(async ({ next, request }) => {
   // Internal /lovable/* routes authenticate themselves — never intercept them.
