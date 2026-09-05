@@ -80,7 +80,7 @@ function Landing() {
               <span className="font-serif text-xl leading-none tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
                 Manipuri <span className="italic" style={{ color: "var(--gold)" }}>AI</span>
               </span>
-              <sup className="text-[10px] font-medium tracking-widest text-muted-foreground">V1.1</sup>
+              <sup className="text-[10px] font-medium tracking-widest text-muted-foreground">V1.2</sup>
             </div>
           </Link>
 
