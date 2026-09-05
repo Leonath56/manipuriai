@@ -259,7 +259,7 @@ function NewChat() {
                     reason to exist is the language; the landing screen is where
                     that should be visible, not a generic "How can I help you". */}
                 <h1 className="mt-4 font-display text-2xl font-semibold sm:text-3xl">
-                  <span className="font-mayek">ꯈꯨꯔꯨꯃꯖꯔꯤ</span> — what can I help with?
+                  <span className="font-mayek">ꯈꯨꯔꯨꯝꯖꯔꯤ</span> — what can I help with?
                 </h1>
                 <p className="mx-auto mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">
                   Write in Manipuri, Meitei Mayek or English. Attach a photo of homework, a document
