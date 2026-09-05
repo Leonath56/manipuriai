@@ -8,6 +8,12 @@ function record(error: unknown) {
   lastCapturedError = { error, at: Date.now() };
 }
 
+// Lets the process-level abort guard (src/start.ts) hand the original error to
+// server.ts when h3 has already swallowed it into a generic 500 Response.
+export function recordCapturedError(error: unknown) {
+  record(error);
+}
+
 if (typeof globalThis.addEventListener === "function") {
   globalThis.addEventListener("error", (event) => record((event as ErrorEvent).error ?? event));
   globalThis.addEventListener("unhandledrejection", (event) =>
