@@ -2,6 +2,7 @@ import { createStart, createMiddleware } from "@tanstack/react-start";
 
 import { renderErrorPage } from "./lib/error-page";
 import { isClientAbort } from "./lib/client-abort";
+import { recordCapturedError } from "./lib/error-capture";
 import { attachSupabaseAuth } from "@/integrations/supabase/auth-attacher";
 
 /**
@@ -37,6 +38,9 @@ if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
         (event === "uncaughtException" || event === "unhandledRejection") &&
         isClientAbort(args[0])
       ) {
+        // Record it so server.ts can still classify a response already
+        // swallowed by h3 as a client abort instead of a 500 error page.
+        recordCapturedError(args[0]);
         return true;
       }
       return originalEmit(event, ...args);
@@ -44,10 +48,12 @@ if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
   }
 
   process.on("uncaughtException", (err: unknown) => {
+    recordCapturedError(err);
     if (isClientAbort(err)) return;
     console.error(err);
   });
   process.on("unhandledRejection", (err: unknown) => {
+    recordCapturedError(err);
     if (isClientAbort(err)) return;
     console.error(err);
   });
