@@ -38,11 +38,22 @@ function NotFoundComponent() {
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
   const router = useRouter();
+  const transient = isClientAbort(error);
   useEffect(() => {
+    if (transient) {
+      // Connection dropped mid-navigation (reload, tab switch, flaky network).
+      // Nothing actually broke — silently retry instead of showing an error.
+      router.invalidate();
+      reset();
+      return;
+    }
+    console.error(error);
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
+  }, [error, transient, router, reset]);
+
+  if (transient) return null;
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
