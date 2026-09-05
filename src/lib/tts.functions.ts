@@ -1,0 +1,66 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+export const synthesizeSpeech = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({
+      text: z.string().min(1).max(4000),
+      gender: z.enum(["male", "female"]).optional(),
+    }).parse(data)
+  )
+  .handler(async ({ data, context }) => {
+    // Paid-only: TTS is Pro/Max. Free plan falls back to browser speechSynthesis.
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("plan")
+      .eq("id", context.userId)
+      .maybeSingle();
+    const plan = (profile?.plan as string | undefined) ?? "free";
+    if (plan !== "pro" && plan !== "max") {
+      return { audio: null, mime: null, fallback: true as const, reason: "free_plan" };
+    }
+
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) {
+      // No key on this deployment — tell the client to use its browser speechSynthesis.
+      return { audio: null, mime: null, fallback: true as const, reason: "no_api_key" };
+    }
+
+    const voice = data.gender === "male" ? "onyx" : data.gender === "female" ? "shimmer" : "alloy";
+
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "openai/gpt-4o-mini-tts",
+        input: data.text,
+        voice,
+        response_format: "mp3",
+        instructions:
+          "You are a native Meiteilon (Manipuri) speaker from Imphal, Manipur. Read the text as spontaneous, conversational Manipuri — the way a friendly local would actually talk, NOT a news-reader or robot. " +
+          "Pronunciation: treat the text as Manipuri written in Latin letters. Pronounce every syllable phonetically as written; 'ng' is a soft nasal (as in 'sing'), 'kh/ph/th/chh' are lightly aspirated, 'ei' = 'ay', 'ou' = 'oh', vowels are short and clean. Never anglicise or translate. " +
+          "Prosody: warm, gentle, slightly soft-spoken with a natural Manipuri sing-song lilt — subtle rising tone on questions, gentle falling tone at sentence ends. Moderate-slow pace, small natural pauses at commas and between clauses, light breaths between sentences. Do not sound flat, dramatic, or overly cheerful. " +
+          "Voice character: friendly, humble, respectful — like a caring elder sibling or a soft-spoken teacher from Manipur. Keep the register calm and human, with subtle warmth. English words inside Manipuri sentences should be pronounced with a light Manipuri accent, not a heavy American one.",
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text().catch(() => "");
+      // Credit/billing/rate-limit failures — degrade gracefully so the client
+      // can fall back to browser speechSynthesis instead of crashing.
+      if (res.status === 402 || res.status === 429 || res.status >= 500) {
+        const reason = res.status === 402 ? "credits_exhausted" : res.status === 429 ? "rate_limited" : "upstream_error";
+        return { audio: null, mime: null, fallback: true as const, reason };
+      }
+      throw new Error(`TTS failed: ${res.status} ${err}`);
+    }
+
+    const buf = await res.arrayBuffer();
+    const base64 = Buffer.from(buf).toString("base64");
+    return { audio: base64, mime: "audio/mpeg", fallback: false as const };
+  });

@@ -1,0 +1,506 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AuthedShell } from "@/components/AuthedShell";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer } from "@/lib/admin.functions";
+import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus, Server, Plus, Trash2, Check, X, Info } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+
+export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({ meta: [{ title: "Admin — Manipuri AI" }, { name: "description", content: "Internal Manipuri AI admin panel for reviewing users, plans, daily usage and guest trial conversations." }, { name: "robots", content: "noindex, nofollow" }] }),
+  component: AdminPage,
+});
+
+function AdminPage() {
+  const navigate = useNavigate();
+  const isAdminFn = useServerFn(isAdmin);
+  const overviewFn = useServerFn(getAdminOverview);
+  const usersFn = useServerFn(listAdminUsers);
+  const correctionsFn = useServerFn(listAdminCorrections);
+  const convosFn = useServerFn(getAdminUserConversations);
+  const guestsFn = useServerFn(listGuestTrialSessions);
+  const guestMsgsFn = useServerFn(getGuestTrialMessages);
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [viewUserId, setViewUserId] = useState<string | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [viewGuestId, setViewGuestId] = useState<string | null>(null);
+  
+  // MCP State
+  const listMcpFn = useServerFn(listMcpServers);
+  const addMcpFn = useServerFn(addMcpServer);
+  const toggleMcpFn = useServerFn(toggleMcpServer);
+  const deleteMcpFn = useServerFn(deleteMcpServer);
+  const [isAddMcpOpen, setIsAddMcpOpen] = useState(false);
+  const [newMcp, setNewMcp] = useState({ name: "", url: "", description: "", api_key: "" });
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => isAdminFn() });
+  const overviewQ = useQuery({
+    queryKey: ["admin-overview"],
+    queryFn: () => overviewFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+  const usersQ = useQuery({
+    queryKey: ["admin-users", debounced],
+    queryFn: () => usersFn({ data: { search: debounced || undefined } }),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+  const corrQ = useQuery({
+    queryKey: ["admin-corrections"],
+    queryFn: () => correctionsFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+  const convoQ = useQuery({
+    queryKey: ["admin-user-convos", viewUserId],
+    queryFn: () => convosFn({ data: { userId: viewUserId! } }),
+    enabled: !!viewUserId && adminQ.data?.isAdmin === true,
+  });
+  const guestsQ = useQuery({
+    queryKey: ["admin-guest-sessions"],
+    queryFn: () => guestsFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+  const guestMsgsQ = useQuery({
+    queryKey: ["admin-guest-messages", viewGuestId],
+    queryFn: () => guestMsgsFn({ data: { sessionId: viewGuestId! } }),
+    enabled: !!viewGuestId && adminQ.data?.isAdmin === true,
+  });
+
+  const mcpServersQ = useQuery<any, Error>({
+    queryKey: ["admin-mcp-servers"],
+    queryFn: () => listMcpFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+
+  const chatMessages = useMemo(() => {
+    if (!convoQ.data || !selectedChatId) return [];
+    return convoQ.data.messages.filter((m) => m.chat_id === selectedChatId);
+  }, [convoQ.data, selectedChatId]);
+
+  // Auto-select first chat when data loads
+  useEffect(() => {
+    if (convoQ.data && convoQ.data.chats.length > 0 && !selectedChatId) {
+      setSelectedChatId(convoQ.data.chats[0].id);
+    }
+  }, [convoQ.data, selectedChatId]);
+
+  if (adminQ.isLoading) {
+    return <AuthedShell><div className="p-8 text-muted-foreground">Checking access…</div></AuthedShell>;
+  }
+  if (!adminQ.data?.isAdmin) {
+    return (
+      <AuthedShell>
+        <div className="mx-auto max-w-md p-8 text-center">
+          <ShieldAlert className="mx-auto h-12 w-12 text-destructive" />
+          <h1 className="mt-4 text-2xl font-semibold">Access denied</h1>
+          <p className="mt-2 text-sm text-muted-foreground">This page is only visible to administrators.</p>
+          <Button className="mt-6" onClick={() => navigate({ to: "/" })}>Back to chat</Button>
+        </div>
+      </AuthedShell>
+    );
+  }
+
+  const o = overviewQ.data;
+
+  return (
+    <AuthedShell>
+      <div className="h-full overflow-y-auto">
+        <div className="mx-auto w-full max-w-6xl p-4 md:p-8 space-y-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Back to chat
+            </Link>
+            <h1 className="mt-1 text-2xl md:text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Overview of Manipuri AI usage.</p>
+          </div>
+          <Badge variant="secondary">Admin</Badge>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <StatCard icon={<Users className="h-4 w-4" />} label="Total users" value={o?.totalUsers ?? "…"} />
+          <StatCard icon={<MessageSquare className="h-4 w-4" />} label="Total chats" value={o?.totalChats ?? "…"} />
+          <StatCard icon={<Sparkles className="h-4 w-4" />} label="Total messages" value={o?.totalMessages ?? "…"} />
+          <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages today" value={o?.messagesToday ?? "…"} />
+          <StatCard 
+            icon={<ShieldAlert className="h-4 w-4" />} 
+            label="AI Credits Remaining" 
+            value={o?.creditsRemaining !== undefined ? `${o.creditsRemaining.toFixed(2)}` : "…"} 
+            className="border-primary/50 bg-primary/5"
+          />
+          <StatCard icon={<Wand2 className="h-4 w-4" />} label="Corrections" value={o?.totalCorrections ?? "…"} />
+          <StatCard icon={<Users className="h-4 w-4" />} label="Free users" value={o?.planCounts.free ?? 0} />
+          <StatCard icon={<Users className="h-4 w-4" />} label="Paid users" value={(o?.planCounts.pro ?? 0) + (o?.planCounts.max ?? 0)} />
+          <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages (7d)" value={o?.messagesLast7d ?? "…"} />
+        </div>
+
+        <Card className="p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold">Users</h2>
+            <Input
+              placeholder="Search email, username, name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-xs"
+            />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">User</th>
+                  <th className="py-2 pr-3">Email</th>
+                  <th className="py-2 pr-3">Age</th>
+                  <th className="py-2 pr-3">Plan</th>
+                  <th className="py-2 pr-3">Chats</th>
+                  <th className="py-2 pr-3">Msgs</th>
+                  <th className="py-2 pr-3">Joined</th>
+                  <th className="py-2 pr-3">Last login</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(usersQ.data?.users ?? []).map((u) => (
+                  <tr key={u.id} className="border-t border-border/40">
+                    <td className="py-2 pr-3">
+                      <div className="font-medium">{u.full_name || u.username || "—"}</div>
+                      {u.roles.includes("admin") && <Badge variant="outline" className="mt-1 text-[10px]">admin</Badge>}
+                    </td>
+                    <td className="py-2 pr-3 text-muted-foreground">{u.email}</td>
+                    <td className="py-2 pr-3">{u.age ?? "—"}</td>
+                    <td className="py-2 pr-3 capitalize">{u.plan}</td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.chatCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.chatCount}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <button
+                        className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
+                        disabled={u.messageCount === 0}
+                        onClick={() => { setSelectedChatId(null); setViewUserId(u.id); }}
+                      >
+                        {u.messageCount}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">
+                      {u.last_login_at ? new Date(u.last_login_at).toLocaleString() : "—"}
+                    </td>
+                  </tr>
+                ))}
+                {usersQ.isLoading && <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">Loading…</td></tr>}
+                {!usersQ.isLoading && (usersQ.data?.users ?? []).length === 0 && (
+                  <tr><td colSpan={8} className="py-6 text-center text-muted-foreground">No users found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <h2 className="mb-3 text-lg font-semibold">Recent Manipuri corrections</h2>
+          <div className="space-y-3">
+            {(corrQ.data?.corrections ?? []).slice(0, 20).map((c) => (
+              <div key={c.id} className="rounded-md border border-border/40 p-3 text-sm">
+                <div className="text-xs text-muted-foreground">
+                  {new Date(c.created_at).toLocaleString()} · {c.language ?? "—"} · <span className="capitalize">{c.status}</span>
+                </div>
+                <div className="mt-2"><span className="text-xs font-semibold text-muted-foreground">Original:</span> {c.original_text}</div>
+                <div className="mt-1"><span className="text-xs font-semibold text-primary">Corrected:</span> {c.corrected_text}</div>
+                {c.note && <div className="mt-1 text-xs text-muted-foreground">Note: {c.note}</div>}
+              </div>
+            ))}
+            {(corrQ.data?.corrections ?? []).length === 0 && !corrQ.isLoading && (
+              <div className="py-6 text-center text-muted-foreground text-sm">No corrections yet.</div>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2"><Server className="h-4 w-4" /> Agent Integrations (MCP Servers)</h2>
+              <p className="text-xs text-muted-foreground">Manage external tools and agents available to the AI via Model Context Protocol.</p>
+            </div>
+            <Button size="sm" onClick={() => setIsAddMcpOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" /> Add Server
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">URL</th>
+                  <th className="py-2 pr-3">Status</th>
+                  <th className="py-2 pr-3">Added</th>
+                  <th className="py-2 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {((mcpServersQ.data as any)?.servers ?? []).map((s: any) => (
+                  <tr key={s.id} className="border-t border-border/40">
+                    <td className="py-2 pr-3 font-medium">
+                      <div>{s.name}</div>
+                      {s.description && <div className="text-[10px] text-muted-foreground font-normal">{s.description}</div>}
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground font-mono truncate max-w-[200px]">{s.url}</td>
+                    <td className="py-2 pr-3">
+                      <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px]">
+                        {s.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(s.created_at).toLocaleDateString()}</td>
+                    <td className="py-2 text-right">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={s.is_active ? `Deactivate ${s.name}` : `Activate ${s.name}`}
+                          title={s.is_active ? "Deactivate" : "Activate"}
+                          onClick={async () => {
+                            await toggleMcpFn({ data: { id: s.id, is_active: !s.is_active } });
+                            mcpServersQ.refetch();
+                          }}
+                        >
+                          {s.is_active ? <X className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive"
+                          aria-label={`Delete ${s.name}`}
+                          title="Delete"
+                          onClick={async () => {
+                            if (confirm(`Delete MCP server "${s.name}"?`)) {
+                              await deleteMcpFn({ data: { id: s.id } });
+                              mcpServersQ.refetch();
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {mcpServersQ.isLoading && <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Loading…</td></tr>}
+                {!mcpServersQ.isLoading && (mcpServersQ.data?.servers ?? []).length === 0 && (
+                  <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No MCP servers configured.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2"><UserPlus className="h-4 w-4" /> Free trial (guest) sessions</h2>
+              <p className="text-xs text-muted-foreground">Names and chat history of users who used the 3-message free trial without signing up.</p>
+            </div>
+            <Badge variant="secondary">{guestsQ.data?.sessions.length ?? 0}</Badge>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">Name</th>
+                  <th className="py-2 pr-3">Msgs</th>
+                  <th className="py-2 pr-3">Started</th>
+                  <th className="py-2 pr-3">Last active</th>
+                  <th className="py-2 pr-3">Device</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(guestsQ.data?.sessions ?? []).map((g) => (
+                  <tr key={g.id} className="border-t border-border/40">
+                    <td className="py-2 pr-3">
+                      <button
+                        className="font-medium text-primary underline-offset-2 hover:underline"
+                        onClick={() => setViewGuestId(g.id)}
+                      >
+                        {g.name}
+                      </button>
+                    </td>
+                    <td className="py-2 pr-3">{g.message_count}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(g.created_at).toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground">{new Date(g.updated_at).toLocaleString()}</td>
+                    <td className="py-2 pr-3 text-xs text-muted-foreground max-w-[240px] truncate" title={g.user_agent ?? ""}>{g.user_agent ?? "—"}</td>
+                  </tr>
+                ))}
+                {guestsQ.isLoading && <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">Loading…</td></tr>}
+                {!guestsQ.isLoading && (guestsQ.data?.sessions ?? []).length === 0 && (
+                  <tr><td colSpan={5} className="py-6 text-center text-muted-foreground">No trial sessions yet.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+        </div>
+      </div>
+
+      <Dialog open={!!viewGuestId} onOpenChange={(o) => { if (!o) setViewGuestId(null); }}>
+        <DialogContent className="max-w-3xl p-0 sm:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="border-b border-border/40 px-4 py-3">
+            <DialogTitle className="text-base">
+              {guestMsgsQ.data?.session
+                ? `${guestMsgsQ.data.session.name} — trial chat (${guestMsgsQ.data.session.message_count} msgs)`
+                : "Trial chat"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto p-4 space-y-3 h-[70vh]">
+            {guestMsgsQ.isLoading && <div className="text-sm text-muted-foreground">Loading…</div>}
+            {(guestMsgsQ.data?.messages ?? []).map((m) => (
+              <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                  <div className="mb-1 text-[10px] opacity-70">
+                    {m.role === "user" ? guestMsgsQ.data?.session?.name ?? "Guest" : "AI"} · {new Date(m.created_at).toLocaleString()}
+                  </div>
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            {!guestMsgsQ.isLoading && (guestMsgsQ.data?.messages ?? []).length === 0 && (
+              <div className="text-sm text-muted-foreground">No messages.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
+      <Dialog open={!!viewUserId} onOpenChange={(o) => { if (!o) { setViewUserId(null); setSelectedChatId(null); } }}>
+        <DialogContent className="max-w-5xl p-0 sm:max-h-[85vh] overflow-hidden">
+          <DialogHeader className="border-b border-border/40 px-4 py-3">
+            <DialogTitle className="text-base">
+              {convoQ.data?.profile
+                ? `${convoQ.data.profile.full_name || convoQ.data.profile.username || convoQ.data.profile.email} — conversations`
+                : "Conversations"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] h-[70vh]">
+            <div className="border-r border-border/40 overflow-y-auto">
+              {convoQ.isLoading && <div className="p-4 text-sm text-muted-foreground">Loading…</div>}
+              {(convoQ.data?.chats ?? []).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedChatId(c.id)}
+                  className={`w-full text-left px-3 py-2 text-sm border-b border-border/30 hover:bg-muted/50 ${selectedChatId === c.id ? "bg-muted" : ""}`}
+                >
+                  <div className="line-clamp-1 font-medium">{c.title || "Untitled chat"}</div>
+                  <div className="text-[10px] text-muted-foreground">{new Date(c.updated_at).toLocaleString()}</div>
+                </button>
+              ))}
+              {!convoQ.isLoading && (convoQ.data?.chats ?? []).length === 0 && (
+                <div className="p-4 text-sm text-muted-foreground">No chats.</div>
+              )}
+            </div>
+            <div className="overflow-y-auto p-4 space-y-3">
+              {chatMessages.length === 0 && !convoQ.isLoading && (
+                <div className="text-sm text-muted-foreground">Select a chat to view messages.</div>
+              )}
+              {chatMessages.map((m) => (
+                <div key={m.id} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                    <div className="mb-1 text-[10px] opacity-70">
+                      {m.role === "user" ? "User" : "AI"} · {new Date(m.created_at).toLocaleString()}
+                    </div>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isAddMcpOpen} onOpenChange={setIsAddMcpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add MCP Server</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Server Name</label>
+              <Input 
+                placeholder="e.g. Brave Search" 
+                value={newMcp.name}
+                onChange={e => setNewMcp(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Server URL (HTTP/SSE)</label>
+              <Input 
+                placeholder="https://..." 
+                value={newMcp.url}
+                onChange={e => setNewMcp(prev => ({ ...prev, url: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">API Key (Optional)</label>
+              <Input 
+                type="password"
+                placeholder="X-API-Key value" 
+                value={newMcp.api_key}
+                onChange={e => setNewMcp(prev => ({ ...prev, api_key: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Description</label>
+              <Input 
+                placeholder="What tools does this server provide?" 
+                value={newMcp.description}
+                onChange={e => setNewMcp(prev => ({ ...prev, description: e.target.value }))}
+              />
+            </div>
+            <div className="flex items-start gap-2 rounded-md bg-muted p-3 text-xs text-muted-foreground">
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <p>MCP servers must expose a <code>/tools</code> GET endpoint and a <code>/tools/call</code> POST endpoint following the standard protocol.</p>
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setIsAddMcpOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={async () => {
+                  if (!newMcp.name || !newMcp.url) return;
+                  try {
+                    await addMcpFn({ data: newMcp });
+                    setIsAddMcpOpen(false);
+                    setNewMcp({ name: "", url: "", description: "", api_key: "" });
+                    mcpServersQ.refetch();
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : "Failed to add server");
+                  }
+                }}
+              >
+                Add Server
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </AuthedShell>
+  );
+}
+
+function StatCard({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: number | string; className?: string }) {
+  return (
+    <Card className={`p-4 ${className || ""}`}>
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">{icon} {label}</div>
+      <div className="mt-2 text-2xl font-bold">{value}</div>
+    </Card>
+  );
+}

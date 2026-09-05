@@ -1,0 +1,292 @@
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Languages, Zap, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Manipuri AI — Bilingual AI Chat in Meiteilon & English" },
+      { name: "description", content: "The first ChatGPT-style AI fluent in Manipuri (Meiteilon) and English. Supports Meitei Mayek script, voice mode, and image generation. Free to start." },
+      { property: "og:title", content: "Manipuri AI — Bilingual AI Chat in Meiteilon & English" },
+      { property: "og:description", content: "ChatGPT-style AI fluent in Manipuri (Meiteilon) and English. Voice, images, and Meitei Mayek script support. Free to start." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://manipuriai.online" },
+      { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Manipuri AI — Bilingual AI Chat in Meiteilon & English" },
+      { name: "twitter:description", content: "ChatGPT-style AI fluent in Manipuri (Meiteilon) and English. Voice, images, and Meitei Mayek script support." },
+      { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "en", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "mni", href: "https://manipuriai.online" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://manipuriai.online" },
+    ],
+  }),
+  component: Landing,
+});
+
+// Utility removed to simplify flow and avoid client-side-only flash logic
+
+
+function Landing() {
+  const navigate = useNavigate();
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        navigate({ to: "/chat", replace: true });
+      } else {
+        setChecking(false);
+      }
+    })().catch(() => setChecking(false));
+  }, [navigate]);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-black grid place-items-center">
+        <div className="flex flex-col items-center gap-4">
+          <span className="grid h-12 w-12 place-items-center rounded-full text-2xl font-semibold animate-pulse" style={{ background: "linear-gradient(135deg, var(--gold-soft), var(--gold-deep))", color: "oklch(0.16 0.02 60)" }}>ꯃ</span>
+          <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-full origin-left animate-progress-fast bg-gold" style={{ background: "var(--gold)" }} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+  return (
+    <div className="relative min-h-screen overflow-hidden aurora-bg">
+      <div className="pointer-events-none absolute inset-0 grid-veil opacity-50" />
+
+      {/* Header */}
+      <header className="relative z-10 border-b border-white/5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+          <Link to="/" className="flex items-center gap-2.5">
+            <span
+              className="grid h-9 w-9 place-items-center rounded-full text-lg leading-none font-semibold"
+              style={{ background: "linear-gradient(135deg, var(--gold-soft), var(--gold-deep))", color: "oklch(0.16 0.02 60)" }}
+              aria-hidden="true"
+            >
+              ꯃ
+            </span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-serif text-xl leading-none tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>
+                Manipuri <span className="italic" style={{ color: "var(--gold)" }}>AI</span>
+              </span>
+              <sup className="text-[10px] font-medium tracking-widest text-muted-foreground">V1.1</sup>
+            </div>
+          </Link>
+
+          <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
+            <a href="#capabilities" className="transition-colors hover:text-foreground">Capabilities</a>
+            <a href="#trust" className="transition-colors hover:text-foreground">Why us</a>
+
+
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <Link to="/auth"><Button variant="ghost" size="sm">Sign in</Button></Link>
+            <Link to="/try">
+              <Button size="sm" className="rounded-full bg-foreground text-background hover:bg-foreground/90">
+                Chat now <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Welcome line */}
+      <div className="relative z-10 mx-auto max-w-7xl px-6 pt-10 text-center">
+        <p className="welcome-rainbow text-2xl leading-snug md:text-3xl">
+          Manipuri AI na Adombu Taramna Okchari 🙏
+        </p>
+      </div>
+
+      {/* Hero */}
+      <main className="relative z-10 mx-auto max-w-7xl px-6 pb-24 pt-10 md:pt-16">
+        <section className="flex flex-col items-center gap-14">
+          {/* Left: headline */}
+          <div className="w-full max-w-3xl flex flex-col items-center text-center">
+
+            <div className="flex items-center gap-3">
+              <span className="h-px w-8 bg-white/20" />
+              <span className="eyebrow">Meiteilon · English · Meitei Mayek</span>
+              <span className="h-px w-8 bg-white/20" />
+            </div>
+
+            <h1
+              className="mt-6 font-sans text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[72px]"
+            >
+              <span className="text-foreground">The AI that speaks</span>
+              <br />
+              <span className="text-foreground/70">your language.</span>
+            </h1>
+
+
+            <p className="mt-7 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              Manipuri AI reads what you write in Meiteilon, English, or <span className="text-foreground/90 font-medium">Mix Manipuri & English</span> and replies fluently with native cultural nuance.
+            </p>
+
+            <div className="mt-9 flex flex-col items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Link to="/try" aria-label="Start chatting now" className="group">
+                  <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg w-[220px] justify-center h-[60px] md:h-[72px]">
+                    <MessageSquare className="h-5 w-5 shrink-0" strokeWidth={2.25} />
+                    <span className="flex-1 text-center">Chat Now</span>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform group-hover:translate-x-1" style={{ background: "oklch(0.16 0.02 60 / 0.15)" }}>
+                      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                    </span>
+                  </button>
+                </Link>
+                <Link to="/auth" className="group">
+                  <button className="cta-mega inline-flex items-center gap-3 rounded-full px-8 py-4 text-base font-semibold md:px-10 md:py-5 md:text-lg w-[220px] justify-center h-[60px] md:h-[72px]">
+                    <span className="flex-1 text-center">Sign in</span>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full transition-transform group-hover:translate-x-1" style={{ background: "oklch(0.16 0.02 60 / 0.15)" }}>
+                      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                    </span>
+                  </button>
+                </Link>
+              </div>
+              <p className="text-sm font-medium text-muted-foreground">Sign in to save your chats</p>
+            </div>
+
+
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-2">
+                <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> No card needed
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Zap className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> Streams live, word by word
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <Languages className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> Latin, Bengali & Meitei Mayek
+              </span>
+            </div>
+          </div>
+
+
+
+        </section>
+
+        {/* Divider */}
+        <div className="divider-hair my-24" />
+
+        {/* Capabilities */}
+        <section id="capabilities">
+          <div className="flex items-center gap-3">
+            <span className="h-px w-8 bg-white/20" />
+            <span className="eyebrow">What it does</span>
+          </div>
+          <h2 className="mt-4 max-w-3xl text-3xl leading-[1.1] tracking-tight md:text-5xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Built for Manipur, <span className="italic" style={{ color: "var(--gold)" }}>engineered for everyone.</span>
+          </h2>
+
+          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/5 md:grid-cols-3">
+            {[
+              { n: "01", icon: Languages, title: "Bilingual by design", body: "Auto-detects Manipuri or English and replies in the same script. Switch mid-sentence — it keeps up." },
+              { n: "02", icon: Zap, title: "Live streaming replies", body: "Word-by-word rendering with markdown, code blocks and syntax hints. Feels instant." },
+              { n: "03", icon: Sparkles, title: "Culturally aware", body: "Understands Meiteilon SOV grammar, Meitei Mayek script and Manipur-specific context." },
+            ].map(({ n, icon: Icon, title, body }) => (
+              <div key={title} className="group relative bg-background p-8 transition-colors hover:bg-white/[0.02]">
+                <div className="flex items-start justify-between">
+                  <span className="text-xs font-medium tracking-widest text-muted-foreground">{n}</span>
+                  <Icon className="h-5 w-5" style={{ color: "var(--gold)" }} />
+                </div>
+                <h3 className="mt-8 text-xl tracking-tight" style={{ fontFamily: "var(--font-serif)" }}>{title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Trust bar */}
+        <section id="trust" className="mt-24 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.03] to-transparent p-10 md:p-14">
+          <div className="grid gap-10 md:grid-cols-4">
+            <div className="md:col-span-2">
+              <div className="flex items-center gap-3">
+                <span className="h-px w-8 bg-white/20" />
+                <span className="eyebrow">Why us</span>
+              </div>
+              <h3 className="mt-4 text-2xl leading-tight md:text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+                An AI that treats Meiteilon as a <span className="italic" style={{ color: "var(--gold)" }}>first-class language</span> — not a translation afterthought.
+              </h3>
+            </div>
+            <Stat k="3" label="Scripts supported" sub="Latin · Bengali · Meitei Mayek" />
+            <Stat k="24/7" label="Availability" sub="Streaming responses, always on" />
+          </div>
+        </section>
+
+        {/* Final CTA */}
+        <section className="mt-24 text-center">
+          <h2 className="mx-auto max-w-3xl text-4xl leading-[1.05] tracking-tight md:text-6xl" style={{ fontFamily: "var(--font-serif)" }}>
+            Start a conversation in <span className="italic" style={{ color: "var(--gold)" }}>Manipuri</span>.
+          </h2>
+          <p className="mx-auto mt-5 max-w-lg text-muted-foreground">
+            Free to try. No card. Sign in only if you want to save your chats.
+          </p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link to="/try" className="group">
+              <button className="cta-mega inline-flex items-center gap-3 rounded-full px-10 py-5 text-lg font-semibold">
+                <MessageSquare className="h-5 w-5" strokeWidth={2.25} />
+                Chat Now
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" strokeWidth={2.5} />
+              </button>
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="relative z-10 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-6 py-10">
+          <nav aria-label="Explore Manipuri AI" className="mb-8 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+            <Link to="/manipuri-ai" className="underline-offset-2 hover:underline">What is Manipuri AI</Link>
+            <Link to="/meiteilon-chatbot" className="underline-offset-2 hover:underline">Meiteilon chatbot</Link>
+            <Link to="/manipuri-translator" className="underline-offset-2 hover:underline">Manipuri translator</Link>
+            <Link to="/manipuri-dictionary" className="underline-offset-2 hover:underline">Manipuri dictionary</Link>
+            <Link to="/meitei-mayek-ai" className="underline-offset-2 hover:underline">Meitei Mayek AI</Link>
+            <Link to="/meitei-mayek-alphabet" className="underline-offset-2 hover:underline">Manipuri alphabet chart</Link>
+          </nav>
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <div className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} Manipuri AI ·{" "}
+              <Link to="/privacy" className="underline-offset-2 hover:underline">Privacy</Link>
+              {" · "}
+              <Link to="/terms" className="underline-offset-2 hover:underline">Terms</Link>
+            </div>
+            <div className="text-[10px] font-semibold tracking-[0.28em]" style={{ color: "var(--gold)" }}>
+              DEVELOPED BY LEONATH
+            </div>
+            <a
+              href="https://t.me/MrLeona"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-medium text-foreground/90 transition hover:border-white/30 hover:bg-white/5"
+            >
+              <Send className="h-3.5 w-3.5" style={{ color: "var(--gold)" }} /> Contact Developer
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function Stat({ k, label, sub }: { k: string; label: string; sub: string }) {
+  return (
+    <div>
+      <div className="text-4xl leading-none tracking-tight md:text-5xl" style={{ fontFamily: "var(--font-serif)", color: "var(--gold)" }}>
+        {k}
+      </div>
+      <div className="mt-3 text-sm font-medium text-foreground">{label}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{sub}</div>
+    </div>
+  );
+}

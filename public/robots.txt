@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /chat
+Disallow: /admin
+Disallow: /api
+
+Sitemap: https://manipuriai.online/sitemap.xml
