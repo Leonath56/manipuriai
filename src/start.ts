@@ -48,10 +48,12 @@ if (typeof process !== "undefined" && process?.on && !process.__abortGuard) {
   }
 
   process.on("uncaughtException", (err: unknown) => {
+    recordCapturedError(err);
     if (isClientAbort(err)) return;
     console.error(err);
   });
   process.on("unhandledRejection", (err: unknown) => {
+    recordCapturedError(err);
     if (isClientAbort(err)) return;
     console.error(err);
   });
