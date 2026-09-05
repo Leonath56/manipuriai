@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
+import { Suspense, useState, useRef, useEffect, useMemo, useCallback, memo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
