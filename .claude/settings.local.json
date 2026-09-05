@@ -127,7 +127,12 @@
       "Bash(grep -oE \"[\\\\\"'][A-Za-z0-9_-]{40,}[\\\\\"']\")",
       "Bash(git commit *)",
       "Bash(echo \"COMMIT_EXIT:$?\")",
-      "Bash(git ls-tree *)"
+      "Bash(git ls-tree *)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(echo \"AMEND_EXIT:$?\")",
+      "Bash(git rebase *)",
+      "Bash(echo \"REBASE_EXIT:$?\")"
     ]
   }
 }
