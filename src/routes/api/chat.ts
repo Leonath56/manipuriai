@@ -6,6 +6,7 @@ import { parseImageRequest } from "@/lib/image-intent";
 import { validateImageInputs } from "@/lib/image-input";
 import { fetchChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
+import { resolveReplyLanguage } from "@/lib/reply-language";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
