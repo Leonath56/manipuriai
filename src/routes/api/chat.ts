@@ -36,15 +36,9 @@ function mayNeedMcpTools(message: string): boolean {
   return MCP_INTENT_REGEX.test(message);
 }
 
-const ROMANIZED_MEITEILON_REGEX = /\b(khurumjari|khurumjari|nungairibra|nungai|kadaino|kari|karino|karigi|karamba|eigi|eina|eidi|nang|nangbu|nahak|adom|yamna|phajana|thagatchari|mateng|touba|touri|touge|leiri|leibra|leitre|chatpa|chatli|lakpa|laakpa|khangba|khangde|haibiyu|haige|pambadi|oiribra|oire|natte|hoi|yare|yaroi|ngasi|hayeng|matam|thabak|yumda|imphal)\b/i;
-const MEITEI_MAYEK_REGEX = /[ꯀ-꯿]/;
+// Auto-mode language detection lives in one shared module so the signed-in chat
+// and the public trial route can never drift apart.
 
-function resolveReplyLanguage(language: z.infer<typeof BodySchema>["language"], message: string) {
-  if (language !== "auto") return language;
-  if (MEITEI_MAYEK_REGEX.test(message)) return "mni-mtei" as const;
-  if (ROMANIZED_MEITEILON_REGEX.test(message)) return "mni" as const;
-  return "en" as const;
-}
 
 const MODEL_BY_MODE = {
   instant: "google/gemini-3.7-flash",
