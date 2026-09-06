@@ -28,7 +28,7 @@ const MEITEILON_SUFFIXES =
 
 /** Everyday English function words — a real English sentence has some. */
 const ENGLISH_WORDS =
-  /\b(the|is|are|was|were|be|been|what|which|who|whom|when|where|why|how|can|could|should|would|will|shall|do|does|did|please|thanks|thank|hello|hey|and|or|but|of|to|in|on|for|with|from|about|this|that|these|those|there|here|you|your|my|me|i|we|our|they|their|it|its|have|has|had|need|want|make|write|explain|tell|give|show|help|create|generate|between|difference|meaning|translate)\b/i;
+  /\b(the|is|are|was|were|be|been|what|which|who|whom|when|where|why|how|can|could|should|would|will|shall|do|does|did|please|thanks|thank|hello|hey|hi|ok|okay|yes|sorry|and|or|but|of|to|in|on|for|with|from|about|this|that|these|those|there|here|you|your|my|me|i|we|our|they|their|it|its|have|has|had|need|want|make|write|explain|tell|give|show|help|create|generate|between|difference|meaning|translate)\b/i;
 
 /**
  * Decide the reply language for a message when the user left the selector on
