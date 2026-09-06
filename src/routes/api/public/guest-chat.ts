@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { fetchChatCompletion } from "@/lib/ai-provider.server";
 import { validateImageInputs } from "@/lib/image-input";
+import { resolveReplyLanguage } from "@/lib/reply-language";
 
 const GUEST_FREE_LIMIT = 3;
 const GUEST_MAX_IMAGES = 4;
@@ -53,15 +54,6 @@ const BodySchema = z.object({
   images: z.unknown().optional(),
 });
 
-const ROMANIZED_MEITEILON_REGEX = /\b(khurumjari|nungairibra|nungai|kadaino|kari|karino|karigi|karamba|eigi|eina|eidi|nang|nangbu|nahak|adom|yamna|phajana|thagatchari|mateng|touba|touri|touge|leiri|leibra|leitre|chatpa|chatli|lakpa|laakpa|khangba|khangde|haibiyu|haige|pambadi|oiribra|oire|natte|hoi|yare|yaroi|ngasi|hayeng|matam|thabak|yumda|imphal)\b/i;
-const MEITEI_MAYEK_REGEX = /[ꯀ-꯿]/;
-
-function resolveReplyLanguage(language: z.infer<typeof BodySchema>["language"], message: string) {
-  if (language !== "auto") return language;
-  if (MEITEI_MAYEK_REGEX.test(message)) return "mni-mtei" as const;
-  if (ROMANIZED_MEITEILON_REGEX.test(message)) return "mni" as const;
-  return "en" as const;
-}
 
 /**
  * Reserve one message against the free-trial allowance, before the model runs.
