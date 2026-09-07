@@ -32,18 +32,29 @@ const ENGLISH_WORDS =
 
 /**
  * Decide the reply language for a message when the user left the selector on
- * "auto". Meiteilon is the fallback: this product exists to answer in Meiteilon,
- * and answering an English message in Meiteilon is a far milder failure than
- * answering a Meiteilon message in English.
+ * "auto". Detection is ordered by confidence:
+ *
+ * 1. Meitei Mayek script always wins.
+ * 2. A strong Meiteilon vocabulary match wins — the word list rarely false-fires.
+ * 3. English function words win next. This runs BEFORE the suffix check because
+ *    suffixes alone false-fire on ordinary English ("agenda", "pasta", "delta").
+ * 4. Suffix/morphology alone counts only when no English signal is present — it
+ *    catches short romanized Meiteilon phrases like "chatlibra" or "irang-gi".
+ * 5. A message with no signal at all (e.g. a single-term query like
+ *    "photosynthesis") defaults to English, matching the pre-auto-detection
+ *    behavior.
  */
 export function detectReplyLanguage(message: string): ReplyLanguage {
   if (MEITEI_MAYEK_REGEX.test(message)) return "mni-mtei";
 
-  const hasMeiteilon = MEITEILON_WORDS.test(message) || MEITEILON_SUFFIXES.test(message);
-  if (hasMeiteilon) return "mni";
+  if (MEITEILON_WORDS.test(message)) return "mni";
 
-  // No Meiteilon signal at all: English only when it reads like English.
-  return ENGLISH_WORDS.test(message) ? "en" : "mni";
+  const hasEnglish = ENGLISH_WORDS.test(message);
+  if (hasEnglish) return "en";
+
+  if (MEITEILON_SUFFIXES.test(message)) return "mni";
+
+  return "en";
 }
 
 /** Applies the user's explicit choice, falling back to detection on "auto". */
