@@ -22,6 +22,7 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
+import { ChatPageSkeleton } from "@/components/skeletons";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
