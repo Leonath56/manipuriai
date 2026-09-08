@@ -10,8 +10,8 @@ import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, Thinking
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { NEW_CHAT_DRAFT_KEY, useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
-import {
 import { HomeRouteSkeleton } from "@/components/skeletons";
+import {
   appendStreamingText,
   setActiveStream,
   updateActiveStream,
