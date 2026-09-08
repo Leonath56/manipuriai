@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
+import { Skeleton } from "@/components/skeletons";
 
 type Plan = "free" | "pro" | "max";
 
