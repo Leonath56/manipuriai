@@ -14,7 +14,11 @@ import { AdminPageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Manipuri AI" }, { name: "description", content: "Internal Manipuri AI admin panel for reviewing users, plans, daily usage and guest trial conversations." }, { name: "robots", content: "noindex, nofollow" }] }),
-  pendingComponent: () => <AdminPageSkeleton />,
+  pendingComponent: () => (
+    <AuthedShell>
+      <AdminPageSkeleton />
+    </AuthedShell>
+  ),
   pendingMs: 60,
   pendingMinMs: 220,
   component: AdminPage,

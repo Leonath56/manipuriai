@@ -10,7 +10,11 @@ import { DashboardPageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Manipuri AI" }, { name: "description", content: "Your Manipuri AI dashboard: track daily message usage, current plan and recent Meiteilon and English chats." }, { name: "robots", content: "noindex, nofollow" }] }),
-  pendingComponent: () => <DashboardPageSkeleton />,
+  pendingComponent: () => (
+    <AuthedShell>
+      <DashboardPageSkeleton />
+    </AuthedShell>
+  ),
   pendingMs: 60,
   pendingMinMs: 220,
   component: Dashboard,
