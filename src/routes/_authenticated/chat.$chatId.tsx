@@ -22,7 +22,7 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
-import { ChatPageSkeleton } from "@/components/skeletons";
+import { ChatPageSkeleton, ChatRouteSkeleton } from "@/components/skeletons";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -47,6 +47,9 @@ function sortMessages(msgs: Msg[]): Msg[] {
 
 export const Route = createFileRoute("/_authenticated/chat/$chatId")({
   head: () => ({ meta: [{ title: "Chat — Manipuri AI" }, { name: "description", content: "Continue your Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
+  pendingComponent: () => <ChatRouteSkeleton />,
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: ChatView,
 });
 

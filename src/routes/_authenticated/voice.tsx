@@ -10,9 +10,13 @@ import { synthesizeSpeech } from "@/lib/tts.functions";
 import { preprocessAudio } from "@/lib/audio-preprocess";
 import { toast } from "sonner";
 import { usePlan } from "@/components/PaidFeatureGate";
+import { VoicePageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/voice")({
   head: () => ({ meta: [{ title: "Voice — Manipuri AI" }, { name: "description", content: "Talk to Manipuri AI out loud in Meiteilon or English with real-time speech recognition and natural voice replies." }, { name: "robots", content: "noindex, nofollow" }] }),
+  pendingComponent: () => <VoicePageSkeleton />,
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: VoiceMode,
 });
 
