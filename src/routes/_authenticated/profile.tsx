@@ -234,7 +234,7 @@ function ProfilePage() {
             </p>
 
             {memoryQ.isPending ? (
-              <SettingsSkeleton fields={3} />
+              <div className="mt-4"><SettingsSkeleton fields={3} /></div>
             ) : memoryQ.isError ? (
               <div className="mt-4 text-sm">
                 <p className="text-muted-foreground">Couldn't load this right now.</p>
