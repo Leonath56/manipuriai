@@ -234,9 +234,7 @@ function ProfilePage() {
             </p>
 
             {memoryQ.isPending ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-              </div>
+              <SettingsSkeleton fields={3} />
             ) : memoryQ.isError ? (
               <div className="mt-4 text-sm">
                 <p className="text-muted-foreground">Couldn't load this right now.</p>
