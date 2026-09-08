@@ -11,6 +11,7 @@ import { clearLocalUserData } from "@/lib/chat-cache";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { SettingsSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Manipuri AI" }, { name: "description", content: "Manage your Manipuri AI profile, preferred language and script, voice settings and account details." }, { name: "robots", content: "noindex, nofollow" }] }),
