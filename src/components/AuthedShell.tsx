@@ -260,18 +260,8 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
       </div>
 
       <nav aria-label="Conversations" className="mt-3 flex-1 overflow-y-auto px-2 pb-2">
-        {chatsQ.isLoading && (
-          // Three shimmering rows the same height as real ones, so the list does
-          // not jump when it arrives. Was a bare "Loading…" string.
-          <ul className="space-y-1 px-1" aria-hidden="true">
-            {[0, 1, 2].map((i) => (
-              <li key={i} className="flex items-center gap-2 px-2 py-2">
-                <span className="shimmer h-3.5 w-3.5 shrink-0 rounded" />
-                <span className="shimmer h-3 flex-1 rounded" style={{ maxWidth: `${70 - i * 12}%` }} />
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* Rows the same height as real ones, so the list does not jump when it arrives. */}
+        {chatsQ.isLoading && <SidebarSkeleton rows={5} />}
         {chatsQ.isError && (
           <div className="px-3 py-6 text-center text-xs">
             <p className="text-muted-foreground">Couldn't load your chats.</p>
