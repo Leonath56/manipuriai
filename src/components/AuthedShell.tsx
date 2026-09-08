@@ -33,6 +33,7 @@ import { purgeLegacyResponseCache, clearLocalUserData } from "@/lib/chat-cache";
 import { hasMod } from "@/lib/shortcuts";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { toast } from "sonner";
+import { SidebarSkeleton } from "@/components/skeletons";
 
 type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean; kind?: string };
 
