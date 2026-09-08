@@ -11,6 +11,10 @@ export const getRouter = () => {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    // Show a destination-shaped placeholder almost immediately instead of
+    // freezing on the current page while the next one loads.
+    defaultPendingMs: 60,
+    defaultPendingMinMs: 220,
   });
 
   return router;

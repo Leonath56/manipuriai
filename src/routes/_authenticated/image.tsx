@@ -10,9 +10,17 @@ import { ImageResultCard } from "@/components/ImageResultCard";
 import { PaidFeatureGate } from "@/components/PaidFeatureGate";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { ImagePageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/image")({
   head: () => ({ meta: [{ title: "Create image — Manipuri AI" }, { name: "description", content: "Generate AI images from prompts written in Manipuri (Meiteilon) or English, in a range of visual styles." }, { name: "robots", content: "noindex, nofollow" }] }),
+  pendingComponent: () => (
+    <AuthedShell>
+      <ImagePageSkeleton />
+    </AuthedShell>
+  ),
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: ImagePage,
 });
 

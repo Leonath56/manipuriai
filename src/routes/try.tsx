@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Send, Loader2, ArrowLeft, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ThinkingLoader } from "@/components/ThinkingLoader";
+import { TryPageSkeleton } from "@/components/skeletons";
 
 const ChatMarkdown = lazy(() =>
   import("@/components/ChatMarkdown").then((m) => ({ default: m.ChatMarkdown })),
@@ -46,6 +47,9 @@ export const Route = createFileRoute("/try")({
       { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
     ],
   }),
+  pendingComponent: () => <TryPageSkeleton />,
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: TryPage,
 });
 

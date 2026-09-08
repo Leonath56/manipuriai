@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { PlansPageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/plans")({
   head: () => ({
@@ -40,6 +41,9 @@ export const Route = createFileRoute("/plans")({
       },
     ],
   }),
+  pendingComponent: () => <PlansPageSkeleton />,
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: PlansPage,
 });
 

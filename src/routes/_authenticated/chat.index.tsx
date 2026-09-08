@@ -10,6 +10,7 @@ import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, Thinking
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { NEW_CHAT_DRAFT_KEY, useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
+import { HomeRouteSkeleton } from "@/components/skeletons";
 import {
   appendStreamingText,
   setActiveStream,
@@ -19,6 +20,9 @@ import {
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   head: () => ({ meta: [{ title: "New chat — Manipuri AI" }, { name: "description", content: "Start a new Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
+  pendingComponent: () => <HomeRouteSkeleton />,
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: NewChat,
 });
 

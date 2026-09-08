@@ -10,9 +10,17 @@ import { useServerFn } from "@tanstack/react-start";
 import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer } from "@/lib/admin.functions";
 import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus, Server, Plus, Trash2, Check, X, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { AdminPageSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — Manipuri AI" }, { name: "description", content: "Internal Manipuri AI admin panel for reviewing users, plans, daily usage and guest trial conversations." }, { name: "robots", content: "noindex, nofollow" }] }),
+  pendingComponent: () => (
+    <AuthedShell>
+      <AdminPageSkeleton />
+    </AuthedShell>
+  ),
+  pendingMs: 60,
+  pendingMinMs: 220,
   component: AdminPage,
 });
 
