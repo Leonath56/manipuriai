@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Lock, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
+import { Skeleton } from "@/components/skeletons";
 
 type Plan = "free" | "pro" | "max";
 
@@ -29,7 +30,17 @@ export function PaidFeatureGate({
 }) {
   const { data: plan, isLoading } = usePlan();
   if (isLoading) {
-    return <div className="grid min-h-[40vh] place-items-center text-sm text-muted-foreground">Loading…</div>;
+    // Shape of the page that is about to appear, not a spinner.
+    return (
+      <div className="mx-auto w-full max-w-2xl p-6" role="status" aria-label="Loading">
+        <Skeleton className="h-7 w-56 rounded" />
+        <Skeleton className="mt-3 h-4 w-80 max-w-full rounded" />
+        <div className="mt-8 space-y-3">
+          <Skeleton className="h-24 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+      </div>
+    );
   }
   if (plan === "pro" || plan === "max") return <>{children}</>;
 

@@ -22,6 +22,7 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
+import { ChatPageSkeleton } from "@/components/skeletons";
 
 type Msg = { id: string; role: "user" | "assistant" | "system"; content: string; created_at?: string };
 
@@ -522,21 +523,7 @@ function ChatView() {
             showed an empty column that suddenly filled, and a failed fetch showed
             the same empty column forever with no way to retry.
           */}
-          {messagesQ.isPending && !showCarryover && (
-            <div className="space-y-7" role="status" aria-label="Loading conversation">
-              <div className="flex justify-end">
-                <div className="shimmer h-14 w-2/3 rounded-2xl rounded-br-md" />
-              </div>
-              <div className="flex gap-3 md:gap-4">
-                <div className="shimmer h-8 w-8 shrink-0 rounded-full" />
-                <div className="flex-1 space-y-2.5 pt-1">
-                  <div className="shimmer h-3.5 w-full rounded" />
-                  <div className="shimmer h-3.5 w-11/12 rounded" />
-                  <div className="shimmer h-3.5 w-4/5 rounded" />
-                </div>
-              </div>
-            </div>
-          )}
+          {messagesQ.isPending && !showCarryover && <ChatPageSkeleton />}
           {messagesQ.isError && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm">
               <p className="font-medium">Couldn't load this conversation.</p>

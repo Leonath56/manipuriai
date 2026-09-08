@@ -11,6 +11,7 @@ import { clearLocalUserData } from "@/lib/chat-cache";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
+import { SettingsSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — Manipuri AI" }, { name: "description", content: "Manage your Manipuri AI profile, preferred language and script, voice settings and account details." }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -234,9 +235,7 @@ function ProfilePage() {
             </p>
 
             {memoryQ.isPending ? (
-              <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading…
-              </div>
+              <div className="mt-4"><SettingsSkeleton fields={3} /></div>
             ) : memoryQ.isError ? (
               <div className="mt-4 text-sm">
                 <p className="text-muted-foreground">Couldn't load this right now.</p>
