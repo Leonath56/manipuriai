@@ -280,7 +280,11 @@ function TryPage() {
             {messages.length > 0 && (
               <div className="space-y-7">
                 {messages.map((message, index) => (
-                  <Message key={`${message.role}-${index}`} from={message.role} className="msg-in">
+                  <Message
+                    key={`${message.role}-${index}`}
+                    from={message.role}
+                    className={message.role === "assistant" ? "msg-in flex-row items-start gap-3" : "msg-in"}
+                  >
                     {message.role === "assistant" && <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-base font-semibold text-primary-foreground">ꯃ</span>}
                     <MessageContent>
                       {message.images?.length ? (
