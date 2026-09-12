@@ -135,7 +135,7 @@ export function StreamingAssistantContent({ content }: { content: string }) {
 
 export function Composer({
   input, setInput, images, setImages, onSubmit, sending, inputRef, lang, setLang, mode, setMode,
-  onStop, containerRef,
+  onStop, containerRef, onRequestImage, onRequestVoice, onRequestDictation, placeholder, footerText,
 }: {
   input: string;
   setInput: (v: string) => void;
@@ -152,6 +152,12 @@ export function Composer({
   onStop?: () => void;
   /** Lets the chat measure the complete composer, including safe-area padding. */
   containerRef?: React.RefObject<HTMLDivElement | null>;
+  /** Optional overrides let public surfaces gate account-only actions. */
+  onRequestImage?: () => void;
+  onRequestVoice?: () => void;
+  onRequestDictation?: () => void;
+  placeholder?: string;
+  footerText?: React.ReactNode;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -407,7 +413,7 @@ export function Composer({
                   ? "Writing down what you said…"
                   : images.length
                     ? "Ask about the image…"
-                    : "Message Manipuri AI…"
+                    : placeholder ?? "Message Manipuri AI…"
             }
             // 16px keeps iOS Safari from zooming the viewport on focus.
             style={{ fontSize: "16px" }}
@@ -453,7 +459,11 @@ export function Composer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => (recording ? dictation.stop() : dictation.start())}
+                onClick={() => {
+                  if (onRequestDictation) return onRequestDictation();
+                  if (recording) dictation.stop();
+                  else dictation.start();
+                }}
                 disabled={sending || transcribing}
                 aria-label={recording ? "Stop dictating" : "Dictate a message"}
                 aria-pressed={recording}
@@ -480,7 +490,7 @@ export function Composer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate({ to: "/image" })}
+                onClick={() => onRequestImage ? onRequestImage() : navigate({ to: "/image" })}
                 aria-label="Create an image"
                 title="Create an image"
                 className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -491,7 +501,7 @@ export function Composer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate({ to: "/voice" })}
+                onClick={() => onRequestVoice ? onRequestVoice() : navigate({ to: "/voice" })}
                 disabled={sending}
                 aria-label="Talk to Manipuri AI"
                 title="Talk to Manipuri AI"
@@ -574,7 +584,7 @@ export function Composer({
         </div>
 
         <p className="mt-2 px-1 text-center text-[11px] leading-tight text-muted-foreground">
-          Manipuri AI can make mistakes — check important details.
+          {footerText ?? "Manipuri AI can make mistakes — check important details."}
         </p>
       </form>
     </div>

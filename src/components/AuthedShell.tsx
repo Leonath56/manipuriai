@@ -449,7 +449,7 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
             <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
             {/* `is-admin` was already being queried and then never read, so every
                 user saw an Admin panel link they could not use. */}
-            {adminQ.data?.isAdmin && (
+            {adminQ.data?.isAdmin === true && (
               <DropdownMenuItem asChild><Link to="/admin"><Shield className="mr-2 h-4 w-4" /> Admin panel</Link></DropdownMenuItem>
             )}
             <DropdownMenuItem asChild><Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>

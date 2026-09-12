@@ -49,6 +49,7 @@ const BodySchema = z.object({
     .default([]),
   message: z.string().trim().min(1).max(2000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
+  mode: z.enum(["instant", "think"]).default("instant"),
   // Shape is checked by validateImageInputs below, which enforces the data-URL
   // scheme, the mime allowlist and the byte caps that Zod can't express cheaply.
   images: z.unknown().optional(),
@@ -301,7 +302,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               let upstream: Response;
               try {
                 upstream = await fetchChatCompletion(
-                  "google/gemini-3.7-flash",
+                  body.mode === "think" ? "google/gemini-3.1-pro-preview" : "google/gemini-3.7-flash",
                   { messages, stream: true },
                   { signal: request.signal },
                 );
