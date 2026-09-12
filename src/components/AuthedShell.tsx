@@ -23,7 +23,29 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, MessageSquare, MoreHorizontal, Pencil, Trash2, LogOut, User, LayoutDashboard, CreditCard, Search, Pin, PinOff, Shield, ImageIcon, Sparkles, PanelLeftClose, PanelLeftOpen, X, Download, FileText, FileJson } from "lucide-react";
+import {
+  Plus,
+  MessageSquare,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  LogOut,
+  User,
+  LayoutDashboard,
+  CreditCard,
+  Search,
+  Pin,
+  PinOff,
+  Shield,
+  ImageIcon,
+  Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
+  X,
+  Download,
+  FileText,
+  FileJson,
+} from "lucide-react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { isAdmin as isAdminFn } from "@/lib/admin.functions";
@@ -37,7 +59,13 @@ import { SidebarSkeleton } from "@/components/skeletons";
 
 type ChatRow = { id: string; title: string; updated_at: string; pinned: boolean; kind?: string };
 
-export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => void; focusSearchToken?: number }) {
+export function ChatSidebar({
+  onClose,
+  focusSearchToken,
+}: {
+  onClose?: () => void;
+  focusSearchToken?: number;
+}) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -51,7 +79,9 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
   // Reclaims the quota held by the retired write-only response cache. Cheap
   // enough to do on mount, and it runs once per session because the key is gone
   // afterwards.
-  useEffect(() => { purgeLegacyResponseCache(); }, []);
+  useEffect(() => {
+    purgeLegacyResponseCache();
+  }, []);
 
   /*
    * ⌘/Ctrl+K arrives as a bumped counter from the shell rather than a ref handed
@@ -93,7 +123,10 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
   const profileQ = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
-      const { data } = await supabase.from("profiles").select("full_name, username, email, plan, avatar_url").maybeSingle();
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, username, email, plan, avatar_url")
+        .maybeSingle();
       return data;
     },
     // Name/plan/avatar effectively never change mid-session.
@@ -102,7 +135,11 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
   });
 
   const checkAdmin = useServerFn(isAdminFn);
-  const adminQ = useQuery({ queryKey: ["is-admin"], queryFn: () => checkAdmin(), staleTime: 60_000 });
+  const adminQ = useQuery({
+    queryKey: ["is-admin"],
+    queryFn: () => checkAdmin(),
+    staleTime: 60_000,
+  });
 
   const renameFn = useServerFn(renameChat);
   const deleteFn = useServerFn(deleteChat);
@@ -203,7 +240,9 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
             ꯃ
           </span>
           <span className="truncate">Manipuri AI</span>
-          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">v1.2</span>
+          <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+            v1.2
+          </span>
         </Link>
         {/*
           Collapse used to reach into the DOM with getElementById and set
@@ -266,7 +305,12 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
         {chatsQ.isError && (
           <div className="px-3 py-6 text-center text-xs">
             <p className="text-muted-foreground">Couldn't load your chats.</p>
-            <Button variant="ghost" size="sm" className="mt-2 h-8 text-gold" onClick={() => chatsQ.refetch()}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 h-8 text-gold"
+              onClick={() => chatsQ.refetch()}
+            >
               Try again
             </Button>
           </div>
@@ -276,15 +320,25 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
             {q ? (
               <>
                 <p className="text-sm text-foreground">No chats match "{search}"</p>
-                <Button variant="ghost" size="sm" className="mt-2 h-8 text-gold" onClick={() => setSearch("")}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2 h-8 text-gold"
+                  onClick={() => setSearch("")}
+                >
                   Clear search
                 </Button>
               </>
             ) : (
               <>
-                <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground/40" aria-hidden="true" />
+                <MessageSquare
+                  className="mx-auto h-8 w-8 text-muted-foreground/40"
+                  aria-hidden="true"
+                />
                 <p className="mt-3 text-sm text-foreground">No chats yet</p>
-                <p className="mt-1 text-xs text-muted-foreground">Ask something in Manipuri or English to get started.</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Ask something in Manipuri or English to get started.
+                </p>
               </>
             )}
           </div>
@@ -305,7 +359,10 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
                 {/* A gold rail is the one unambiguous "you are here" marker. The
                     active row used to differ only by a slightly lighter grey. */}
                 {active && (
-                  <span aria-hidden="true" className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-gold" />
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-gold"
+                  />
                 )}
                 {isRenaming ? (
                   <form
@@ -339,15 +396,23 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
                     onClick={onClose}
                     aria-current={active ? "page" : undefined}
                     className={`flex min-w-0 flex-1 items-center gap-2 px-2.5 py-2.5 text-sm ${
-                      active ? "font-medium text-sidebar-accent-foreground" : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
+                      active
+                        ? "font-medium text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/80 hover:text-sidebar-foreground"
                     }`}
                   >
                     {c.pinned ? (
                       <Pin className="h-3.5 w-3.5 shrink-0 text-gold" aria-hidden="true" />
                     ) : c.kind === "image" ? (
-                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <ImageIcon
+                        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                        aria-hidden="true"
+                      />
                     ) : (
-                      <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <MessageSquare
+                        className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                        aria-hidden="true"
+                      />
                     )}
                     <span className="truncate">{c.title}</span>
                   </Link>
@@ -368,10 +433,25 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem onClick={() => pinM.mutate({ chatId: c.id, pinned: !c.pinned })}>
-                      {c.pinned ? <><PinOff className="mr-2 h-3.5 w-3.5" /> Unpin</> : <><Pin className="mr-2 h-3.5 w-3.5" /> Pin</>}
+                    <DropdownMenuItem
+                      onClick={() => pinM.mutate({ chatId: c.id, pinned: !c.pinned })}
+                    >
+                      {c.pinned ? (
+                        <>
+                          <PinOff className="mr-2 h-3.5 w-3.5" /> Unpin
+                        </>
+                      ) : (
+                        <>
+                          <Pin className="mr-2 h-3.5 w-3.5" /> Pin
+                        </>
+                      )}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { setRenamingId(c.id); setRenameValue(c.title); }}>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setRenamingId(c.id);
+                        setRenameValue(c.title);
+                      }}
+                    >
                       <Pencil className="mr-2 h-3.5 w-3.5" /> Rename
                     </DropdownMenuItem>
                     <DropdownMenuSub>
@@ -390,7 +470,10 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setDeleteTarget(c)}>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => setDeleteTarget(c)}
+                    >
                       <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -404,7 +487,9 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
                 <>
                   {/* Sentence case, no letter-spacing. The tracked-out ALL-CAPS
                       eyebrow is template chrome, not information. */}
-                  <h2 className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">Pinned</h2>
+                  <h2 className="px-3 pb-1 pt-2 text-xs font-medium text-muted-foreground">
+                    Pinned
+                  </h2>
                   <ul className="space-y-0.5">{pinned.map(renderRow)}</ul>
                 </>
               )}
@@ -426,17 +511,35 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left text-sm hover:bg-sidebar-accent">
               <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                {(profileQ.data?.full_name ?? profileQ.data?.username ?? profileQ.data?.email ?? "U").slice(0, 1).toUpperCase()}
+                {(
+                  profileQ.data?.full_name ??
+                  profileQ.data?.username ??
+                  profileQ.data?.email ??
+                  "U"
+                )
+                  .slice(0, 1)
+                  .toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate font-medium">{profileQ.data?.full_name ?? profileQ.data?.username ?? "Account"}</div>
+                <div className="truncate font-medium">
+                  {profileQ.data?.full_name ?? profileQ.data?.username ?? "Account"}
+                </div>
                 {(() => {
                   const p = profileQ.data?.plan ?? "free";
                   const premium = p === "pro" || p === "max";
                   return (
                     <div
                       className={`truncate text-xs capitalize ${premium ? "font-semibold" : "text-muted-foreground"}`}
-                      style={premium ? { background: "linear-gradient(90deg,#f5d67a,#c9a84c,#f0d78c)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" } : undefined}
+                      style={
+                        premium
+                          ? {
+                              background: "linear-gradient(90deg,#f5d67a,#c9a84c,#f0d78c)",
+                              WebkitBackgroundClip: "text",
+                              WebkitTextFillColor: "transparent",
+                              backgroundClip: "text",
+                            }
+                          : undefined
+                      }
                     >
                       {p} plan
                     </div>
@@ -446,16 +549,35 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem asChild><Link to="/dashboard"><LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/dashboard">
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Dashboard
+              </Link>
+            </DropdownMenuItem>
             {/* `is-admin` was already being queried and then never read, so every
                 user saw an Admin panel link they could not use. */}
             {adminQ.data?.isAdmin === true && (
-              <DropdownMenuItem asChild><Link to="/admin"><Shield className="mr-2 h-4 w-4" /> Admin panel</Link></DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/admin">
+                  <Shield className="mr-2 h-4 w-4" /> Admin panel
+                </Link>
+              </DropdownMenuItem>
             )}
-            <DropdownMenuItem asChild><Link to="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
-            <DropdownMenuItem asChild><Link to="/plans"><CreditCard className="mr-2 h-4 w-4" /> Plans & billing</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/profile">
+                <User className="mr-2 h-4 w-4" /> Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/plans">
+                <CreditCard className="mr-2 h-4 w-4" /> Plans & billing
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="text-destructive focus:text-destructive"
+            >
               <LogOut className="mr-2 h-4 w-4" /> Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -495,7 +617,7 @@ export function ChatSidebar({ onClose, focusSearchToken }: { onClose?: () => voi
 
 export function AuthedShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [sidebarState, setSidebarState] = useState<'open' | 'closed'>('open');
+  const [sidebarState, setSidebarState] = useState<"open" | "closed">("open");
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [focusSearchToken, setFocusSearchToken] = useState(0);
   const shellNavigate = useNavigate();
@@ -511,21 +633,26 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
     let last = 0;
     try {
       last = Number(localStorage.getItem(KEY)) || 0;
-    } catch { /* private mode */ }
+    } catch {
+      /* private mode */
+    }
     if (Date.now() - last < SIX_HOURS) return;
 
     const write = () => {
       try {
         localStorage.setItem(KEY, String(Date.now()));
-      } catch { /* private mode */ }
+      } catch {
+        /* private mode */
+      }
       void supabase
         .from("profiles")
         .update({ last_login_at: new Date().toISOString() })
         .then(() => {});
     };
 
-    const idle = (globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number })
-      .requestIdleCallback;
+    const idle = (
+      globalThis as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }
+    ).requestIdleCallback;
     if (idle) {
       const handle = idle(write, { timeout: 4000 });
       return () => {
@@ -540,7 +667,9 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
   // which previously had none.
   useEffect(() => {
     if (!mobileOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileOpen]);
@@ -642,16 +771,24 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
       <div
         className="hidden h-full overflow-hidden border-r border-sidebar-border transition-[width,opacity,transform] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] will-change-[width,opacity,transform] md:block"
         style={{
-          width: sidebarState === 'open' ? '18rem' : '0',
-          opacity: sidebarState === 'open' ? 1 : 0,
-          transform: sidebarState === 'open' ? 'translateX(0)' : 'translateX(-100%)',
+          width: sidebarState === "open" ? "18rem" : "0",
+          opacity: sidebarState === "open" ? 1 : 0,
+          transform: sidebarState === "open" ? "translateX(0)" : "translateX(-100%)",
         }}
       >
-        <ChatSidebar onClose={() => setSidebarState('closed')} focusSearchToken={focusSearchToken} />
+        <ChatSidebar
+          onClose={() => setSidebarState("closed")}
+          focusSearchToken={focusSearchToken}
+        />
       </div>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation">
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation"
+        >
           <button
             type="button"
             className="absolute inset-0 bg-background/70 backdrop-blur-sm"
@@ -682,7 +819,7 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             size="icon"
             onClick={() => {
               if (window.innerWidth < 768) setMobileOpen(true);
-              else setSidebarState((prev) => (prev === 'open' ? 'closed' : 'open'));
+              else setSidebarState((prev) => (prev === "open" ? "closed" : "open"));
             }}
             aria-label="Open sidebar"
             title="Open sidebar"
@@ -691,8 +828,13 @@ export function AuthedShell({ children }: { children: React.ReactNode }) {
             <PanelLeftOpen className="h-[20px] w-[20px]" />
           </Button>
 
-          <Link to="/chat" className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:justify-start">
-            <span className="truncate font-display text-base font-semibold tracking-tight">Manipuri AI</span>
+          <Link
+            to="/chat"
+            className="flex min-w-0 flex-1 items-center justify-center gap-1.5 md:justify-start"
+          >
+            <span className="truncate font-display text-base font-semibold tracking-tight">
+              Manipuri AI
+            </span>
             <span className="shrink-0 rounded-full border border-gold/25 bg-gold/10 px-1.5 py-0.5 text-[10px] font-semibold text-gold">
               v1.2
             </span>
