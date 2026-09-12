@@ -49,11 +49,11 @@ const BodySchema = z.object({
     .default([]),
   message: z.string().trim().min(1).max(2000),
   language: z.enum(["auto", "mni", "mni-mtei", "en"]).default("auto"),
+  mode: z.enum(["instant", "think"]).default("instant"),
   // Shape is checked by validateImageInputs below, which enforces the data-URL
   // scheme, the mime allowlist and the byte caps that Zod can't express cheaply.
   images: z.unknown().optional(),
 });
-
 
 /**
  * Reserve one message against the free-trial allowance, before the model runs.
@@ -292,7 +292,9 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               const safeClose = () => {
                 if (closed) return;
                 closed = true;
-                try { controller.close(); } catch {}
+                try {
+                  controller.close();
+                } catch {}
               };
 
               // Open the response stream before waiting for the model. This lets
@@ -301,14 +303,18 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               let upstream: Response;
               try {
                 upstream = await fetchChatCompletion(
-                  "google/gemini-3.7-flash",
+                  body.mode === "think"
+                    ? "google/gemini-3.1-pro-preview"
+                    : "google/gemini-3.7-flash",
                   { messages, stream: true },
                   { signal: request.signal },
                 );
               } catch (err) {
                 if (!request.signal.aborted) {
                   console.error("[guest-chat] upstream connection failed", (err as Error)?.message);
-                  safeEnqueue(encoder.encode("Manipuri AI couldn't answer just now. Please try again."));
+                  safeEnqueue(
+                    encoder.encode("Manipuri AI couldn't answer just now. Please try again."),
+                  );
                 }
                 await releaseGuestMessage(sessionId);
                 safeClose();
@@ -317,15 +323,23 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
               if (!upstream.ok || !upstream.body) {
                 const detail = await upstream.text().catch(() => "");
-                console.error("[guest-chat] upstream failed", upstream.status, detail.slice(0, 300));
-                safeEnqueue(encoder.encode("Manipuri AI couldn't answer just now. Please try again."));
+                console.error(
+                  "[guest-chat] upstream failed",
+                  upstream.status,
+                  detail.slice(0, 300),
+                );
+                safeEnqueue(
+                  encoder.encode("Manipuri AI couldn't answer just now. Please try again."),
+                );
                 await releaseGuestMessage(sessionId);
                 safeClose();
                 return;
               }
 
               const reader = upstream.body.getReader();
-              const onAbort = () => { reader.cancel().catch(() => {}); };
+              const onAbort = () => {
+                reader.cancel().catch(() => {});
+              };
               request.signal.addEventListener("abort", onAbort);
               try {
                 while (true) {
@@ -365,7 +379,9 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 }
                 console.error("[guest-chat] stream failed", (err as Error)?.message);
                 if (!assistantAcc) await releaseGuestMessage(sessionId);
-                try { controller.error(err); } catch {}
+                try {
+                  controller.error(err);
+                } catch {}
                 closed = true;
                 return;
               } finally {

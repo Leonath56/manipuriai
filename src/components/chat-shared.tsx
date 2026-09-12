@@ -12,7 +12,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ArrowUp, Square, Loader2, Zap, Brain, ImagePlus, X, AudioLines, Sparkles, Languages, Mic, Wand2 } from "lucide-react";
+import {
+  ArrowUp,
+  Square,
+  Loader2,
+  Zap,
+  Brain,
+  ImagePlus,
+  X,
+  AudioLines,
+  Sparkles,
+  Languages,
+  Mic,
+  Wand2,
+} from "lucide-react";
 import { ChatMarkdown } from "@/components/ChatMarkdown";
 import { ImageResultCard } from "@/components/ImageResultCard";
 import { parseImageMessage } from "@/lib/image-gen";
@@ -55,7 +68,10 @@ export function ImageGeneratingAnimation() {
   useEffect(() => {
     const t1 = setTimeout(() => setStageIdx(1), 1200);
     const t2 = setTimeout(() => setStageIdx(2), 6500);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, []);
 
   useEffect(() => {
@@ -76,7 +92,10 @@ export function ImageGeneratingAnimation() {
         <div className="relative grid aspect-square w-full place-items-center overflow-hidden rounded-xl border border-border/60 bg-background/40">
           <div className="image-gen-scan absolute inset-x-0 top-0 h-16" />
           <div className="image-gen-grid absolute inset-0 opacity-70" />
-          <div className="relative grid h-16 w-16 place-items-center rounded-full border border-border bg-background/80 text-3xl font-semibold leading-none shadow-glow" aria-hidden="true">
+          <div
+            className="relative grid h-16 w-16 place-items-center rounded-full border border-border bg-background/80 text-3xl font-semibold leading-none shadow-glow"
+            aria-hidden="true"
+          >
             ꯃ
           </div>
         </div>
@@ -103,8 +122,8 @@ export function ImageGeneratingAnimation() {
                       done
                         ? "border-primary bg-primary text-primary-foreground"
                         : active
-                        ? "border-primary text-primary"
-                        : "border-border text-muted-foreground"
+                          ? "border-primary text-primary"
+                          : "border-border text-muted-foreground"
                     }`}
                     aria-hidden="true"
                   >
@@ -134,8 +153,24 @@ export function StreamingAssistantContent({ content }: { content: string }) {
 }
 
 export function Composer({
-  input, setInput, images, setImages, onSubmit, sending, inputRef, lang, setLang, mode, setMode,
-  onStop, containerRef,
+  input,
+  setInput,
+  images,
+  setImages,
+  onSubmit,
+  sending,
+  inputRef,
+  lang,
+  setLang,
+  mode,
+  setMode,
+  onStop,
+  containerRef,
+  onRequestImage,
+  onRequestVoice,
+  onRequestDictation,
+  placeholder,
+  footerText,
 }: {
   input: string;
   setInput: (v: string) => void;
@@ -152,6 +187,12 @@ export function Composer({
   onStop?: () => void;
   /** Lets the chat measure the complete composer, including safe-area padding. */
   containerRef?: React.RefObject<HTMLDivElement | null>;
+  /** Optional overrides let public surfaces gate account-only actions. */
+  onRequestImage?: () => void;
+  onRequestVoice?: () => void;
+  onRequestDictation?: () => void;
+  placeholder?: string;
+  footerText?: React.ReactNode;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -251,7 +292,9 @@ export function Composer({
     // Re-applying a tool works from the original text instead of nesting one
     // instruction inside another.
     const base =
-      lastToolRef.current && lastToolRef.current.built === input ? lastToolRef.current.source : input;
+      lastToolRef.current && lastToolRef.current.built === input
+        ? lastToolRef.current.source
+        : input;
     const source = base.trim();
     if (!source) return;
     const built = tool.build(source);
@@ -328,7 +371,10 @@ export function Composer({
     "button-click-feedback [&>svg:last-child]:hidden";
 
   return (
-    <div ref={containerRef} className="sticky bottom-0 z-20 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+    <div
+      ref={containerRef}
+      className="sticky bottom-0 z-20 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70"
+    >
       <form
         onSubmit={onSubmit}
         className="mx-auto max-w-3xl px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 sm:px-4 sm:pb-4"
@@ -391,7 +437,9 @@ export function Composer({
             onChange={(e) => setInput(e.target.value)}
             onPaste={(e) => {
               const items = Array.from(e.clipboardData?.items ?? []);
-              const files = items.map((it) => it.getAsFile()).filter((f): f is File => !!f && f.type.startsWith("image/"));
+              const files = items
+                .map((it) => it.getAsFile())
+                .filter((f): f is File => !!f && f.type.startsWith("image/"));
               if (files.length) {
                 e.preventDefault();
                 void onPickFiles(files as unknown as FileList);
@@ -407,7 +455,7 @@ export function Composer({
                   ? "Writing down what you said…"
                   : images.length
                     ? "Ask about the image…"
-                    : "Message Manipuri AI…"
+                    : (placeholder ?? "Message Manipuri AI…")
             }
             // 16px keeps iOS Safari from zooming the viewport on focus.
             style={{ fontSize: "16px" }}
@@ -437,7 +485,11 @@ export function Composer({
                 size="icon"
                 onClick={() => fileRef.current?.click()}
                 disabled={sending || images.length >= MAX_IMAGES}
-                aria-label={images.length >= MAX_IMAGES ? `Attachment limit reached (${MAX_IMAGES})` : "Attach a photo"}
+                aria-label={
+                  images.length >= MAX_IMAGES
+                    ? `Attachment limit reached (${MAX_IMAGES})`
+                    : "Attach a photo"
+                }
                 title="Attach a photo"
                 className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
               >
@@ -453,7 +505,11 @@ export function Composer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => (recording ? dictation.stop() : dictation.start())}
+                onClick={() => {
+                  if (onRequestDictation) return onRequestDictation();
+                  if (recording) dictation.stop();
+                  else dictation.start();
+                }}
                 disabled={sending || transcribing}
                 aria-label={recording ? "Stop dictating" : "Dictate a message"}
                 aria-pressed={recording}
@@ -473,14 +529,11 @@ export function Composer({
                 )}
               </Button>
 
-
-
-
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate({ to: "/image" })}
+                onClick={() => (onRequestImage ? onRequestImage() : navigate({ to: "/image" }))}
                 aria-label="Create an image"
                 title="Create an image"
                 className="h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -491,7 +544,7 @@ export function Composer({
                 type="button"
                 variant="ghost"
                 size="icon"
-                onClick={() => navigate({ to: "/voice" })}
+                onClick={() => (onRequestVoice ? onRequestVoice() : navigate({ to: "/voice" }))}
                 disabled={sending}
                 aria-label="Talk to Manipuri AI"
                 title="Talk to Manipuri AI"
@@ -504,16 +557,26 @@ export function Composer({
 
               <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
                 <SelectTrigger aria-label="Reply speed" title="Reply speed" className={pillTrigger}>
-                  {mode === "instant" ? <Zap className="h-3.5 w-3.5" /> : <Brain className="h-3.5 w-3.5" />}
+                  {mode === "instant" ? (
+                    <Zap className="h-3.5 w-3.5" />
+                  ) : (
+                    <Brain className="h-3.5 w-3.5" />
+                  )}
                   <span>{mode === "instant" ? "Instant" : "Think"}</span>
                 </SelectTrigger>
-                <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={8}>
+                <SelectContent
+                  className="!animate-none !transition-none"
+                  position="popper"
+                  sideOffset={8}
+                >
                   <SelectItem value="instant">
                     <div className="flex items-start gap-2.5">
                       <Zap className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                       <div className="flex flex-col">
                         <span className="font-medium">Instant reply</span>
-                        <span className="text-[11px] text-muted-foreground">Fast answers for everyday chat</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Fast answers for everyday chat
+                        </span>
                       </div>
                     </div>
                   </SelectItem>
@@ -522,21 +585,40 @@ export function Composer({
                       <Brain className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                       <div className="flex flex-col">
                         <span className="font-medium">Deep thinking</span>
-                        <span className="text-[11px] text-muted-foreground">Slower, searches the web, better reasoning</span>
+                        <span className="text-[11px] text-muted-foreground">
+                          Slower, searches the web, better reasoning
+                        </span>
                       </div>
                     </div>
                   </SelectItem>
                 </SelectContent>
               </Select>
 
-              <Select value={lang} onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}>
-                <SelectTrigger aria-label="Reply language" title="Reply language" className={pillTrigger}>
+              <Select
+                value={lang}
+                onValueChange={(v) => setLang(v as "auto" | "mni" | "mni-mtei" | "en")}
+              >
+                <SelectTrigger
+                  aria-label="Reply language"
+                  title="Reply language"
+                  className={pillTrigger}
+                >
                   <Languages className="h-3.5 w-3.5" />
                   <span className="max-w-[92px] truncate">
-                    {lang === "auto" ? "Auto" : lang === "mni" ? "Manipuri" : lang === "mni-mtei" ? "Mayek" : "English"}
+                    {lang === "auto"
+                      ? "Auto"
+                      : lang === "mni"
+                        ? "Manipuri"
+                        : lang === "mni-mtei"
+                          ? "Mayek"
+                          : "English"}
                   </span>
                 </SelectTrigger>
-                <SelectContent className="!animate-none !transition-none" position="popper" sideOffset={8}>
+                <SelectContent
+                  className="!animate-none !transition-none"
+                  position="popper"
+                  sideOffset={8}
+                >
                   <SelectItem value="auto">Match my language</SelectItem>
                   <SelectItem value="mni">Reply in Manipuri (Latin)</SelectItem>
                   <SelectItem value="mni-mtei">
@@ -567,14 +649,18 @@ export function Composer({
                 title="Send message"
                 className="h-10 w-10 shrink-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
               >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowUp className="h-[18px] w-[18px]" />}
+                {sending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ArrowUp className="h-[18px] w-[18px]" />
+                )}
               </Button>
             )}
           </div>
         </div>
 
         <p className="mt-2 px-1 text-center text-[11px] leading-tight text-muted-foreground">
-          Manipuri AI can make mistakes — check important details.
+          {footerText ?? "Manipuri AI can make mistakes — check important details."}
         </p>
       </form>
     </div>
