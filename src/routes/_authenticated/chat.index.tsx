@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
@@ -17,6 +17,7 @@ import {
   updateActiveStream,
   useActiveStream,
 } from "@/lib/active-stream";
+import { chatMessagesQueryOptions } from "@/lib/chat-messages";
 
 export const Route = createFileRoute("/_authenticated/chat/")({
   head: () => ({ meta: [{ title: "New chat — Manipuri AI" }, { name: "description", content: "Start a new Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
@@ -36,6 +37,7 @@ function NewChat() {
   /** Set when a send failed outright, so the message can be retried or edited. */
   const [failed, setFailed] = useState<{ text: string; images: string[]; message: string } | null>(null);
   const navigate = useNavigate();
+  const router = useRouter();
   const qc = useQueryClient();
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -47,12 +49,34 @@ function NewChat() {
   // prompt and left the first stream unstoppable (the second overwrote
   // `abortRef`).
   const inFlightRef = useRef(false);
+  const destinationPreloadRef = useRef<{ chatId: string; promise: Promise<unknown> } | null>(null);
   const active = useActiveStream();
   // Keep the pending preview visible on /chat for the entire stream. The
   // server sends chatId almost immediately, but we intentionally navigate only
   // after the reply finishes; hiding this when chatId arrives made long replies
   // disappear until refresh.
   const pendingHere = active;
+
+  const preloadDestination = (chatId: string) => {
+    const current = destinationPreloadRef.current;
+    if (current?.chatId === chatId) return current.promise;
+
+    const promise = router
+      .preloadRoute({ to: "/chat/$chatId", params: { chatId } })
+      .catch(() => undefined);
+    destinationPreloadRef.current = { chatId, promise };
+    return promise;
+  };
+
+  const prepareDestination = async (chatId: string) => {
+    // Force a post-save read even if route preloading saw the chat before its
+    // first message rows were committed. The current completed reply remains
+    // visible while both pieces finish warming in the background.
+    await Promise.all([
+      preloadDestination(chatId),
+      qc.fetchQuery(chatMessagesQueryOptions(chatId, 0)).catch(() => undefined),
+    ]);
+  };
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
@@ -155,6 +179,7 @@ function NewChat() {
         });
         qc.invalidateQueries({ queryKey: ["chats"] });
         updateActiveStream({ chatId: result.chatId, done: true });
+        await prepareDestination(result.chatId);
         navigate({ to: "/chat/$chatId", params: { chatId: result.chatId } });
         // Destination will clear activeStream once its messages query loads.
         return;
@@ -176,6 +201,7 @@ function NewChat() {
         onMeta: (m) => {
           receivedChatId = m.chatId;
           updateActiveStream({ chatId: m.chatId });
+          void preloadDestination(m.chatId);
         },
         onChunk: (delta) => {
           acc += delta;
@@ -193,7 +219,7 @@ function NewChat() {
         // reply showed placeholder rows that never matched the database.
         qc.invalidateQueries({ queryKey: ["chats"] });
         updateActiveStream({ done: true, chatId: finalChatId, streaming: acc });
-
+        await prepareDestination(finalChatId);
         navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
       } else if (finalChatId) {
         // The chat row exists but nothing was generated (stopped immediately).
@@ -201,6 +227,7 @@ function NewChat() {
         // whatever the server saved.
         setActiveStream(null);
         qc.invalidateQueries({ queryKey: ["chats"] });
+        await prepareDestination(finalChatId);
         navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
       } else {
         // No chatId ever arrived, so nothing was saved and there is nowhere to
@@ -219,6 +246,7 @@ function NewChat() {
       });
     } finally {
       abortRef.current = null;
+      destinationPreloadRef.current = null;
       inFlightRef.current = false;
       setSending(false);
     }
