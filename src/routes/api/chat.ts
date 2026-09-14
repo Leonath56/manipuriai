@@ -402,13 +402,14 @@ export const Route = createFileRoute("/api/chat")({
             chatId = newChat.id;
           } else {
             const existingChatId = chatId;
-            chatOwnedPromise = supabase
-              .from("chats")
-              .select("id")
-              .eq("id", existingChatId)
-              .eq("user_id", userId)
-              .maybeSingle()
-              .then(({ data }) => !!data);
+            chatOwnedPromise = Promise.resolve(
+              supabase
+                .from("chats")
+                .select("id")
+                .eq("id", existingChatId)
+                .eq("user_id", userId)
+                .maybeSingle(),
+            ).then(({ data }) => !!data);
           }
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
