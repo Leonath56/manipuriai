@@ -304,11 +304,16 @@ export const Route = createFileRoute("/api/chat")({
             auth: { persistSession: false, autoRefreshToken: false },
           });
 
-          const { data: userData } = await supabase.auth.getUser(token);
+          // Token verification and body parsing are independent — running them
+          // together removes one serial round-trip from time-to-first-token.
+          const [{ data: userData }, rawBody] = await Promise.all([
+            supabase.auth.getUser(token),
+            request.json(),
+          ]);
           const userId = userData.user?.id;
           if (!userId) return new Response("Unauthorized", { status: 401 });
 
-          const body = BodySchema.parse(await request.json());
+          const body = BodySchema.parse(rawBody);
 
           // Zod caps the image *count*; this caps the part that actually costs
           // something — decoded bytes — and rejects anything that isn't a
@@ -379,6 +384,10 @@ export const Route = createFileRoute("/api/chat")({
           const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
 
           // ensure chat
+          // For an existing chat the ownership check no longer blocks here; it
+          // runs alongside the history/memory reads below so the model call
+          // isn't waiting on an extra serial round-trip.
+          let chatOwnedPromise: Promise<boolean> = Promise.resolve(true);
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
@@ -392,17 +401,20 @@ export const Route = createFileRoute("/api/chat")({
             }
             chatId = newChat.id;
           } else {
-            const { data: chat } = await supabase
-              .from("chats")
-              .select("id")
-              .eq("id", chatId)
-              .eq("user_id", userId)
-              .maybeSingle();
-            if (!chat) return new Response("Chat not found", { status: 404 });
+            const existingChatId = chatId;
+            chatOwnedPromise = Promise.resolve(
+              supabase
+                .from("chats")
+                .select("id")
+                .eq("id", existingChatId)
+                .eq("user_id", userId)
+                .maybeSingle(),
+            ).then(({ data }) => !!data);
           }
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
           if (imageRequest) {
+            if (!(await chatOwnedPromise)) return new Response("Chat not found", { status: 404 });
             const lovable = lovableOnlyEndpoint();
             if (!lovable) {
               return new Response(JSON.stringify({ error: "Image generation requires LOVABLE_API_KEY on this deployment." }), {
@@ -552,7 +564,7 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const shouldLoadMcpTools = mayNeedMcpTools(body.message);
-          const [historyRes, webInfo, memoryRes, mcpTools] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpTools, chatOwned] = await Promise.all([
             supabase
               .from("messages")
               .select("id, role, content")
@@ -568,7 +580,12 @@ export const Route = createFileRoute("/api/chat")({
             // Tool discovery is cached (see mcp-client.server) so this no longer
             // costs a live round-trip to every MCP server on every message.
             shouldLoadMcpTools ? loadMcpTools() : Promise.resolve([]),
+            chatOwnedPromise,
           ]);
+          if (!chatOwned) {
+            await refundQuota();
+            return new Response("Chat not found", { status: 404 });
+          }
           const omitIds = new Set(body.omitMessageIds);
           const history = (historyRes.data ?? [])
             .filter((m) => !omitIds.has(m.id))
