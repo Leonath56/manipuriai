@@ -304,11 +304,16 @@ export const Route = createFileRoute("/api/chat")({
             auth: { persistSession: false, autoRefreshToken: false },
           });
 
-          const { data: userData } = await supabase.auth.getUser(token);
+          // Token verification and body parsing are independent — running them
+          // together removes one serial round-trip from time-to-first-token.
+          const [{ data: userData }, rawBody] = await Promise.all([
+            supabase.auth.getUser(token),
+            request.json(),
+          ]);
           const userId = userData.user?.id;
           if (!userId) return new Response("Unauthorized", { status: 401 });
 
-          const body = BodySchema.parse(await request.json());
+          const body = BodySchema.parse(rawBody);
 
           // Zod caps the image *count*; this caps the part that actually costs
           // something — decoded bytes — and rejects anything that isn't a
