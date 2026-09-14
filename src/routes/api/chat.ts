@@ -666,7 +666,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
             : "\n\nFinal language check: prefer a short native expression over a literal translation; keep spelling consistent; do not invent words; answer only the current request.";
 
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + "\n\nCRITICAL: Always look at the full conversation history. If the user refers to something previously discussed or an image uploaded earlier, use that context. Do not ignore previous turns." + meiteilonGuard },
+            { role: "system", content: SYSTEM_PROMPT + (replyLanguage === "en" ? "" : MEITEILON_RULES) + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + meiteilonGuard },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
