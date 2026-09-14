@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ArrowRight, ArrowUpRight, ShieldCheck, Sparkles, Languages, Zap, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,31 +34,18 @@ export const Route = createFileRoute("/")({
 
 function Landing() {
   const navigate = useNavigate();
-  const [checking, setChecking] = useState(true);
 
+  // The landing copy renders straight away, for people and for search engines.
+  // This used to hold back the whole page behind a spinner while the session
+  // was checked, so crawlers only ever indexed a loading screen.
   useEffect(() => {
     (async () => {
       const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        navigate({ to: "/chat", replace: true });
-      } else {
-        setChecking(false);
-      }
-    })().catch(() => setChecking(false));
+      if (data.session) navigate({ to: "/chat", replace: true });
+    })().catch(() => undefined);
   }, [navigate]);
 
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-black grid place-items-center">
-        <div className="flex flex-col items-center gap-4">
-          <span className="grid h-12 w-12 place-items-center rounded-full text-2xl font-semibold animate-pulse" style={{ background: "linear-gradient(135deg, var(--gold-soft), var(--gold-deep))", color: "oklch(0.16 0.02 60)" }}>ꯃ</span>
-          <div className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
-            <div className="h-full w-full origin-left animate-progress-fast bg-gold" style={{ background: "var(--gold)" }} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
 
   return (
