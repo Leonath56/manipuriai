@@ -25,8 +25,8 @@ const BodySchema = z.object({
 
 // How much conversation the model actually receives. The previous values
 // (4 messages / 400 chars) made the assistant forget the last question.
-const HISTORY_MESSAGE_LIMIT = 12;
-const HISTORY_CHAR_LIMIT = 1400;
+const HISTORY_MESSAGE_LIMIT = 8;
+const HISTORY_CHAR_LIMIT = 900;
 
 // Agent tools are powerful but discovering and serializing them on every ordinary
 // chat turn delays time-to-first-token. Only attach them when the user is
