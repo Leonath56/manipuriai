@@ -384,6 +384,10 @@ export const Route = createFileRoute("/api/chat")({
           const effectiveMessage = body.message || "What is in this image? Please describe and answer any question visible in it.";
 
           // ensure chat
+          // For an existing chat the ownership check no longer blocks here; it
+          // runs alongside the history/memory reads below so the model call
+          // isn't waiting on an extra serial round-trip.
+          let chatOwnedPromise: Promise<boolean> = Promise.resolve(true);
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
@@ -397,17 +401,19 @@ export const Route = createFileRoute("/api/chat")({
             }
             chatId = newChat.id;
           } else {
-            const { data: chat } = await supabase
+            const existingChatId = chatId;
+            chatOwnedPromise = supabase
               .from("chats")
               .select("id")
-              .eq("id", chatId)
+              .eq("id", existingChatId)
               .eq("user_id", userId)
-              .maybeSingle();
-            if (!chat) return new Response("Chat not found", { status: 404 });
+              .maybeSingle()
+              .then(({ data }) => !!data);
           }
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
           if (imageRequest) {
+            if (!(await chatOwnedPromise)) return new Response("Chat not found", { status: 404 });
             const lovable = lovableOnlyEndpoint();
             if (!lovable) {
               return new Response(JSON.stringify({ error: "Image generation requires LOVABLE_API_KEY on this deployment." }), {
