@@ -563,7 +563,7 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const shouldLoadMcpTools = mayNeedMcpTools(body.message);
-          const [historyRes, webInfo, memoryRes, mcpTools] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpTools, chatOwned] = await Promise.all([
             supabase
               .from("messages")
               .select("id, role, content")
@@ -579,7 +579,12 @@ export const Route = createFileRoute("/api/chat")({
             // Tool discovery is cached (see mcp-client.server) so this no longer
             // costs a live round-trip to every MCP server on every message.
             shouldLoadMcpTools ? loadMcpTools() : Promise.resolve([]),
+            chatOwnedPromise,
           ]);
+          if (!chatOwned) {
+            await refundQuota();
+            return new Response("Chat not found", { status: 404 });
+          }
           const omitIds = new Set(body.omitMessageIds);
           const history = (historyRes.data ?? [])
             .filter((m) => !omitIds.has(m.id))
