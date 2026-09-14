@@ -43,8 +43,8 @@ iframe[src*="lovable.dev/badge"] {
      one: macOS and iOS ship no Meetei Mayek face at all, so ꯃꯤꯇꯩ ꯃꯌꯦꯛ rendered
      as tofu boxes for those users — including the ꯃ in the app's own logo. */
   --font-sans: "Inter", "Figtree", "Noto Sans Meetei Mayek", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Outfit", "Noto Sans Meetei Mayek", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Instrument Serif", "Noto Sans Meetei Mayek", ui-serif, Georgia, serif;
+  --font-display: "Inter", "Noto Sans Meetei Mayek", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Inter", "Noto Sans Meetei Mayek", ui-sans-serif, system-ui, sans-serif;
   --font-mayek: "Noto Sans Meetei Mayek", "Nirmala UI", sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", monospace;
