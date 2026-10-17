@@ -41,8 +41,8 @@ const ENGLISH_WORDS =
  * 4. Suffix/morphology alone counts only when no English signal is present — it
  *    catches short romanized Meiteilon phrases like "chatlibra" or "irang-gi".
  * 5. A message with no signal at all (e.g. a single-term query like
- *    "photosynthesis") defaults to English, matching the pre-auto-detection
- *    behavior.
+ *    "photosynthesis") defaults to Meiteilon — this app is Manipuri-first, so
+ *    the safe default is romanized Meiteilon, not English.
  */
 export function detectReplyLanguage(message: string): ReplyLanguage {
   if (MEITEI_MAYEK_REGEX.test(message)) return "mni-mtei";
@@ -54,7 +54,7 @@ export function detectReplyLanguage(message: string): ReplyLanguage {
 
   if (MEITEILON_SUFFIXES.test(message)) return "mni";
 
-  return "en";
+  return "mni";
 }
 
 /** Applies the user's explicit choice, falling back to detection on "auto". */
