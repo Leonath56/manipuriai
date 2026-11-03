@@ -15,6 +15,13 @@
       "when": 1793730419316,
       "tag": "0001_restrict_effective_plan_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793732656311,
+      "tag": "0002_expire_due_subscriptions",
+      "breakpoints": true
     }
   ]
 }
