@@ -321,11 +321,15 @@ export const Route = createFileRoute("/api/chat")({
           // plan + atomic usage increment in parallel (RPC via service role — restricted from client roles)
           const today = new Date().toISOString().slice(0, 10);
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const [profileRes, incRes] = await Promise.all([
+          const [profileRes, incRes, planRes] = await Promise.all([
             supabase.from("profiles").select("plan, full_name, username, age").eq("id", userId).maybeSingle(),
             supabaseAdmin.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today }),
+            // Effective plan: an expired subscription is downgraded server-side
+            // here, so expired users fall back to Free limits immediately.
+            supabaseAdmin.rpc("get_effective_plan", { _user_id: userId }),
           ]);
-          const plan: Plan = (profileRes.data?.plan as Plan) ?? "free";
+          const effPlanRow = Array.isArray(planRes.data) ? planRes.data[0] : planRes.data;
+          const plan: Plan = ((effPlanRow?.plan as Plan | undefined) ?? (profileRes.data?.plan as Plan)) ?? "free";
           const displayName =
             (profileRes.data?.full_name as string | null)?.split(" ")[0] ||
             (profileRes.data?.username as string | null) ||
