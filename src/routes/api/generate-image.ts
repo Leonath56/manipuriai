@@ -56,17 +56,47 @@ export const Route = createFileRoute("/api/generate-image")({
           if (userErr || !userRes.user) return new Response("Unauthorized", { status: 401 });
           const userId = userRes.user.id;
 
-          // Paid feature: image generation is Pro/Max only.
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("plan")
-            .eq("id", userId)
-            .maybeSingle();
-          const plan = (profile?.plan as string | undefined) ?? "free";
+          // Paid feature: image generation is Pro/Max only. Resolved through
+          // get_effective_plan so an expired subscription is caught and
+          // downgraded server-side, never trusted from the client.
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+          const { data: effective } = await supabaseAdmin.rpc("get_effective_plan", {
+            _user_id: userId,
+          });
+          const effRow = Array.isArray(effective) ? effective[0] : effective;
+          const plan = (effRow?.plan as string | undefined) ?? "free";
           if (plan !== "pro" && plan !== "max") {
+            const expired = effRow?.subscription_status === "expired";
             return new Response(
-              JSON.stringify({ error: "Image generation is a Pro feature. Upgrade your plan to unlock it." }),
+              JSON.stringify({
+                error: expired
+                  ? "Your subscription has expired. Renew your plan to keep generating images."
+                  : "Image generation is a Pro feature. Upgrade your plan to unlock it.",
+              }),
               { status: 402, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
+          // Hard cap: 3 images per subscription period, enforced atomically in
+          // the database so simultaneous requests cannot slip past the limit.
+          const IMAGE_LIMIT = 3;
+          const periodStart = effRow?.subscription_start
+            ? String(effRow.subscription_start).slice(0, 10)
+            : undefined;
+          const remaining = await supabaseAdmin.rpc("consume_image_credits", {
+            _user_id: userId,
+            _count: body.count,
+            _limit: IMAGE_LIMIT,
+            ...(periodStart ? { _period_start: periodStart } : {}),
+          });
+          const remainingCount = Array.isArray(remaining) ? remaining[0] : remaining;
+          if (typeof remainingCount === "number" && remainingCount < 0) {
+            return new Response(
+              JSON.stringify({
+                error:
+                  "You have reached your image generation limit of 3 images. Your image generation credits will reset when your next subscription period begins.",
+              }),
+              { status: 429, headers: { "Content-Type": "application/json" } },
             );
           }
 
