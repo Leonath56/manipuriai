@@ -106,6 +106,8 @@ export const listAdminUsers = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const limit = Math.min(data?.limit ?? 100, 500);
+    // Downgrade any paid plans whose validity has ended before listing.
+    await supabaseAdmin.rpc("expire_due_subscriptions");
 
     let q = supabaseAdmin
       .from("profiles")

@@ -440,6 +440,7 @@ export type Database = {
         }
         Returns: number
       }
+      expire_due_subscriptions: { Args: never; Returns: number }
       get_effective_plan: {
         Args: { _user_id: string }
         Returns: {
