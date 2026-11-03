@@ -109,7 +109,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
 
     let q = supabaseAdmin
       .from("profiles")
-      .select("id, email, username, full_name, age, plan, preferred_language, last_login_at, created_at, avatar_url")
+      .select("id, email, username, full_name, age, plan, subscription_status, subscription_start, subscription_end, preferred_language, last_login_at, created_at, avatar_url")
       .order("created_at", { ascending: false })
       .limit(limit);
     if (data?.search) {
