@@ -170,6 +170,7 @@ function AdminPage() {
                   <th className="py-2 pr-3">Email</th>
                   <th className="py-2 pr-3">Age</th>
                   <th className="py-2 pr-3">Plan</th>
+                  <th className="py-2 pr-3">Valid until</th>
                   <th className="py-2 pr-3">Chats</th>
                   <th className="py-2 pr-3">Msgs</th>
                   <th className="py-2 pr-3">Joined</th>
@@ -186,6 +187,23 @@ function AdminPage() {
                     <td className="py-2 pr-3 text-muted-foreground">{u.email}</td>
                     <td className="py-2 pr-3">{u.age ?? "—"}</td>
                     <td className="py-2 pr-3 capitalize">{u.plan}</td>
+                    <td className="py-2 pr-3 text-xs">
+                      {u.plan === "free" || !u.subscription_end ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : (() => {
+                        const end = new Date(u.subscription_end);
+                        const days = Math.ceil((end.getTime() - Date.now()) / 86400000);
+                        const expired = days <= 0;
+                        return (
+                          <div>
+                            <div className={expired ? "text-destructive" : ""}>{end.toLocaleDateString()}</div>
+                            <div className={expired ? "text-destructive" : "text-muted-foreground"}>
+                              {expired ? "Expired" : `${days} day${days === 1 ? "" : "s"} left`}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="py-2 pr-3">
                       <button
                         className="rounded px-1.5 py-0.5 font-medium text-primary underline-offset-2 hover:underline disabled:opacity-40"
