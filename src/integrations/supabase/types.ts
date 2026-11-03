@@ -130,6 +130,27 @@ export type Database = {
         }
         Relationships: []
       }
+      image_usage: {
+        Row: {
+          period_start: string
+          updated_at: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          period_start?: string
+          updated_at?: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          period_start?: string
+          updated_at?: string
+          used?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       manipuri_corrections: {
         Row: {
           chat_id: string | null
@@ -308,6 +329,9 @@ export type Database = {
           last_login_at: string | null
           plan: Database["public"]["Enums"]["subscription_plan"]
           preferred_language: string
+          subscription_end: string | null
+          subscription_start: string | null
+          subscription_status: string
           updated_at: string
           username: string | null
         }
@@ -321,6 +345,9 @@ export type Database = {
           last_login_at?: string | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           preferred_language?: string
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?: string
           updated_at?: string
           username?: string | null
         }
@@ -334,6 +361,9 @@ export type Database = {
           last_login_at?: string | null
           plan?: Database["public"]["Enums"]["subscription_plan"]
           preferred_language?: string
+          subscription_end?: string | null
+          subscription_start?: string | null
+          subscription_status?: string
           updated_at?: string
           username?: string | null
         }
@@ -401,6 +431,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_image_credits: {
+        Args: {
+          _count: number
+          _limit?: number
+          _period_start?: string
+          _user_id: string
+        }
+        Returns: number
+      }
+      get_effective_plan: {
+        Args: { _user_id: string }
+        Returns: {
+          plan: string
+          subscription_end: string
+          subscription_start: string
+          subscription_status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -414,6 +462,10 @@ export type Database = {
       }
       refund_daily_usage: {
         Args: { _usage_date: string; _user_id: string }
+        Returns: number
+      }
+      refund_image_credits: {
+        Args: { _count: number; _user_id: string }
         Returns: number
       }
     }
