@@ -296,7 +296,12 @@ function ImagePage() {
             </div>
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
               <ImageIcon className="mr-1 inline h-3 w-3" />
-              AI-generated images — for personal use. DEVELOPED BY LEONATH
+              AI-generated images — for personal use.
+              {creditsLeft !== null && (
+                <span className="ml-1 font-medium">
+                  {creditsLeft}/3 image credits left this period.
+                </span>
+              )}
             </p>
           </form>
         </div>
