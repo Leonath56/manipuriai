@@ -8,6 +8,13 @@
       "when": 1793730394788,
       "tag": "0000_subscription_expiration_and_image_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793730419316,
+      "tag": "0001_restrict_effective_plan_rpc",
+      "breakpoints": true
     }
   ]
 }
