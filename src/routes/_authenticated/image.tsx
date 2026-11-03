@@ -285,7 +285,7 @@ function ImagePage() {
                   <Button
                     type="submit"
                     size="icon"
-                    disabled={!prompt.trim() || busy}
+                    disabled={!prompt.trim() || busy || creditsLeft === 0}
                     aria-label="Generate image"
                     className="h-10 w-10 shrink-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
                   >
