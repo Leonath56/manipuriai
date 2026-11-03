@@ -22,7 +22,7 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
-import { ChatPageSkeleton, ChatRouteSkeleton } from "@/components/skeletons";
+import { ChatPageSkeleton } from "@/components/skeletons";
 import { chatMessagesQueryOptions, type ChatMessage } from "@/lib/chat-messages";
 
 type Msg = ChatMessage;
