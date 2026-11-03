@@ -105,6 +105,18 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     if (!paymentRow) throw new Error("Order not found");
 
+    // Idempotency: a duplicate verify call (retried checkout, double webhook)
+    // must not extend the subscription window. If this order was already
+    // marked paid, return the current plan without touching anything.
+    if (paymentRow.status === "paid") {
+      const { data: existing } = await supabaseAdmin
+        .from("profiles")
+        .select("plan")
+        .eq("id", context.userId)
+        .maybeSingle();
+      return { ok: true, plan: (existing?.plan as Plan | undefined) ?? "free" };
+    }
+
     // Independently confirm the captured amount with Razorpay; never trust the DB row alone.
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const payResp = await fetch(
@@ -147,9 +159,33 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
 
     // Upgrade user's plan (service role bypasses the plan self-upgrade guard)
+    // and stamp the subscription window: one month from activation. Renewal of
+    // an active paid plan extends from the current end date, not from now, so
+    // paying early never shortens the paid period.
+    const now = new Date();
+    const { data: currentProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("plan, subscription_end")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const currentEnd = currentProfile?.subscription_end
+      ? new Date(currentProfile.subscription_end)
+      : null;
+    const stillActive =
+      currentProfile?.plan !== "free" && currentEnd !== null && currentEnd > now;
+    const windowStart = stillActive && currentEnd ? currentEnd : now;
+    const windowEnd = new Date(windowStart);
+    windowEnd.setMonth(windowEnd.getMonth() + 1);
+
     await supabaseAdmin
       .from("profiles")
-      .update({ plan })
+      .update({
+        plan,
+        subscription_start: now.toISOString(),
+        subscription_end: windowEnd.toISOString(),
+        subscription_status: "active",
+      })
       .eq("id", context.userId);
 
 

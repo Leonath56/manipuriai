@@ -8,7 +8,8 @@ import { Send, Loader2, ImageIcon, Sparkles, MessageSquare } from "lucide-react"
 import { generateImages, type ImageGenParams } from "@/lib/image-gen";
 import { ImageResultCard } from "@/components/ImageResultCard";
 import { PaidFeatureGate } from "@/components/PaidFeatureGate";
-import { useQueryClient } from "@tanstack/react-query";
+import { getSubscriptionStatus } from "@/lib/subscription.functions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ImagePageSkeleton } from "@/components/skeletons";
 
@@ -56,6 +57,14 @@ function ImagePage() {
   const [result, setResult] = useState<{ prompt: string; images: string[]; chatId: string } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Server-enforced 3-images-per-period allowance, shown live in the composer.
+  const creditsQ = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: () => getSubscriptionStatus(),
+    staleTime: 30_000,
+  });
+  const creditsLeft = creditsQ.data?.imageCredits.remaining ?? null;
+
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -77,6 +86,7 @@ function ImagePage() {
       });
       setResult({ prompt: text, images: res.images, chatId: res.chatId });
       qc.invalidateQueries({ queryKey: ["chats"] });
+      qc.invalidateQueries({ queryKey: ["subscription-status"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Image generation failed");
     } finally {
@@ -275,7 +285,7 @@ function ImagePage() {
                   <Button
                     type="submit"
                     size="icon"
-                    disabled={!prompt.trim() || busy}
+                    disabled={!prompt.trim() || busy || creditsLeft === 0}
                     aria-label="Generate image"
                     className="h-10 w-10 shrink-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
                   >
@@ -286,7 +296,12 @@ function ImagePage() {
             </div>
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
               <ImageIcon className="mr-1 inline h-3 w-3" />
-              AI-generated images — for personal use. DEVELOPED BY LEONATH
+              AI-generated images — for personal use.
+              {creditsLeft !== null && (
+                <span className="ml-1 font-medium">
+                  {creditsLeft}/3 image credits left this period.
+                </span>
+              )}
             </p>
           </form>
         </div>
