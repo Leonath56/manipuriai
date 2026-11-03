@@ -188,8 +188,10 @@ function AdminPage() {
                     <td className="py-2 pr-3">{u.age ?? "—"}</td>
                     <td className="py-2 pr-3 capitalize">{u.plan}</td>
                     <td className="py-2 pr-3 text-xs">
-                      {u.plan === "free" || !u.subscription_end ? (
+                      {u.plan === "free" ? (
                         <span className="text-muted-foreground">—</span>
+                      ) : !u.subscription_end ? (
+                        <span className="text-muted-foreground">No expiry set</span>
                       ) : (() => {
                         const end = new Date(u.subscription_end);
                         const days = Math.ceil((end.getTime() - Date.now()) / 86400000);
