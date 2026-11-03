@@ -86,6 +86,7 @@ function ImagePage() {
       });
       setResult({ prompt: text, images: res.images, chatId: res.chatId });
       qc.invalidateQueries({ queryKey: ["chats"] });
+      qc.invalidateQueries({ queryKey: ["subscription-status"] });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Image generation failed");
     } finally {
