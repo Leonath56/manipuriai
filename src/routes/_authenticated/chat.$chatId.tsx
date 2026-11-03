@@ -22,7 +22,7 @@ import { appendStreamingText, setActiveStream, updateActiveStream, useActiveStre
 import { clearDraft, getUserPrefs, setUserPrefs } from "@/lib/chat-cache";
 import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
-import { ChatPageSkeleton, ChatRouteSkeleton } from "@/components/skeletons";
+import { ChatPageSkeleton } from "@/components/skeletons";
 import { chatMessagesQueryOptions, type ChatMessage } from "@/lib/chat-messages";
 
 type Msg = ChatMessage;
@@ -49,14 +49,11 @@ function sortMessages(msgs: Msg[]): Msg[] {
 export const Route = createFileRoute("/_authenticated/chat/$chatId")({
   head: () => ({ meta: [{ title: "Chat — Manipuri AI" }, { name: "description", content: "Continue your Manipuri AI conversation in Meiteilon, Meitei Mayek script or English with streaming replies." }, { name: "robots", content: "noindex, nofollow" }] }),
   loader: ({ context, params }) => {
-    // The new-chat screen starts this request before navigating. On handoff,
-    // this resolves from the warm cache so the route never covers the finished
-    // reply with a fake conversation skeleton.
-    return context.queryClient.ensureQueryData(chatMessagesQueryOptions(params.chatId));
+    // Warm the cache without blocking or throwing: the page renders right away
+    // (keeping any finished carryover reply visible), and a failed fetch shows
+    // the in-page retry UI instead of the app-wide error screen.
+    void context.queryClient.prefetchQuery(chatMessagesQueryOptions(params.chatId));
   },
-  pendingComponent: () => <ChatRouteSkeleton />,
-  pendingMs: 60,
-  pendingMinMs: 220,
   component: ChatView,
 });
 
