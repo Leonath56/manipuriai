@@ -244,6 +244,54 @@ function ProfilePage() {
           </Card>
 
           <Card className="mt-4 p-6">
+            <h2 className="font-display text-lg font-semibold">Subscription</h2>
+            {subQ.isPending ? (
+              <div className="mt-4"><SettingsSkeleton fields={2} /></div>
+            ) : (
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className="font-medium capitalize">{subQ.data?.plan ?? "free"}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="font-medium capitalize">{subQ.data?.status ?? "free"}</span>
+                </div>
+                {subQ.data?.start && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Activated</span>
+                    <span className="font-medium">{new Date(subQ.data.start).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {subQ.data?.end && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{subQ.data.status === "expired" ? "Expired on" : "Renews / expires"}</span>
+                    <span className="font-medium">{new Date(subQ.data.end).toLocaleDateString()}</span>
+                  </div>
+                )}
+                {subQ.data && subQ.data.plan !== "free" && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Image credits</span>
+                    <span className="font-medium">
+                      {subQ.data.imageCredits.remaining}/{subQ.data.imageCredits.limit} remaining
+                    </span>
+                  </div>
+                )}
+                {subQ.data?.status === "expired" && (
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    Your subscription has expired and you are back on the Free plan. Renew on the plans page to restore paid features.
+                  </p>
+                )}
+                <div className="pt-2">
+                  <Button asChild variant="outline" size="sm">
+                    <Link to="/plans">View plans</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <Card className="mt-4 p-6">
             <h2 className="font-display text-lg font-semibold">What Manipuri AI remembers</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Details picked up from your conversations, used to personalize replies. Edit or clear
