@@ -105,6 +105,18 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
 
     if (!paymentRow) throw new Error("Order not found");
 
+    // Idempotency: a duplicate verify call (retried checkout, double webhook)
+    // must not extend the subscription window. If this order was already
+    // marked paid, return the current plan without touching anything.
+    if (paymentRow.status === "paid") {
+      const { data: existing } = await supabaseAdmin
+        .from("profiles")
+        .select("plan")
+        .eq("id", context.userId)
+        .maybeSingle();
+      return { ok: true, plan: (existing?.plan as Plan | undefined) ?? "free" };
+    }
+
     // Independently confirm the captured amount with Razorpay; never trust the DB row alone.
     const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
     const payResp = await fetch(
