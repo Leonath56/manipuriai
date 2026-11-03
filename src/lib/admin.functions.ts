@@ -122,11 +122,30 @@ export const listAdminUsers = createServerFn({ method: "GET" })
     const ids = (users ?? []).map((u) => u.id);
     if (ids.length === 0) return { users: [] };
 
-    const [{ data: roles }, { data: chatCounts }, { data: msgCounts }] = await Promise.all([
+    const [{ data: roles }, { data: chatCounts }, { data: msgCounts }, { data: paidRows }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", ids),
       supabaseAdmin.from("chats").select("user_id").in("user_id", ids),
       supabaseAdmin.from("messages").select("user_id").in("user_id", ids),
+      supabaseAdmin
+        .from("payments")
+        .select("user_id, updated_at")
+        .eq("status", "paid")
+        .in("user_id", ids)
+        .order("updated_at", { ascending: true }),
     ]);
+
+    // Validity derived from paid payments (each payment = 1 month; an early
+    // renewal extends from the current end). Used for users upgraded before
+    // the subscription window was stored on the profile.
+    const paidEnd = new Map<string, Date>();
+    for (const p of paidRows ?? []) {
+      const paidAt = new Date(p.updated_at);
+      const cur = paidEnd.get(p.user_id);
+      const start = cur && cur > paidAt ? cur : paidAt;
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + 1);
+      paidEnd.set(p.user_id, end);
+    }
 
     const roleMap = new Map<string, string[]>();
     for (const r of roles ?? []) {
@@ -142,6 +161,7 @@ export const listAdminUsers = createServerFn({ method: "GET" })
     return {
       users: (users ?? []).map((u) => ({
         ...u,
+        subscription_end: u.subscription_end ?? (u.plan !== "free" ? paidEnd.get(u.id)?.toISOString() ?? null : null),
         roles: roleMap.get(u.id) ?? [],
         chatCount: chatCount.get(u.id) ?? 0,
         messageCount: msgCount.get(u.id) ?? 0,
