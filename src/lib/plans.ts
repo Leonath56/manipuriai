@@ -18,10 +18,10 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     label: "Pro",
     price: "₹99",
     priceInPaise: 9900,
-    dailyMessages: 500,
+    dailyMessages: 100,
     model: "google/gemini-2.5-flash",
     features: [
-      "500 messages per day",
+      "100 messages per day",
       "Faster responses",
       "Voice mode",
       "AI image generation",
