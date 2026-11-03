@@ -175,6 +175,11 @@ export const Route = createFileRoute("/api/generate-image")({
           try {
             dataUrls = await Promise.all(tasks);
           } catch (e) {
+            // Generation failed after credits were consumed — give them back.
+            await supabaseAdmin.rpc("refund_image_credits", {
+              _user_id: userId,
+              _count: body.count,
+            });
             const msg = e instanceof Error ? e.message : "Image generation failed";
             const isRate = /\b429\b/.test(msg);
             const isCredits = /\b402\b/.test(msg);
@@ -230,13 +235,14 @@ export const Route = createFileRoute("/api/generate-image")({
           // `authenticated` has no write grant on daily_usage, and the previous
           // read-then-upsert let two concurrent generations record only one.
           const today = nowIso.slice(0, 10);
-          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           await supabaseAdmin.rpc("increment_daily_usage", {
             _user_id: userId,
             _usage_date: today,
           });
 
-          return Response.json({ chatId, images: dataUrls });
+          const remainingAfter =
+            typeof remainingCount === "number" ? remainingCount : null;
+          return Response.json({ chatId, images: dataUrls, imageCreditsRemaining: remainingAfter });
         } catch (err) {
           const invalid = err instanceof z.ZodError || err instanceof SyntaxError;
           if (!invalid) console.error("[generate-image] request failed", err);
