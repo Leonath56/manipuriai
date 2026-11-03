@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { clearLocalUserData } from "@/lib/chat-cache";
+import { getSubscriptionStatus } from "@/lib/subscription.functions";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -66,6 +67,14 @@ function ProfilePage() {
       const { data } = await supabase.from("profiles").select("*").maybeSingle();
       return data;
     },
+  });
+
+  // Plan, activation/expiry dates and image credits — resolved server-side so
+  // an expired subscription shows as Free here the moment it lapses.
+  const subQ = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: () => getSubscriptionStatus(),
+    staleTime: 30_000,
   });
 
   const [fullName, setFullName] = useState("");
