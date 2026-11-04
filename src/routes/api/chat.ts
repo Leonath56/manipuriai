@@ -1225,7 +1225,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                   const hasSelfSignal = selfEn || selfMni;
                   if (!hasSelfSignal || (isQuestion && !/\b(my|i am|i'm|im|eigi|ei .* ni)\b/i.test(msg))) return;
 
-                  const update = await extractMemoryUpdate(body.message, persistedText, complete);
+                  const update = await extractMemoryUpdate(body.message, persistedText, complete, logCtx);
                   if (!update) return;
 
                   const merged: UserMemory = {
