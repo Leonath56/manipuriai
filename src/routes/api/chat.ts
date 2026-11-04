@@ -105,10 +105,13 @@ function mayNeedWebSearch(msg: string): boolean {
   return FRESH_INFO_REGEX.test(msg);
 }
 
+type HelperLogCtx = { userId: string | null; mode: "instant" | "think"; source: "chat" | "guest" | "voice" };
+
 async function decideWebSearch(
   query: string,
   complete: typeof fetchChatCompletion,
   force: boolean,
+  logCtx?: HelperLogCtx,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
   const ctrl = new AbortController();
@@ -132,6 +135,15 @@ async function decideWebSearch(
 
     if (!r.ok) return null;
     const j = await r.json();
+    if (logCtx) {
+      void logGeminiUsage({
+        ...logCtx,
+        model: "gemini-2.5-flash-lite",
+        purpose: "search_decision",
+        usage: extractUsage(j),
+        success: true,
+      });
+    }
     const out: string = (j.choices?.[0]?.message?.content ?? "").trim();
     if (!out || /^no\b/i.test(out)) return null;
     return out.replace(/^["']|["']$/g, "").slice(0, 200);
@@ -201,6 +213,7 @@ async function extractMemoryUpdate(
   userMsg: string,
   assistantMsg: string,
   complete: typeof fetchChatCompletion,
+  logCtx?: HelperLogCtx,
 ): Promise<Partial<UserMemory> | null> {
   try {
     const r = await complete("google/gemini-2.5-flash-lite", {
@@ -217,6 +230,15 @@ async function extractMemoryUpdate(
 
     if (!r.ok) return null;
     const j = await r.json();
+    if (logCtx) {
+      void logGeminiUsage({
+        ...logCtx,
+        model: "gemini-2.5-flash-lite",
+        purpose: "memory_extraction",
+        usage: extractUsage(j),
+        success: true,
+      });
+    }
     const raw = j.choices?.[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? parsed : null;
