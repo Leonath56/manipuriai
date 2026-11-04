@@ -83,14 +83,29 @@ export const Route = createFileRoute("/api/generate-image")({
           const periodStart = effRow?.subscription_start
             ? String(effRow.subscription_start).slice(0, 10)
             : undefined;
-          const remaining = await supabaseAdmin.rpc("consume_image_credits", {
-            _user_id: userId,
-            _count: body.count,
-            _limit: IMAGE_LIMIT,
-            ...(periodStart ? { _period_start: periodStart } : {}),
-          });
-          const remainingCount = Array.isArray(remaining) ? remaining[0] : remaining;
-          if (typeof remainingCount === "number" && remainingCount < 0) {
+          // consume_image_credits is a scalar RPC: supabase-js resolves it to a
+          // response object ({ data, error }), where data is the returned
+          // integer (remaining credits, or -1 when the request was rejected).
+          const { data: remainingData, error: remainingErr } =
+            await supabaseAdmin.rpc("consume_image_credits", {
+              _user_id: userId,
+              _count: body.count,
+              _limit: IMAGE_LIMIT,
+              ...(periodStart ? { _period_start: periodStart } : {}),
+            });
+          // Fail closed: if the credit check itself failed we cannot verify
+          // the user is within the limit, so refuse instead of charging up.
+          if (remainingErr || typeof remainingData !== "number") {
+            console.error("[generate-image] consume_image_credits failed", remainingErr);
+            return new Response(
+              JSON.stringify({
+                error: "Couldn't check your image credits. Please try again.",
+              }),
+              { status: 500, headers: { "Content-Type": "application/json" } },
+            );
+          }
+          const remainingCount = remainingData;
+          if (remainingCount < 0) {
             return new Response(
               JSON.stringify({
                 error:
