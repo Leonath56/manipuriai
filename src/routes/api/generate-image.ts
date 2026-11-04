@@ -36,13 +36,15 @@ export const Route = createFileRoute("/api/generate-image")({
       POST: async ({ request }) => {
         try {
           // Temporary maintenance: image generation is disabled server-side
-          // until this block is removed.
-          return new Response(
-            JSON.stringify({
-              error: "Image generation is temporarily down for maintenance. Please try again later.",
-            }),
-            { status: 503, headers: { "Content-Type": "application/json" } },
-          );
+          // until MAINTENANCE_MODE is switched off.
+          if (MAINTENANCE_MODE) {
+            return new Response(
+              JSON.stringify({
+                error: "Image generation is temporarily down for maintenance. Please try again later.",
+              }),
+              { status: 503, headers: { "Content-Type": "application/json" } },
+            );
+          }
 
           const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
           if (!token) return new Response("Unauthorized", { status: 401 });
