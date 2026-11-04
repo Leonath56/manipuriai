@@ -70,7 +70,8 @@ test("Google failure never retries through Lovable and does not expose provider 
     assert.equal(calls, 1);
     delete process.env.GEMINI_API_KEY;
     assert.equal((await fetchChatCompletion("google/gemini-3.8-flash", {})).status, 503);
-    assert.equal(calls, 2);
+    // Missing key is rejected before any upstream request too.
+    assert.equal(calls, 1);
     // Existing media endpoint selection is deliberately not migrated.
     assert.equal(chatCompletionsEndpoint("google/gemini-2.5-flash").url, "https://ai.gateway.lovable.dev/v1/chat/completions");
   } finally {
