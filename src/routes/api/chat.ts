@@ -586,7 +586,12 @@ export const Route = createFileRoute("/api/chat")({
                   return results ? { query: q, results } : null;
                 }
                 // Think mode: keep the smart query rewrite for better recall.
-                const q = await decideWebSearch(body.message, body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion, true);
+                const q = await decideWebSearch(
+                  body.message,
+                  body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion,
+                  true,
+                  { userId, mode: body.mode, source: body.source === "voice" ? "voice" : "chat" },
+                );
                 if (!q) return null;
                 const results = await firecrawlSearch(q, 8, 3500);
                 return results ? { query: q, results } : null;
@@ -594,7 +599,7 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const shouldLoadMcpTools = mayNeedMcpTools(body.message);
-          const [historyRes, webInfo, memoryRes, mcpTools, chatOwned] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpTools, chatRow, countRes] = await Promise.all([
             supabase
               .from("messages")
               .select("id, role, content")
