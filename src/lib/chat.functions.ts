@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "./plans";
 import { fetchChatCompletion } from "./ai-provider.server";
+import { extractUsage, logGeminiUsage } from "./gemini-usage.server";
 
 const SendMessageInput = z.object({
   chatId: z.string().uuid().nullable(),
@@ -151,7 +152,10 @@ export const sendMessage = createServerFn({ method: "POST" })
       ...(history ?? []).map((m) => ({ role: m.role, content: m.content })),
     ];
 
-    const resp = await fetchChatCompletion(MODEL_BY_MODE[data.mode], { messages });
+    const resp = await fetchChatCompletion(MODEL_BY_MODE[data.mode], {
+      messages,
+      max_tokens: data.mode === "think" ? 4096 : 2048,
+    });
 
     if (!resp.ok) {
       const errBody = await resp.text();
@@ -161,6 +165,15 @@ export const sendMessage = createServerFn({ method: "POST" })
     const json = (await resp.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
     };
+    void logGeminiUsage({
+      userId,
+      model: MODEL_BY_MODE[data.mode].replace(/^google\//, ""),
+      mode: data.mode,
+      source: "chat",
+      purpose: "main",
+      usage: extractUsage(json),
+      success: true,
+    });
     const rawReply = json.choices?.[0]?.message?.content?.trim() ?? "";
     // Vocabulary correction: replace incorrect "pangbageda" with "mateng pangjouge"
     const reply = rawReply.replace(/pangbageda/gi, "mateng pangjouge");
