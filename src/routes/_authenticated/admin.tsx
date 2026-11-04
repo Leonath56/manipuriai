@@ -160,6 +160,79 @@ function AdminPage() {
         </div>
 
         <Card className="p-4">
+          <h2 className="text-lg font-semibold">Gemini API usage <span className="text-xs font-normal text-muted-foreground">(estimated costs, not billed amounts)</span></h2>
+          {geminiUsageQ.isLoading ? (
+            <p className="mt-3 text-sm text-muted-foreground">Loading usage…</p>
+          ) : !geminiUsageQ.data ? (
+            <p className="mt-3 text-sm text-muted-foreground">No usage recorded yet.</p>
+          ) : (
+            <>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {([["Today", geminiUsageQ.data.totals.today], ["Last 7 days", geminiUsageQ.data.totals.last7d], ["Last 30 days", geminiUsageQ.data.totals.last30d]] as const).map(([label, b]) => (
+                  <div key={label} className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-xl font-semibold">₹{b.costInr.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {b.calls} calls · {b.total.toLocaleString()} tokens
+                      {b.thinking > 0 ? ` (${b.thinking.toLocaleString()} thinking)` : ""}
+                      {b.failures > 0 ? ` · ${b.failures} failed` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium">By model</h3>
+                  <table className="mt-2 w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-1 pr-2 font-normal">Model</th>
+                        <th className="py-1 pr-2 font-normal text-right">Calls</th>
+                        <th className="py-1 pr-2 font-normal text-right">Tokens</th>
+                        <th className="py-1 font-normal text-right">Est. ₹</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {geminiUsageQ.data.byModel.map((r) => (
+                        <tr key={r.key} className="border-t">
+                          <td className="py-1 pr-2">{r.key}</td>
+                          <td className="py-1 pr-2 text-right">{r.calls}</td>
+                          <td className="py-1 pr-2 text-right">{r.total.toLocaleString()}</td>
+                          <td className="py-1 text-right">{r.costInr.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium">By purpose</h3>
+                  <table className="mt-2 w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-1 pr-2 font-normal">Purpose</th>
+                        <th className="py-1 pr-2 font-normal text-right">Calls</th>
+                        <th className="py-1 pr-2 font-normal text-right">Tokens</th>
+                        <th className="py-1 font-normal text-right">Est. ₹</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {geminiUsageQ.data.byPurpose.map((r) => (
+                        <tr key={r.key} className="border-t">
+                          <td className="py-1 pr-2">{r.key}</td>
+                          <td className="py-1 pr-2 text-right">{r.calls}</td>
+                          <td className="py-1 pr-2 text-right">{r.total.toLocaleString()}</td>
+                          <td className="py-1 text-right">{r.costInr.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
+
+        <Card className="p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Users</h2>
             <Input
