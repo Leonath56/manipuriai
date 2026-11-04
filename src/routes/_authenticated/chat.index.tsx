@@ -381,7 +381,7 @@ function NewChat() {
                     Edit the message
                   </Button>
                   {(failed.message.includes("daily limit") || failed.message.includes("Deep Think")) && (
-                    <Button size="sm" asChild className="h-9 bg-gold text-gold-foreground hover:bg-gold/90">
+                    <Button size="sm" asChild className="h-9 bg-gold text-background hover:bg-gold/90">
                       <Link to="/plans">Upgrade your plan</Link>
                     </Button>
                   )}
