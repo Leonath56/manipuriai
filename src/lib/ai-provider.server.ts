@@ -43,9 +43,19 @@ export function chatCompletionsEndpoint(modelId: string): Endpoint {
   return getChatProvider() === "gemini" ? geminiEndpoint(modelId) : lovableEndpoint(modelId);
 }
 
+// Connecting to Google should never hang forever: if the upstream hasn't
+// responded with headers within this window, fail fast instead of holding the
+// request (and the user's quota) open. The timeout is cleared as soon as
+// headers arrive, so long streaming replies are NOT cut off.
+const CONNECT_TIMEOUT_MS = 45_000;
+
 /**
  * Google-only text completions. Never return raw provider error bodies, which
  * may contain sensitive request details. Successful SSE bodies pass through.
+ *
+ * Streaming requests automatically ask for `stream_options.include_usage` so
+ * the final SSE chunk carries token counts — that is how the usage dashboard
+ * gets real numbers without any extra API call.
  */
 export async function fetchChatCompletion(
   modelId: string,
@@ -54,18 +64,44 @@ export async function fetchChatCompletion(
 ): Promise<Response> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return new Response("Google Gemini is not configured. Please contact the app owner.", { status: 503 });
+
+  // Link the caller's signal with our connect timeout. The timeout only runs
+  // until the response headers arrive; after that the stream flows freely.
+  const timeoutCtrl = new AbortController();
+  const timeout = setTimeout(() => timeoutCtrl.abort(new Error("connect-timeout")), CONNECT_TIMEOUT_MS);
+  const onCallerAbort = () => timeoutCtrl.abort(init!.signal!.reason);
+  if (init?.signal) {
+    if (init.signal.aborted) {
+      clearTimeout(timeout);
+      throw new DOMException("Request cancelled", "AbortError");
+    }
+    init.signal.addEventListener("abort", onCallerAbort, { once: true });
+  }
+
   let response: Response;
   try {
     response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      signal: init?.signal,
-      body: JSON.stringify({ ...payload, model: modelId.replace(/^google\//, "") }),
+      signal: timeoutCtrl.signal,
+      body: JSON.stringify({
+        ...payload,
+        model: modelId.replace(/^google\//, ""),
+        ...(payload.stream ? { stream_options: { include_usage: true } } : {}),
+      }),
     });
-  } catch {
+  } catch (err) {
+    clearTimeout(timeout);
+    if (init?.signal) init.signal.removeEventListener("abort", onCallerAbort);
     if (init?.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
+    if (timeoutCtrl.signal.aborted) {
+      return new Response("Google Gemini took too long to respond. Please try again.", { status: 504 });
+    }
+    void err;
     return new Response("Google Gemini could not be reached. Please try again.", { status: 502 });
   }
+  clearTimeout(timeout);
+  if (init?.signal) init.signal.removeEventListener("abort", onCallerAbort);
   if (response.ok) return response;
   await response.body?.cancel().catch(() => {});
   const message = response.status === 401 || response.status === 403
