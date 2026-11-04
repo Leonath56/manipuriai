@@ -405,7 +405,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 userId: null,
                 isGuest: true,
                 model: guestModel,
-                mode: body.mode,
+                mode: "instant",
                 source: "guest",
                 purpose: "main",
                 usage: streamUsage,
