@@ -417,7 +417,14 @@ export const Route = createFileRoute("/api/chat")({
           // For an existing chat the ownership check no longer blocks here; it
           // runs alongside the history/memory reads below so the model call
           // isn't waiting on an extra serial round-trip.
-          let chatOwnedPromise: Promise<boolean> = Promise.resolve(true);
+          type ChatRow = { id: string; summary: string | null; summarized_count: number | null };
+          // A brand-new chat has no summary yet; the placeholder row keeps the
+          // type identical to the ownership-check path below.
+          let chatOwnedPromise: Promise<ChatRow | null> = Promise.resolve({
+            id: "",
+            summary: null,
+            summarized_count: 0,
+          });
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
