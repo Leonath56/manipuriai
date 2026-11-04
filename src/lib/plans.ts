@@ -32,10 +32,10 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     label: "Max",
     price: "₹399",
     priceInPaise: 39900,
-    dailyMessages: 10000,
+    dailyMessages: 200,
     model: "google/gemini-2.5-pro",
     features: [
-      "Effectively unlimited messages",
+      "200 messages per day",
       "Deep Think mode (advanced reasoning)",
       "Fastest responses",
       "Premium AI model",

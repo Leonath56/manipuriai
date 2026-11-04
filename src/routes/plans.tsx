@@ -14,10 +14,11 @@ export const Route = createFileRoute("/plans")({
   head: () => ({
     meta: [
       { title: "Manipuri AI Pricing — Free Plan, Pro ₹99, Max ₹399" },
-      { name: "description", content: "Start free with 20 Manipuri chats a day. Pro (₹99/mo) adds 100 chats a day and voice mode; Max (₹399/mo) adds AI image generation. Cancel anytime." },
+      { name: "description", content: "Free: 8 messages/day. Pro (₹99/mo): 100 messages/day. Max (₹399/mo): 200 messages/day and Deep Think. Daily limits reset at midnight IST." },
       { property: "og:title", content: "Manipuri AI plans — Free, Pro ₹99 and Max ₹399" },
-      { property: "og:description", content: "Unlimited Meiteilon & English chat, voice mode and AI image generation from ₹99/month." },
+      { property: "og:description", content: "Free: 8 messages/day. Pro: 100 messages/day for ₹99/month. Max: 200 messages/day and Deep Think for ₹399/month." },
       { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://manipuriai.online/plans" },
       { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
       { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
@@ -33,9 +34,9 @@ export const Route = createFileRoute("/plans")({
           description: "Bilingual AI chatbot for Manipuri (Meiteilon) and English with voice mode and AI image generation.",
           brand: { "@type": "Brand", name: "Manipuri AI" },
           offers: [
-            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "20 messages every day in Meiteilon and English." },
+            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "8 messages every day in Meiteilon and English." },
             { "@type": "Offer", name: "Pro", price: "99", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "100 messages a day, voice mode and faster replies." },
-            { "@type": "Offer", name: "Max", price: "399", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "Everything in Pro plus AI image generation and priority access." },
+            { "@type": "Offer", name: "Max", price: "399", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "200 messages a day, Deep Think and priority access. Resets at midnight IST." },
           ],
         }),
       },
