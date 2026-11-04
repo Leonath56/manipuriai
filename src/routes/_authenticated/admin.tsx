@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer } from "@/lib/admin.functions";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer, getGeminiUsage } from "@/lib/admin.functions";
 import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus, Server, Plus, Trash2, Check, X, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminPageSkeleton } from "@/components/skeletons";
@@ -87,6 +87,13 @@ function AdminPage() {
   const mcpServersQ = useQuery<any, Error>({
     queryKey: ["admin-mcp-servers"],
     queryFn: () => listMcpFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+
+  const geminiUsageFn = useServerFn(getGeminiUsage);
+  const geminiUsageQ = useQuery({
+    queryKey: ["admin-gemini-usage"],
+    queryFn: () => geminiUsageFn(),
     enabled: adminQ.data?.isAdmin === true,
   });
 
