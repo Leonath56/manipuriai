@@ -435,16 +435,24 @@ export const Route = createFileRoute("/api/chat")({
             chatOwnedPromise = Promise.resolve(
               supabase
                 .from("chats")
-                .select("id")
+                .select("id, summary, summarized_count")
                 .eq("id", existingChatId)
                 .eq("user_id", userId)
                 .maybeSingle(),
-            ).then(({ data }) => !!data);
+            ).then(({ data }) => data);
           }
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
           if (imageRequest) {
             if (!(await chatOwnedPromise)) return new Response("Chat not found", { status: 404 });
+            await refundQuota();
+            return new Response(
+              JSON.stringify({ error: "Image generation is temporarily down for maintenance. Please try again later." }),
+              { status: 503, headers: { "Content-Type": "application/json" } },
+            );
+          }
+          // eslint-disable-next-line no-unreachable
+          if (false as boolean) {
             const lovable = lovableOnlyEndpoint();
             if (!lovable) {
               return new Response(JSON.stringify({ error: "Image generation requires LOVABLE_API_KEY on this deployment." }), {
