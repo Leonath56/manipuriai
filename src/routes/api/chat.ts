@@ -1109,6 +1109,18 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                 }
               }
 
+              // The reply hit the output-token ceiling: tell the user it was
+              // cut and how to get the rest, instead of ending mid-sentence
+              // with no explanation.
+              if (hitLengthLimit && full.trim()) {
+                const hint =
+                  replyLanguage === "en"
+                    ? "\n\n*(Reply reached the length limit — ask me to continue for the rest.)*"
+                    : "\n\n*(Tengthakna thamkhre — \"continue\" haibadi mamangbu thajathani.)*";
+                full += hint;
+                safeEnqueue(encoder.encode(hint));
+              }
+
               let replyFailed = false;
               if (!full.trim()) {
                 // No reply was produced, so the message should not be billed.
