@@ -616,11 +616,21 @@ export const Route = createFileRoute("/api/chat")({
             // costs a live round-trip to every MCP server on every message.
             shouldLoadMcpTools ? loadMcpTools() : Promise.resolve([]),
             chatOwnedPromise,
+            // Total turn count drives the rolling-summary gate: long chats send
+            // a compact summary of the old turns instead of nothing at all.
+            supabase
+              .from("messages")
+              .select("id", { count: "exact", head: true })
+              .eq("chat_id", chatId),
           ]);
-          if (!chatOwned) {
+          if (!chatRow) {
             await refundQuota();
             return new Response("Chat not found", { status: 404 });
           }
+          const chatOwned = true;
+          const existingSummary = (chatRow.summary as string | null) ?? null;
+          const summarizedCount = (chatRow.summarized_count as number | null) ?? 0;
+          const totalMessageCount = countRes.count ?? 0;
           const omitIds = new Set(body.omitMessageIds);
           const history = (historyRes.data ?? [])
             .filter((m) => !omitIds.has(m.id))
