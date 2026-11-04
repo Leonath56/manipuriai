@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Text-chat completions share the Google-only fetchChatCompletion helper; legacy provider routing is restricted to existing voice/media paths so chat cannot spend Lovable AI credits or silently change providers.

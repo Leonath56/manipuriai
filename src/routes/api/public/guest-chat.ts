@@ -201,8 +201,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          if (!process.env.LOVABLE_API_KEY && !process.env.GEMINI_API_KEY) {
-            return new Response("AI not configured", { status: 500 });
+          if (!process.env.GEMINI_API_KEY) {
+            return new Response("Google Gemini is not configured. Please contact the app owner.", { status: 503 });
           }
 
           const body = BodySchema.parse(await request.json());
@@ -305,7 +305,7 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 upstream = await fetchChatCompletion(
                   body.mode === "think"
                     ? "google/gemini-3.1-pro-preview"
-                    : "google/gemini-3.7-flash",
+                    : "google/gemini-3.8-flash",
                   { messages, stream: true },
                   { signal: request.signal },
                 );
@@ -323,13 +323,9 @@ export const Route = createFileRoute("/api/public/guest-chat")({
 
               if (!upstream.ok || !upstream.body) {
                 const detail = await upstream.text().catch(() => "");
-                console.error(
-                  "[guest-chat] upstream failed",
-                  upstream.status,
-                  detail.slice(0, 300),
-                );
+                console.error("[guest-chat] Google request failed", upstream.status);
                 safeEnqueue(
-                  encoder.encode("Manipuri AI couldn't answer just now. Please try again."),
+                  encoder.encode(detail || "Google Gemini couldn't answer just now. Please try again."),
                 );
                 await releaseGuestMessage(sessionId);
                 safeClose();

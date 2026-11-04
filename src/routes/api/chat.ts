@@ -4,7 +4,7 @@ import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
 import { validateImageInputs } from "@/lib/image-input";
-import { fetchChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
+import { fetchChatCompletion, fetchLegacyChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
 import { resolveReplyLanguage } from "@/lib/reply-language";
 
@@ -92,14 +92,14 @@ function mayNeedWebSearch(msg: string): boolean {
 
 async function decideWebSearch(
   query: string,
-  _apiKey: string,
+  complete: typeof fetchChatCompletion,
   force: boolean,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), 2000);
   try {
-    const r = await fetchChatCompletion(
+    const r = await complete(
       "google/gemini-2.5-flash-lite",
       {
         messages: [
@@ -185,10 +185,10 @@ function dedupeMerge(existing: string[], incoming: string[], max = 20): string[]
 async function extractMemoryUpdate(
   userMsg: string,
   assistantMsg: string,
-  _apiKey: string,
+  complete: typeof fetchChatCompletion,
 ): Promise<Partial<UserMemory> | null> {
   try {
-    const r = await fetchChatCompletion("google/gemini-2.5-flash-lite", {
+    const r = await complete("google/gemini-2.5-flash-lite", {
       response_format: { type: "json_object" },
       messages: [
         {
@@ -276,8 +276,6 @@ export const Route = createFileRoute("/api/chat")({
         try {
           const SUPABASE_URL = process.env.SUPABASE_URL!;
           const SUPABASE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY!;
-          const LOVABLE_API_KEY = process.env.LOVABLE_API_KEY ?? process.env.GEMINI_API_KEY ?? "";
-          if (!LOVABLE_API_KEY) return new Response("AI not configured (set LOVABLE_API_KEY or GEMINI_API_KEY)", { status: 500 });
 
           const auth = request.headers.get("authorization");
           if (!auth) return new Response("Unauthorized", { status: 401 });
@@ -551,7 +549,7 @@ export const Route = createFileRoute("/api/chat")({
                   return results ? { query: q, results } : null;
                 }
                 // Think mode: keep the smart query rewrite for better recall.
-                const q = await decideWebSearch(body.message, LOVABLE_API_KEY, true);
+                const q = await decideWebSearch(body.message, body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion, true);
                 if (!q) return null;
                 const results = await firecrawlSearch(q, 8, 3500);
                 return results ? { query: q, results } : null;
@@ -675,7 +673,9 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
             { role: "user", content: finalUserContent },
           ];
 
-          const modelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+          const legacyModelId = hasImages ? VISION_MODEL_BY_MODE[body.mode] : MODEL_BY_MODE[body.mode];
+          const modelId = body.source === "voice" ? legacyModelId : body.mode === "instant" ? "google/gemini-3.8-flash" : "google/gemini-3.1-pro-preview";
+          const complete = body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion;
 
           const finalChatId = chatId;
           const encoder = new TextEncoder();
@@ -770,7 +770,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
                 }
-                upstream = await fetchChatCompletion(modelId, aiPayload, { signal: request.signal });
+                upstream = await complete(modelId, aiPayload, { signal: request.signal });
               } catch {
                 clearInterval(heartbeat);
                 await refundQuota();
@@ -922,7 +922,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                       ...toolResults
                     ];
                     
-                    const finalUpstream = await fetchChatCompletion(modelId, {
+                    const finalUpstream = await complete(modelId, {
                       messages: finalMessages,
                       stream: true
                     }, { signal: request.signal });
@@ -987,7 +987,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await fetchChatCompletion(modelId, { messages }, { signal: request.signal });
+                  const r = await complete(modelId, { messages }, { signal: request.signal });
 
                   if (r.ok) {
                     const j = await r.json();
@@ -1036,7 +1036,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                   const hasSelfSignal = selfEn || selfMni;
                   if (!hasSelfSignal || (isQuestion && !/\b(my|i am|i'm|im|eigi|ei .* ni)\b/i.test(msg))) return;
 
-                  const update = await extractMemoryUpdate(body.message, persistedText, LOVABLE_API_KEY);
+                  const update = await extractMemoryUpdate(body.message, persistedText, complete);
                   if (!update) return;
 
                   const merged: UserMemory = {
