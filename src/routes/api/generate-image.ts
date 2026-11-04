@@ -14,7 +14,11 @@ const BodySchema = z.object({
     .default("none"),
 });
 
-const STYLE_SUFFIX: Record<string, string> = {: ", photorealistic, hyper-detailed, professional photography, sharp focus, natural lighting",
+// Temporary maintenance switch: flip to false to re-enable image generation.
+const MAINTENANCE_MODE: boolean = true;
+
+const STYLE_SUFFIX: Record<string, string> = {
+  realistic: ", photorealistic, hyper-detailed, professional photography, sharp focus, natural lighting",
   anime: ", anime style, cel-shaded, vibrant colors, studio-quality anime illustration",
   "digital-art": ", digital art, concept art, trending on artstation, highly detailed",
   "oil-painting": ", oil painting, thick brush strokes, classical fine art, museum quality",
