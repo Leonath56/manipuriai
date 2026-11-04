@@ -1,8 +1,9 @@
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState, useRef, useEffect, type CSSProperties } from "react";
 import { streamChat } from "@/lib/chat-stream";
 import { generateImages, parseImageRequest } from "@/lib/image-gen";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getSubscriptionStatus } from "@/lib/subscription.functions";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -56,6 +57,23 @@ function NewChat() {
   // after the reply finishes; hiding this when chatId arrives made long replies
   // disappear until refresh.
   const pendingHere = active;
+
+  // Live subscription + daily-usage snapshot. Drives the Deep Think lock and
+  // the "n/8 messages remaining" line for Free users; refreshed after each send.
+  const subQ = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: () => getSubscriptionStatus(),
+    staleTime: 30_000,
+  });
+  const plan = subQ.data?.plan;
+  const thinkLocked = plan !== undefined && plan !== "max";
+  const usageFooter =
+    plan === "free" && subQ.data ? (
+      <span>
+        {subQ.data.dailyMessages.remaining}/{subQ.data.dailyMessages.limit} messages remaining today
+        {" · "}Manipuri AI can make mistakes — check important details.
+      </span>
+    ) : undefined;
 
   const preloadDestination = (chatId: string) => {
     const current = destinationPreloadRef.current;
@@ -218,6 +236,7 @@ function NewChat() {
         // destination route read them. Writing `u-1`/`a-1` here meant a stopped
         // reply showed placeholder rows that never matched the database.
         qc.invalidateQueries({ queryKey: ["chats"] });
+        qc.invalidateQueries({ queryKey: ["subscription-status"] });
         updateActiveStream({ done: true, chatId: finalChatId, streaming: acc });
         await prepareDestination(finalChatId);
         navigate({ to: "/chat/$chatId", params: { chatId: finalChatId } });
@@ -361,6 +380,11 @@ function NewChat() {
                   <Button variant="outline" size="sm" onClick={editFailed} className="h-9">
                     Edit the message
                   </Button>
+                  {(failed.message.includes("daily limit") || failed.message.includes("Deep Think")) && (
+                    <Button size="sm" asChild className="h-9 bg-gold text-gold-foreground hover:bg-gold/90">
+                      <Link to="/plans">Upgrade your plan</Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -429,6 +453,8 @@ function NewChat() {
         // generation, which has no AbortController to cancel: offering a Stop
         // that silently does nothing is worse than not offering one.
         onStop={pendingHere?.generatingImage ? undefined : stop}
+        thinkLocked={thinkLocked}
+        footerText={usageFooter}
       />
     </div>
   );
