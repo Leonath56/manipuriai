@@ -1,5 +1,5 @@
 import { Suspense, useState, useRef, useEffect, useMemo, useCallback, memo, type CSSProperties } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { Composer, ImageGeneratingAnimation, StreamingAssistantContent, ThinkingLoader } from "@/components/chat-shared";
 // Static import: this module is already in the shared chunk via chat-shared,
@@ -24,6 +24,7 @@ import { useDraft } from "@/lib/use-draft";
 import { mayekClass } from "@/lib/script";
 import { ChatPageSkeleton } from "@/components/skeletons";
 import { chatMessagesQueryOptions, type ChatMessage } from "@/lib/chat-messages";
+import { getSubscriptionStatus } from "@/lib/subscription.functions";
 
 type Msg = ChatMessage;
 
@@ -97,6 +98,23 @@ function ChatView() {
   const inFlightRef = useRef(false);
   const qc = useQueryClient();
   const active = useActiveStream();
+
+  // Live subscription + daily-usage snapshot. Drives the Deep Think lock and
+  // the "n/8 messages remaining" line for Free users; refreshed after each send.
+  const subQ = useQuery({
+    queryKey: ["subscription-status"],
+    queryFn: () => getSubscriptionStatus(),
+    staleTime: 30_000,
+  });
+  const plan = subQ.data?.plan;
+  const thinkLocked = plan !== undefined && plan !== "max";
+  const usageFooter =
+    plan === "free" && subQ.data ? (
+      <span>
+        {subQ.data.dailyMessages.remaining}/{subQ.data.dailyMessages.limit} messages remaining today
+        {" · "}Manipuri AI can make mistakes — check important details.
+      </span>
+    ) : undefined;
 
   // Keep the active stream authoritative for this chat until the database rows
   // have had time to settle. This prevents long replies from clearing during
@@ -298,6 +316,7 @@ function ChatView() {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["messages", chatId] }),
         qc.invalidateQueries({ queryKey: ["chats"] }),
+        qc.invalidateQueries({ queryKey: ["subscription-status"] }),
       ]);
 
       setHiddenIds([]);
@@ -613,6 +632,11 @@ function ChatView() {
                   <Button variant="outline" size="sm" onClick={editFailed} className="h-9">
                     Edit the message
                   </Button>
+                  {(failed.message.includes("daily limit") || failed.message.includes("Deep Think")) && (
+                    <Button size="sm" asChild className="h-9 bg-gold text-background hover:bg-gold/90">
+                      <Link to="/plans">Upgrade your plan</Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -681,6 +705,8 @@ function ChatView() {
         // `inflight` belongs to another route and image generation has no
         // controller, so neither gets a Stop button that would do nothing.
         onStop={sending && !generatingImage ? stop : undefined}
+        thinkLocked={thinkLocked}
+        footerText={usageFooter}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { PLAN_LIMITS, type Plan } from "@/lib/plans";
+import { PLAN_LIMITS, todayIst, type Plan } from "@/lib/plans";
 import { parseImageRequest } from "@/lib/image-intent";
 import { validateImageInputs } from "@/lib/image-input";
 import { fetchChatCompletion, fetchLegacyChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
@@ -354,7 +354,8 @@ export const Route = createFileRoute("/api/chat")({
           }
 
           // plan + atomic usage increment in parallel (RPC via service role — restricted from client roles)
-          const today = new Date().toISOString().slice(0, 10);
+          // Daily limits reset at midnight IST, not UTC.
+          const today = todayIst();
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const [profileRes, incRes, planRes] = await Promise.all([
             supabase.from("profiles").select("plan, full_name, username, age").eq("id", userId).maybeSingle(),
@@ -393,8 +394,26 @@ export const Route = createFileRoute("/api/chat")({
             // rollover either, so hand the increment straight back.
             await refundQuota();
             return new Response(
-              JSON.stringify({ error: `Daily limit reached (${limit.dailyMessages} on ${limit.label}). Upgrade at /plans.` }),
+              JSON.stringify({
+                error: `You have reached your daily limit of ${limit.dailyMessages} messages. Upgrade your plan to continue chatting with Manipuri AI.`,
+                upgrade: true,
+              }),
               { status: 429, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
+          // Deep Think is a Max-only feature, enforced on the server — hiding
+          // the button in the UI is not enough against direct API calls. The
+          // effective plan already downgrades expired subscriptions, so an
+          // expired Max loses Deep Think here immediately.
+          if (body.mode === "think" && plan !== "max") {
+            await refundQuota();
+            return new Response(
+              JSON.stringify({
+                error: "Deep Think is exclusively available with the Max plan. Upgrade to Max to unlock advanced reasoning.",
+                upgrade: true,
+              }),
+              { status: 403, headers: { "Content-Type": "application/json" } },
             );
           }
 

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { PLAN_LIMITS, type Plan } from "./plans";
+import { PLAN_LIMITS, computeSubscriptionEnd, type Plan } from "./plans";
 
 const CreateOrderInput = z.object({
   plan: z.enum(["pro", "max"]),
@@ -159,9 +159,10 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .eq("user_id", context.userId);
 
     // Upgrade user's plan (service role bypasses the plan self-upgrade guard)
-    // and stamp the subscription window: one month from activation. Renewal of
-    // an active paid plan extends from the current end date, not from now, so
-    // paying early never shortens the paid period.
+    // and stamp the subscription window. Same-plan renewal of an active plan
+    // extends from the current end date; a plan CHANGE (e.g. Pro → Max)
+    // replaces the old subscription and starts a fresh one-month window from
+    // this payment — the old plan's remaining days are not carried forward.
     const now = new Date();
     const { data: currentProfile } = await supabaseAdmin
       .from("profiles")
@@ -169,14 +170,12 @@ export const verifyRazorpayPayment = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
-    const currentEnd = currentProfile?.subscription_end
-      ? new Date(currentProfile.subscription_end)
-      : null;
-    const stillActive =
-      currentProfile?.plan !== "free" && currentEnd !== null && currentEnd > now;
-    const windowStart = stillActive && currentEnd ? currentEnd : now;
-    const windowEnd = new Date(windowStart);
-    windowEnd.setMonth(windowEnd.getMonth() + 1);
+    const windowEnd = computeSubscriptionEnd({
+      now,
+      currentPlan: currentProfile?.plan as Plan | undefined,
+      currentEnd: currentProfile?.subscription_end,
+      newPlan: plan,
+    });
 
     await supabaseAdmin
       .from("profiles")

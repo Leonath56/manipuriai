@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { PLAN_LIMITS, todayIst, type Plan } from "./plans";
 
 export type SubscriptionStatus = {
   plan: "free" | "pro" | "max";
@@ -7,6 +8,8 @@ export type SubscriptionStatus = {
   start: string | null;
   end: string | null;
   imageCredits: { used: number; limit: number; remaining: number };
+  /** Today's chat usage against the plan's daily limit (resets midnight IST). */
+  dailyMessages: { used: number; limit: number; remaining: number };
 };
 
 export const IMAGE_CREDIT_LIMIT = 3;
@@ -47,6 +50,15 @@ export const getSubscriptionStatus = createServerFn({ method: "GET" })
       }
     }
 
+    const { data: usageRow } = await supabaseAdmin
+      .from("daily_usage")
+      .select("message_count")
+      .eq("user_id", context.userId)
+      .eq("usage_date", todayIst())
+      .maybeSingle();
+    const messagesUsed = usageRow?.message_count ?? 0;
+    const messageLimit = PLAN_LIMITS[plan as Plan].dailyMessages;
+
     return {
       plan,
       status,
@@ -56,6 +68,11 @@ export const getSubscriptionStatus = createServerFn({ method: "GET" })
         used,
         limit: IMAGE_CREDIT_LIMIT,
         remaining: Math.max(IMAGE_CREDIT_LIMIT - used, 0),
+      },
+      dailyMessages: {
+        used: messagesUsed,
+        limit: messageLimit,
+        remaining: Math.max(messageLimit - messagesUsed, 0),
       },
     };
   });

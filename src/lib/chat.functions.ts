@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import { PLAN_LIMITS, type Plan } from "./plans";
+import { PLAN_LIMITS, todayIst, type Plan } from "./plans";
 import { fetchChatCompletion } from "./ai-provider.server";
 import { extractUsage, logGeminiUsage } from "./gemini-usage.server";
 
@@ -79,17 +79,29 @@ export const sendMessage = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // Load profile / plan
+    // Load profile / plan. The effective-plan RPC downgrades expired
+    // subscriptions server-side, so an expired Max cannot keep Deep Think.
     const { data: profile } = await supabase
       .from("profiles")
       .select("plan")
       .eq("id", userId)
       .maybeSingle();
-    const plan: Plan = (profile?.plan as Plan) ?? "free";
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: effPlanRows } = await supabaseAdmin.rpc("get_effective_plan", { _user_id: userId });
+    const effPlanRow = Array.isArray(effPlanRows) ? effPlanRows[0] : effPlanRows;
+    const plan: Plan =
+      ((effPlanRow?.plan as Plan | undefined) ?? (profile?.plan as Plan)) ?? "free";
     const limit = PLAN_LIMITS[plan];
 
-    // Check daily usage
-    const today = new Date().toISOString().slice(0, 10);
+    // Deep Think is exclusive to active Max subscribers.
+    if (data.mode === "think" && plan !== "max") {
+      throw new Error(
+        "Deep Think is exclusively available with the Max plan. Upgrade to Max to unlock advanced reasoning.",
+      );
+    }
+
+    // Check daily usage (resets at midnight IST)
+    const today = todayIst();
     const { data: usage } = await supabase
       .from("daily_usage")
       .select("message_count")
@@ -193,7 +205,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     // no write grant on daily_usage (a user must not be able to reset the counter
     // that meters them), and a read-then-upsert of `count + 1` also lost writes
     // whenever two requests overlapped.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // supabaseAdmin was imported above for the effective-plan check.
     await supabaseAdmin.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today });
 
     return { chatId, reply, remaining: Math.max(0, limit.dailyMessages - count - 1) };
