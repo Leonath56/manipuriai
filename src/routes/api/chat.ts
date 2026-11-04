@@ -1085,10 +1085,12 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await complete(modelId, { messages }, { signal: request.signal });
+                  const r = await complete(modelId, { messages, max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode] }, { signal: request.signal });
 
                   if (r.ok) {
                     const j = await r.json();
+                    const fu = extractUsage(j);
+                    if (fu) streamUsage = fu;
                     const content: string = j.choices?.[0]?.message?.content ?? "";
                     if (content) {
                       full = content;
