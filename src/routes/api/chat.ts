@@ -927,6 +927,16 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                       stream: true
                     }, { signal: request.signal });
 
+                    if (!finalUpstream.ok || !finalUpstream.body) {
+                      clearInterval(heartbeat);
+                      await refundQuota();
+                      const failure = await finalUpstream.text().catch(() => "");
+                      const message = body.source === "voice" ? "AI request failed. Please retry." : failure || "Google Gemini could not finish the reply. Please try again.";
+                      safeEnqueue(encoder.encode(message));
+                      await persistTurn(full + message, true);
+                      safeClose();
+                      return;
+                    }
                     if (finalUpstream.ok && finalUpstream.body) {
                       const finalReader = finalUpstream.body.getReader();
                       let finalBuffer = "";
@@ -996,6 +1006,13 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                       full = content;
                       safeEnqueue(encoder.encode(content));
                     }
+                  } else if (body.source !== "voice") {
+                    full = await r.text() || "Google Gemini could not finish the reply. Please try again.";
+                    safeEnqueue(encoder.encode(full));
+                    await refundQuota();
+                    await persistTurn(full, true);
+                    safeClose();
+                    return;
                   }
                 } catch {
                   // ignore, fall through to save-empty guard
