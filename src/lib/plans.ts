@@ -35,7 +35,7 @@ export const PLAN_LIMITS: Record<Plan, { dailyMessages: number; label: string; p
     dailyMessages: 200,
     model: "google/gemini-2.5-pro",
     features: [
-      "200 messages per day",
+      "Generous daily chat allowance (daily limits apply)",
       "Deep Think mode (advanced reasoning)",
       "Fastest responses",
       "Premium AI model",
