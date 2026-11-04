@@ -20,6 +20,8 @@ export type Database = {
           id: string
           kind: string
           pinned: boolean
+          summarized_count: number
+          summary: string | null
           title: string
           updated_at: string
           user_id: string
@@ -29,6 +31,8 @@ export type Database = {
           id?: string
           kind?: string
           pinned?: boolean
+          summarized_count?: number
+          summary?: string | null
           title?: string
           updated_at?: string
           user_id: string
@@ -38,6 +42,8 @@ export type Database = {
           id?: string
           kind?: string
           pinned?: boolean
+          summarized_count?: number
+          summary?: string | null
           title?: string
           updated_at?: string
           user_id?: string
@@ -62,6 +68,60 @@ export type Database = {
           updated_at?: string
           usage_date?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      gemini_usage: {
+        Row: {
+          api_calls: number
+          cost_estimate_inr: number
+          created_at: string
+          id: string
+          input_tokens: number
+          is_guest: boolean
+          mode: string
+          model: string
+          output_tokens: number
+          purpose: string
+          source: string
+          success: boolean
+          thinking_tokens: number
+          total_tokens: number
+          user_id: string | null
+        }
+        Insert: {
+          api_calls?: number
+          cost_estimate_inr?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          is_guest?: boolean
+          mode?: string
+          model: string
+          output_tokens?: number
+          purpose?: string
+          source?: string
+          success?: boolean
+          thinking_tokens?: number
+          total_tokens?: number
+          user_id?: string | null
+        }
+        Update: {
+          api_calls?: number
+          cost_estimate_inr?: number
+          created_at?: string
+          id?: string
+          input_tokens?: number
+          is_guest?: boolean
+          mode?: string
+          model?: string
+          output_tokens?: number
+          purpose?: string
+          source?: string
+          success?: boolean
+          thinking_tokens?: number
+          total_tokens?: number
+          user_id?: string | null
         }
         Relationships: []
       }

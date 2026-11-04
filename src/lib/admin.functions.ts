@@ -259,6 +259,78 @@ export const getGuestTrialMessages = createServerFn({ method: "GET" })
     return { session: session ?? null, messages: messages ?? [] };
   });
 
+// Aggregate Gemini usage for the admin dashboard. Rows contain no message
+// content — only model/mode/token counters — and the table is service-role
+// only, so this admin-gated read is the sole way in.
+export const getGeminiUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { assertAdmin } = await import("./admin.server");
+    await assertAdmin(context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const since30 = new Date(Date.now() - 30 * 864e5).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("gemini_usage")
+      .select("model, mode, source, purpose, input_tokens, output_tokens, thinking_tokens, total_tokens, api_calls, cost_estimate_inr, success, is_guest, created_at")
+      .gte("created_at", since30)
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (error) throw new Error(error.message);
+
+    const rows = data ?? [];
+    const today = new Date().toISOString().slice(0, 10);
+    const since7 = Date.now() - 7 * 864e5;
+
+    type Bucket = {
+      calls: number;
+      input: number;
+      output: number;
+      thinking: number;
+      total: number;
+      costInr: number;
+      failures: number;
+    };
+    const blank = (): Bucket => ({ calls: 0, input: 0, output: 0, thinking: 0, total: 0, costInr: 0, failures: 0 });
+    const add = (b: Bucket, r: (typeof rows)[number]) => {
+      b.calls += r.api_calls ?? 1;
+      b.input += r.input_tokens ?? 0;
+      b.output += r.output_tokens ?? 0;
+      b.thinking += r.thinking_tokens ?? 0;
+      b.total += r.total_tokens ?? 0;
+      b.costInr += Number(r.cost_estimate_inr ?? 0);
+      if (!r.success) b.failures += 1;
+    };
+
+    const totals = { today: blank(), last7d: blank(), last30d: blank() };
+    const byModel = new Map<string, Bucket>();
+    const byPurpose = new Map<string, Bucket>();
+
+    for (const r of rows) {
+      add(totals.last30d, r);
+      if (r.created_at.slice(0, 10) === today) add(totals.today, r);
+      if (new Date(r.created_at).getTime() >= since7) add(totals.last7d, r);
+      const mk = `${r.model} (${r.mode})`;
+      if (!byModel.has(mk)) byModel.set(mk, blank());
+      add(byModel.get(mk)!, r);
+      const pk = r.purpose;
+      if (!byPurpose.has(pk)) byPurpose.set(pk, blank());
+      add(byPurpose.get(pk)!, r);
+    }
+
+    const toRows = (m: Map<string, Bucket>) =>
+      [...m.entries()]
+        .map(([key, b]) => ({ key, ...b, costInr: Math.round(b.costInr * 100) / 100 }))
+        .sort((a, b) => b.costInr - a.costInr);
+    const roundBucket = (b: Bucket) => ({ ...b, costInr: Math.round(b.costInr * 100) / 100 });
+
+    return {
+      totals: { today: roundBucket(totals.today), last7d: roundBucket(totals.last7d), last30d: roundBucket(totals.last30d) },
+      byModel: toRows(byModel),
+      byPurpose: toRows(byPurpose),
+    };
+  });
+
 export const listMcpServers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

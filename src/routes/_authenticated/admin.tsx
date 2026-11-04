@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer } from "@/lib/admin.functions";
+import { isAdmin, getAdminOverview, listAdminUsers, listAdminCorrections, getAdminUserConversations, listGuestTrialSessions, getGuestTrialMessages, listMcpServers, addMcpServer, toggleMcpServer, deleteMcpServer, getGeminiUsage } from "@/lib/admin.functions";
 import { ArrowLeft, Users, MessageSquare, Sparkles, ShieldAlert, Wand2, UserPlus, Server, Plus, Trash2, Check, X, Info } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { AdminPageSkeleton } from "@/components/skeletons";
@@ -90,6 +90,13 @@ function AdminPage() {
     enabled: adminQ.data?.isAdmin === true,
   });
 
+  const geminiUsageFn = useServerFn(getGeminiUsage);
+  const geminiUsageQ = useQuery({
+    queryKey: ["admin-gemini-usage"],
+    queryFn: () => geminiUsageFn(),
+    enabled: adminQ.data?.isAdmin === true,
+  });
+
   const chatMessages = useMemo(() => {
     if (!convoQ.data || !selectedChatId) return [];
     return convoQ.data.messages.filter((m) => m.chat_id === selectedChatId);
@@ -151,6 +158,79 @@ function AdminPage() {
           <StatCard icon={<Users className="h-4 w-4" />} label="Paid users" value={(o?.planCounts.pro ?? 0) + (o?.planCounts.max ?? 0)} />
           <StatCard icon={<Sparkles className="h-4 w-4" />} label="Messages (7d)" value={o?.messagesLast7d ?? "…"} />
         </div>
+
+        <Card className="p-4">
+          <h2 className="text-lg font-semibold">Gemini API usage <span className="text-xs font-normal text-muted-foreground">(estimated costs, not billed amounts)</span></h2>
+          {geminiUsageQ.isLoading ? (
+            <p className="mt-3 text-sm text-muted-foreground">Loading usage…</p>
+          ) : !geminiUsageQ.data ? (
+            <p className="mt-3 text-sm text-muted-foreground">No usage recorded yet.</p>
+          ) : (
+            <>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                {([["Today", geminiUsageQ.data.totals.today], ["Last 7 days", geminiUsageQ.data.totals.last7d], ["Last 30 days", geminiUsageQ.data.totals.last30d]] as const).map(([label, b]) => (
+                  <div key={label} className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-xl font-semibold">₹{b.costInr.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {b.calls} calls · {b.total.toLocaleString()} tokens
+                      {b.thinking > 0 ? ` (${b.thinking.toLocaleString()} thinking)` : ""}
+                      {b.failures > 0 ? ` · ${b.failures} failed` : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium">By model</h3>
+                  <table className="mt-2 w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-1 pr-2 font-normal">Model</th>
+                        <th className="py-1 pr-2 font-normal text-right">Calls</th>
+                        <th className="py-1 pr-2 font-normal text-right">Tokens</th>
+                        <th className="py-1 font-normal text-right">Est. ₹</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {geminiUsageQ.data.byModel.map((r) => (
+                        <tr key={r.key} className="border-t">
+                          <td className="py-1 pr-2">{r.key}</td>
+                          <td className="py-1 pr-2 text-right">{r.calls}</td>
+                          <td className="py-1 pr-2 text-right">{r.total.toLocaleString()}</td>
+                          <td className="py-1 text-right">{r.costInr.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium">By purpose</h3>
+                  <table className="mt-2 w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-muted-foreground">
+                        <th className="py-1 pr-2 font-normal">Purpose</th>
+                        <th className="py-1 pr-2 font-normal text-right">Calls</th>
+                        <th className="py-1 pr-2 font-normal text-right">Tokens</th>
+                        <th className="py-1 font-normal text-right">Est. ₹</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {geminiUsageQ.data.byPurpose.map((r) => (
+                        <tr key={r.key} className="border-t">
+                          <td className="py-1 pr-2">{r.key}</td>
+                          <td className="py-1 pr-2 text-right">{r.calls}</td>
+                          <td className="py-1 pr-2 text-right">{r.total.toLocaleString()}</td>
+                          <td className="py-1 text-right">{r.costInr.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </Card>
 
         <Card className="p-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

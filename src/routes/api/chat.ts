@@ -7,6 +7,13 @@ import { validateImageInputs } from "@/lib/image-input";
 import { fetchChatCompletion, fetchLegacyChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
 import { resolveReplyLanguage } from "@/lib/reply-language";
+import {
+  extractUsage,
+  extractStreamUsage,
+  logGeminiUsage,
+  shouldRefreshSummary,
+  type UsageMetadata,
+} from "@/lib/gemini-usage.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -27,6 +34,14 @@ const BodySchema = z.object({
 // (4 messages / 400 chars) made the assistant forget the last question.
 const HISTORY_MESSAGE_LIMIT = 8;
 const HISTORY_CHAR_LIMIT = 900;
+
+// Output-token ceilings. These are ceilings, not targets: normal replies end
+// long before them. A reply that hits the ceiling ends with a continuation
+// hint instead of being silently cut (see finishReason === "length" below).
+const MAX_OUTPUT_TOKENS_BY_MODE = { instant: 2048, think: 4096 } as const;
+
+// Bare model ids as Google sees them — used for usage logging and pricing.
+const GEMINI_MODEL_BY_MODE = { instant: "gemini-3.8-flash", think: "gemini-3.1-pro-preview" } as const;
 
 // Agent tools are powerful but discovering and serializing them on every ordinary
 // chat turn delays time-to-first-token. Only attach them when the user is
@@ -90,10 +105,13 @@ function mayNeedWebSearch(msg: string): boolean {
   return FRESH_INFO_REGEX.test(msg);
 }
 
+type HelperLogCtx = { userId: string | null; mode: "instant" | "think"; source: "chat" | "guest" | "voice" };
+
 async function decideWebSearch(
   query: string,
   complete: typeof fetchChatCompletion,
   force: boolean,
+  logCtx?: HelperLogCtx,
 ): Promise<string | null> {
   if (!force && !mayNeedWebSearch(query)) return null;
   const ctrl = new AbortController();
@@ -117,6 +135,15 @@ async function decideWebSearch(
 
     if (!r.ok) return null;
     const j = await r.json();
+    if (logCtx) {
+      void logGeminiUsage({
+        ...logCtx,
+        model: "gemini-2.5-flash-lite",
+        purpose: "search_decision",
+        usage: extractUsage(j),
+        success: true,
+      });
+    }
     const out: string = (j.choices?.[0]?.message?.content ?? "").trim();
     if (!out || /^no\b/i.test(out)) return null;
     return out.replace(/^["']|["']$/g, "").slice(0, 200);
@@ -186,6 +213,7 @@ async function extractMemoryUpdate(
   userMsg: string,
   assistantMsg: string,
   complete: typeof fetchChatCompletion,
+  logCtx?: HelperLogCtx,
 ): Promise<Partial<UserMemory> | null> {
   try {
     const r = await complete("google/gemini-2.5-flash-lite", {
@@ -202,6 +230,15 @@ async function extractMemoryUpdate(
 
     if (!r.ok) return null;
     const j = await r.json();
+    if (logCtx) {
+      void logGeminiUsage({
+        ...logCtx,
+        model: "gemini-2.5-flash-lite",
+        purpose: "memory_extraction",
+        usage: extractUsage(j),
+        success: true,
+      });
+    }
     const raw = j.choices?.[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === "object" ? parsed : null;
@@ -380,7 +417,14 @@ export const Route = createFileRoute("/api/chat")({
           // For an existing chat the ownership check no longer blocks here; it
           // runs alongside the history/memory reads below so the model call
           // isn't waiting on an extra serial round-trip.
-          let chatOwnedPromise: Promise<boolean> = Promise.resolve(true);
+          type ChatRow = { id: string; summary: string | null; summarized_count: number | null };
+          // A brand-new chat has no summary yet; the placeholder row keeps the
+          // type identical to the ownership-check path below.
+          let chatOwnedPromise: Promise<ChatRow | null> = Promise.resolve({
+            id: "",
+            summary: null,
+            summarized_count: 0,
+          });
           if (!chatId) {
             const title = (body.message || "Image chat").slice(0, 60);
             const { data: newChat, error } = await supabase
@@ -398,11 +442,11 @@ export const Route = createFileRoute("/api/chat")({
             chatOwnedPromise = Promise.resolve(
               supabase
                 .from("chats")
-                .select("id")
+                .select("id, summary, summarized_count")
                 .eq("id", existingChatId)
                 .eq("user_id", userId)
                 .maybeSingle(),
-            ).then(({ data }) => !!data);
+            ).then(({ data }) => data);
           }
 
           const imageRequest = !hasImages && body.message ? parseImageRequest(body.message) : null;
@@ -549,7 +593,12 @@ export const Route = createFileRoute("/api/chat")({
                   return results ? { query: q, results } : null;
                 }
                 // Think mode: keep the smart query rewrite for better recall.
-                const q = await decideWebSearch(body.message, body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion, true);
+                const q = await decideWebSearch(
+                  body.message,
+                  body.source === "voice" ? fetchLegacyChatCompletion : fetchChatCompletion,
+                  true,
+                  { userId, mode: body.mode, source: body.source === "voice" ? "voice" : "chat" },
+                );
                 if (!q) return null;
                 const results = await firecrawlSearch(q, 8, 3500);
                 return results ? { query: q, results } : null;
@@ -557,7 +606,7 @@ export const Route = createFileRoute("/api/chat")({
 
 
           const shouldLoadMcpTools = mayNeedMcpTools(body.message);
-          const [historyRes, webInfo, memoryRes, mcpTools, chatOwned] = await Promise.all([
+          const [historyRes, webInfo, memoryRes, mcpTools, chatRow, countRes] = await Promise.all([
             supabase
               .from("messages")
               .select("id, role, content")
@@ -574,11 +623,21 @@ export const Route = createFileRoute("/api/chat")({
             // costs a live round-trip to every MCP server on every message.
             shouldLoadMcpTools ? loadMcpTools() : Promise.resolve([]),
             chatOwnedPromise,
+            // Total turn count drives the rolling-summary gate: long chats send
+            // a compact summary of the old turns instead of nothing at all.
+            supabase
+              .from("messages")
+              .select("id", { count: "exact", head: true })
+              .eq("chat_id", chatId),
           ]);
-          if (!chatOwned) {
+          if (!chatRow) {
             await refundQuota();
             return new Response("Chat not found", { status: 404 });
           }
+          const chatOwned = true;
+          const existingSummary = (chatRow.summary as string | null) ?? null;
+          const summarizedCount = (chatRow.summarized_count as number | null) ?? 0;
+          const totalMessageCount = countRes.count ?? 0;
           const omitIds = new Set(body.omitMessageIds);
           const history = (historyRes.data ?? [])
             .filter((m) => !omitIds.has(m.id))
@@ -651,6 +710,14 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
           })();
           const recentChatsBlock = "";
 
+          // Rolling summary of turns older than the live history window, so
+          // long conversations keep their context without resending every old
+          // message. Refreshed in the background after a reply (see below),
+          // never on the critical path.
+          const summaryBlock = existingSummary
+            ? `\n\n# EARLIER CONVERSATION (summary of older turns)\n${existingSummary}`
+            : "";
+
           // Build the final user turn: multimodal content when images are attached
           const finalUserContent = hasImages
             ? [
@@ -668,7 +735,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
             : "\n\nFinal language check: prefer a short native expression over a literal translation; keep spelling consistent; do not invent words; answer only the current request.";
 
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + (replyLanguage === "en" ? "" : MEITEILON_RULES) + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + meiteilonGuard },
+            { role: "system", content: SYSTEM_PROMPT + (replyLanguage === "en" ? "" : MEITEILON_RULES) + userInfo + memoryBlock + summaryBlock + recentChatsBlock + languageHint + webContext + mcpContext + meiteilonGuard },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
@@ -765,7 +832,11 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               let upstream: Response;
               try {
                 // If there are tools, we use them. Gemini 2.5 Pro supports tool calling.
-                const aiPayload: any = { messages, stream: true };
+                const aiPayload: any = {
+                  messages,
+                  stream: true,
+                  max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode],
+                };
                 if (tools.length > 0) {
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
@@ -805,6 +876,15 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               const onAbort = () => { void reader.cancel().catch(() => {}); };
               request.signal.addEventListener("abort", onAbort);
               let clientGone = false;
+              // Token counts arrive on the final SSE chunk (include_usage).
+              let streamUsage: UsageMetadata | null = null;
+              let hitLengthLimit = false;
+              const logCtx: HelperLogCtx = {
+                userId,
+                mode: body.mode,
+                source: body.source === "voice" ? "voice" : "chat",
+              };
+              const mainModel = modelId.replace(/^google\//, "");
               try {
                 while (true) {
                   const { done, value } = await reader.read();
@@ -820,6 +900,10 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                     try {
                       const j = JSON.parse(payload);
                       const choice = j.choices?.[0];
+
+                      const u = extractStreamUsage(j);
+                      if (u) streamUsage = u;
+                      if (choice?.finish_reason === "length") hitLengthLimit = true;
 
                       // Handle tool calls in streaming
                       if (choice?.delta?.tool_calls) {
@@ -924,7 +1008,8 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                     
                     const finalUpstream = await complete(modelId, {
                       messages: finalMessages,
-                      stream: true
+                      stream: true,
+                      max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode],
                     }, { signal: request.signal });
 
                     if (!finalUpstream.ok || !finalUpstream.body) {
@@ -957,6 +1042,9 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                           if (payload === "[DONE]") continue;
                           try {
                             const j = JSON.parse(payload);
+                            const u2 = extractStreamUsage(j);
+                            if (u2) streamUsage = u2;
+                            if (j.choices?.[0]?.finish_reason === "length") hitLengthLimit = true;
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
@@ -997,10 +1085,12 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               // visible content. Do a non-streaming call and emit the full text.
               if (!full.trim()) {
                 try {
-                  const r = await complete(modelId, { messages }, { signal: request.signal });
+                  const r = await complete(modelId, { messages, max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode] }, { signal: request.signal });
 
                   if (r.ok) {
                     const j = await r.json();
+                    const fu = extractUsage(j);
+                    if (fu) streamUsage = fu;
                     const content: string = j.choices?.[0]?.message?.content ?? "";
                     if (content) {
                       full = content;
@@ -1019,6 +1109,18 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                 }
               }
 
+              // The reply hit the output-token ceiling: tell the user it was
+              // cut and how to get the rest, instead of ending mid-sentence
+              // with no explanation.
+              if (hitLengthLimit && full.trim()) {
+                const hint =
+                  replyLanguage === "en"
+                    ? "\n\n*(Reply reached the length limit — ask me to continue for the rest.)*"
+                    : "\n\n*(Tengthakna thamkhre — \"continue\" haibadi mamangbu thajathani.)*";
+                full += hint;
+                safeEnqueue(encoder.encode(hint));
+              }
+
               let replyFailed = false;
               if (!full.trim()) {
                 // No reply was produced, so the message should not be billed.
@@ -1032,7 +1134,77 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
 
               const persistedText = await persistTurn(full, replyFailed);
 
+              // Record what this reply actually cost (metadata the API already
+              // returned — no extra call). Fire-and-forget.
+              void logGeminiUsage({
+                ...logCtx,
+                model: mainModel,
+                purpose: "main",
+                usage: streamUsage,
+                success: !replyFailed,
+              });
+
               safeClose();
+
+              // Rolling summary for long conversations: refresh only when the
+              // gate says the backlog is big enough (never every message), and
+              // never on the reply's critical path.
+              if (
+                !replyFailed &&
+                body.source !== "voice" &&
+                shouldRefreshSummary(totalMessageCount + 2, summarizedCount, !!existingSummary)
+              ) {
+                void (async () => {
+                  try {
+                    // Summarize the oldest turns that are no longer inside the
+                    // live history window, merged with any existing summary.
+                    const olderCount = Math.max(0, totalMessageCount - HISTORY_MESSAGE_LIMIT);
+                    if (olderCount <= summarizedCount) return;
+                    const { data: older } = await supabase
+                      .from("messages")
+                      .select("role, content")
+                      .eq("chat_id", finalChatId)
+                      .order("created_at", { ascending: true })
+                      .range(summarizedCount, olderCount - 1);
+                    const material = (older ?? [])
+                      .map((m) => `${m.role}: ${(m.content as string).replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").slice(0, 600)}`)
+                      .join("\n")
+                      .slice(0, 8000);
+                    if (!material.trim()) return;
+                    const r = await fetchChatCompletion("google/gemini-2.5-flash-lite", {
+                      messages: [
+                        {
+                          role: "system",
+                          content:
+                            "You maintain a rolling summary of a conversation. Merge the existing summary (if any) with the new older turns into ONE compact summary (max 250 words). Keep facts, decisions, code/context details, names, and unresolved questions; drop chit-chat. Preserve the conversation's language mix. Output only the summary.",
+                        },
+                        {
+                          role: "user",
+                          content: `EXISTING SUMMARY:\n${existingSummary ?? "(none)"}\n\nNEW OLDER TURNS:\n${material}`,
+                        },
+                      ],
+                      max_tokens: 400,
+                    });
+                    if (!r.ok) return;
+                    const j = await r.json();
+                    void logGeminiUsage({
+                      ...logCtx,
+                      model: "gemini-2.5-flash-lite",
+                      purpose: "summary",
+                      usage: extractUsage(j),
+                      success: true,
+                    });
+                    const summary: string = (j.choices?.[0]?.message?.content ?? "").trim();
+                    if (!summary) return;
+                    await supabase
+                      .from("chats")
+                      .update({ summary: summary.slice(0, 2000), summarized_count: olderCount })
+                      .eq("id", finalChatId);
+                  } catch {
+                    // best-effort; the next eligible turn retries
+                  }
+                })();
+              }
 
 
               // Fire-and-forget memory extraction (do not block stream close)
@@ -1053,7 +1225,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                   const hasSelfSignal = selfEn || selfMni;
                   if (!hasSelfSignal || (isQuestion && !/\b(my|i am|i'm|im|eigi|ei .* ni)\b/i.test(msg))) return;
 
-                  const update = await extractMemoryUpdate(body.message, persistedText, complete);
+                  const update = await extractMemoryUpdate(body.message, persistedText, complete, logCtx);
                   if (!update) return;
 
                   const merged: UserMemory = {

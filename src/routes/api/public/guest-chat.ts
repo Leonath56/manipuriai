@@ -3,6 +3,7 @@ import { z } from "zod";
 import { fetchChatCompletion } from "@/lib/ai-provider.server";
 import { validateImageInputs } from "@/lib/image-input";
 import { resolveReplyLanguage } from "@/lib/reply-language";
+import { extractStreamUsage, logGeminiUsage, type UsageMetadata } from "@/lib/gemini-usage.server";
 
 const GUEST_FREE_LIMIT = 3;
 const GUEST_MAX_IMAGES = 4;
@@ -301,12 +302,15 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               // the trial UI display its thinking state immediately instead of
               // appearing frozen during the upstream connection.
               let upstream: Response;
+              const guestModel = body.mode === "think" ? "gemini-3.1-pro-preview" : "gemini-3.8-flash";
               try {
                 upstream = await fetchChatCompletion(
                   body.mode === "think"
                     ? "google/gemini-3.1-pro-preview"
                     : "google/gemini-3.8-flash",
-                  { messages, stream: true },
+                  // Output ceiling; a reply that reaches it ends with a
+                  // continuation hint instead of a silent cut.
+                  { messages, stream: true, max_tokens: body.mode === "think" ? 4096 : 2048 },
                   { signal: request.signal },
                 );
               } catch (err) {
@@ -337,6 +341,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 reader.cancel().catch(() => {});
               };
               request.signal.addEventListener("abort", onAbort);
+              let streamUsage: UsageMetadata | null = null;
+              let hitLengthLimit = false;
               try {
                 while (true) {
                   const { done, value } = await reader.read();
@@ -351,6 +357,9 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                     if (payload === "[DONE]") continue;
                     try {
                       const j = JSON.parse(payload);
+                      const u = extractStreamUsage(j);
+                      if (u) streamUsage = u;
+                      if (j.choices?.[0]?.finish_reason === "length") hitLengthLimit = true;
                       const delta: string | undefined =
                         j.choices?.[0]?.delta?.content ?? j.choices?.[0]?.message?.content;
                       if (delta) {
@@ -383,6 +392,24 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               } finally {
                 request.signal.removeEventListener("abort", onAbort);
               }
+
+              if (hitLengthLimit && assistantAcc) {
+                const hint = "\n\n*(Reply reached the length limit — ask me to continue.)*";
+                assistantAcc += hint;
+                safeEnqueue(encoder.encode(hint));
+              }
+
+              // Aggregate usage only — no message content, no keys.
+              void logGeminiUsage({
+                userId: null,
+                isGuest: true,
+                model: guestModel,
+                mode: body.mode,
+                source: "guest",
+                purpose: "main",
+                usage: streamUsage,
+                success: !!assistantAcc,
+              });
 
               if (assistantAcc) {
                 // Await so the Worker doesn't terminate the persist promise

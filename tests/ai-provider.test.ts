@@ -22,7 +22,12 @@ test("text chat uses Google only and preserves streaming and exact supported mod
         assert.equal(body.stream, true);
         assert.equal(body.service_tier, undefined);
         assert.deepEqual(body.messages, [{ role: "user", content: "Hello" }]);
-        assert.equal(init?.signal, signal);
+        // Streaming asks for usage metadata so the admin dashboard gets real
+        // token counts without an extra API call.
+        assert.deepEqual(body.stream_options, { include_usage: true });
+        // The outgoing signal is an internal one linked to the caller's signal
+        // plus a connect timeout — not the caller's signal object itself.
+        assert.ok(init?.signal instanceof AbortSignal);
         return new Response(stream);
       };
       const response = await fetchChatCompletion(`google/${model}`, { messages: [{ role: "user", content: "Hello" }], stream: true }, { signal });
@@ -61,10 +66,12 @@ test("Google failure never retries through Lovable and does not expose provider 
     const controller = new AbortController();
     controller.abort();
     await assert.rejects(fetchChatCompletion("google/gemini-3.8-flash", {}, { signal: controller.signal }), { name: "AbortError" });
-    assert.equal(calls, 2);
+    // A pre-aborted caller signal is rejected before any upstream request.
+    assert.equal(calls, 1);
     delete process.env.GEMINI_API_KEY;
     assert.equal((await fetchChatCompletion("google/gemini-3.8-flash", {})).status, 503);
-    assert.equal(calls, 2);
+    // Missing key is rejected before any upstream request too.
+    assert.equal(calls, 1);
     // Existing media endpoint selection is deliberately not migrated.
     assert.equal(chatCompletionsEndpoint("google/gemini-2.5-flash").url, "https://ai.gateway.lovable.dev/v1/chat/completions");
   } finally {
