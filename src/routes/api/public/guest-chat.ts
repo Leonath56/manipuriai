@@ -302,15 +302,16 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               // the trial UI display its thinking state immediately instead of
               // appearing frozen during the upstream connection.
               let upstream: Response;
-              const guestModel = body.mode === "think" ? "gemini-3.1-pro-preview" : "gemini-3.8-flash";
+              // Deep Think is exclusive to active Max subscribers. Guests are
+              // not subscribers, so the trial always runs on the Instant model
+              // regardless of the mode the client asked for.
+              const guestModel = "gemini-3.8-flash";
               try {
                 upstream = await fetchChatCompletion(
-                  body.mode === "think"
-                    ? "google/gemini-3.1-pro-preview"
-                    : "google/gemini-3.8-flash",
+                  "google/gemini-3.8-flash",
                   // Output ceiling; a reply that reaches it ends with a
                   // continuation hint instead of a silent cut.
-                  { messages, stream: true, max_tokens: body.mode === "think" ? 4096 : 2048 },
+                  { messages, stream: true, max_tokens: 2048 },
                   { signal: request.signal },
                 );
               } catch (err) {
