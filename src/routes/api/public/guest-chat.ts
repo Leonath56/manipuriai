@@ -3,6 +3,7 @@ import { z } from "zod";
 import { fetchChatCompletion } from "@/lib/ai-provider.server";
 import { validateImageInputs } from "@/lib/image-input";
 import { resolveReplyLanguage } from "@/lib/reply-language";
+import { extractStreamUsage, logGeminiUsage, type UsageMetadata } from "@/lib/gemini-usage.server";
 
 const GUEST_FREE_LIMIT = 3;
 const GUEST_MAX_IMAGES = 4;
@@ -301,12 +302,15 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               // the trial UI display its thinking state immediately instead of
               // appearing frozen during the upstream connection.
               let upstream: Response;
+              const guestModel = body.mode === "think" ? "gemini-3.1-pro-preview" : "gemini-3.8-flash";
               try {
                 upstream = await fetchChatCompletion(
                   body.mode === "think"
                     ? "google/gemini-3.1-pro-preview"
                     : "google/gemini-3.8-flash",
-                  { messages, stream: true },
+                  // Output ceiling; a reply that reaches it ends with a
+                  // continuation hint instead of a silent cut.
+                  { messages, stream: true, max_tokens: body.mode === "think" ? 4096 : 2048 },
                   { signal: request.signal },
                 );
               } catch (err) {
