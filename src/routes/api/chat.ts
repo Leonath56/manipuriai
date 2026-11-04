@@ -710,6 +710,14 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
           })();
           const recentChatsBlock = "";
 
+          // Rolling summary of turns older than the live history window, so
+          // long conversations keep their context without resending every old
+          // message. Refreshed in the background after a reply (see below),
+          // never on the critical path.
+          const summaryBlock = existingSummary
+            ? `\n\n# EARLIER CONVERSATION (summary of older turns)\n${existingSummary}`
+            : "";
+
           // Build the final user turn: multimodal content when images are attached
           const finalUserContent = hasImages
             ? [
@@ -727,7 +735,7 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
             : "\n\nFinal language check: prefer a short native expression over a literal translation; keep spelling consistent; do not invent words; answer only the current request.";
 
           const messages = [
-            { role: "system", content: SYSTEM_PROMPT + (replyLanguage === "en" ? "" : MEITEILON_RULES) + userInfo + memoryBlock + recentChatsBlock + languageHint + webContext + mcpContext + meiteilonGuard },
+            { role: "system", content: SYSTEM_PROMPT + (replyLanguage === "en" ? "" : MEITEILON_RULES) + userInfo + memoryBlock + summaryBlock + recentChatsBlock + languageHint + webContext + mcpContext + meiteilonGuard },
             ...priorHistory.map((m) => ({ role: m.role, content: m.content })),
             { role: "user", content: finalUserContent },
           ];
@@ -824,7 +832,11 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               let upstream: Response;
               try {
                 // If there are tools, we use them. Gemini 2.5 Pro supports tool calling.
-                const aiPayload: any = { messages, stream: true };
+                const aiPayload: any = {
+                  messages,
+                  stream: true,
+                  max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode],
+                };
                 if (tools.length > 0) {
                   aiPayload.tools = tools;
                   aiPayload.tool_choice = "auto";
