@@ -1134,7 +1134,77 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
 
               const persistedText = await persistTurn(full, replyFailed);
 
+              // Record what this reply actually cost (metadata the API already
+              // returned — no extra call). Fire-and-forget.
+              void logGeminiUsage({
+                ...logCtx,
+                model: mainModel,
+                purpose: "main",
+                usage: streamUsage,
+                success: !replyFailed,
+              });
+
               safeClose();
+
+              // Rolling summary for long conversations: refresh only when the
+              // gate says the backlog is big enough (never every message), and
+              // never on the reply's critical path.
+              if (
+                !replyFailed &&
+                body.source !== "voice" &&
+                shouldRefreshSummary(totalMessageCount + 2, summarizedCount, !!existingSummary)
+              ) {
+                void (async () => {
+                  try {
+                    // Summarize the oldest turns that are no longer inside the
+                    // live history window, merged with any existing summary.
+                    const olderCount = Math.max(0, totalMessageCount - HISTORY_MESSAGE_LIMIT);
+                    if (olderCount <= summarizedCount) return;
+                    const { data: older } = await supabase
+                      .from("messages")
+                      .select("role, content")
+                      .eq("chat_id", finalChatId)
+                      .order("created_at", { ascending: true })
+                      .range(summarizedCount, olderCount - 1);
+                    const material = (older ?? [])
+                      .map((m) => `${m.role}: ${(m.content as string).replace(/!\[[^\]]*\]\([^)]+\)/g, "[image]").slice(0, 600)}`)
+                      .join("\n")
+                      .slice(0, 8000);
+                    if (!material.trim()) return;
+                    const r = await fetchChatCompletion("google/gemini-2.5-flash-lite", {
+                      messages: [
+                        {
+                          role: "system",
+                          content:
+                            "You maintain a rolling summary of a conversation. Merge the existing summary (if any) with the new older turns into ONE compact summary (max 250 words). Keep facts, decisions, code/context details, names, and unresolved questions; drop chit-chat. Preserve the conversation's language mix. Output only the summary.",
+                        },
+                        {
+                          role: "user",
+                          content: `EXISTING SUMMARY:\n${existingSummary ?? "(none)"}\n\nNEW OLDER TURNS:\n${material}`,
+                        },
+                      ],
+                      max_tokens: 400,
+                    });
+                    if (!r.ok) return;
+                    const j = await r.json();
+                    void logGeminiUsage({
+                      ...logCtx,
+                      model: "gemini-2.5-flash-lite",
+                      purpose: "summary",
+                      usage: extractUsage(j),
+                      success: true,
+                    });
+                    const summary: string = (j.choices?.[0]?.message?.content ?? "").trim();
+                    if (!summary) return;
+                    await supabase
+                      .from("chats")
+                      .update({ summary: summary.slice(0, 2000), summarized_count: olderCount })
+                      .eq("id", finalChatId);
+                  } catch {
+                    // best-effort; the next eligible turn retries
+                  }
+                })();
+              }
 
 
               // Fire-and-forget memory extraction (do not block stream close)
