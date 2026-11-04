@@ -1,22 +1,13 @@
 /**
- * AI provider abstraction so the same codebase runs on:
- *  - Lovable (uses LOVABLE_API_KEY → Lovable AI Gateway)
- *  - Self-hosted VPS (set GEMINI_API_KEY → Google Gemini OpenAI-compatible endpoint,
- *    no Lovable credits consumed)
- *
- * How the switch works: if GEMINI_API_KEY is set, chat completions go to Google
- * directly. Otherwise they go to Lovable AI Gateway.
- *
- * Image generation, TTS and transcription still go through Lovable Gateway
- * (Google's OpenAI-compat endpoint does not expose them). Keep LOVABLE_API_KEY
- * set for those features, or the endpoints return a clear error.
+ * Text chat uses Google directly, without a Lovable fallback.
+ * Legacy endpoint selection is retained only for existing media/voice services.
+ * Credentials are read when invoked from a server handler, never at module load.
  */
 
 export type AiProvider = "lovable" | "gemini";
 
 export function getChatProvider(): AiProvider {
-  // Prefer Lovable AI Gateway whenever a key is present (user has credits).
-  // Fall back to a direct Gemini key only when Lovable is not configured.
+  // Legacy media/voice routing; text chat does not use this selector.
   if (process.env.LOVABLE_API_KEY) return "lovable";
   if (process.env.GEMINI_API_KEY) return "gemini";
   return "lovable";
@@ -27,7 +18,7 @@ type Endpoint = { url: string; apiKey: string; model: string; provider: AiProvid
 function geminiEndpoint(modelId: string): Endpoint {
   return {
     url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
-    apiKey: process.env.GEMINI_API_KEY!,
+    apiKey: process.env.GEMINI_API_KEY ?? "",
     model: mapToGeminiModel(modelId),
     provider: "gemini",
   };
@@ -36,7 +27,7 @@ function geminiEndpoint(modelId: string): Endpoint {
 function lovableEndpoint(modelId: string): Endpoint {
   return {
     url: "https://ai.gateway.lovable.dev/v1/chat/completions",
-    apiKey: process.env.LOVABLE_API_KEY!,
+    apiKey: process.env.LOVABLE_API_KEY ?? "",
     model: modelId,
     provider: "lovable",
   };
@@ -53,15 +44,42 @@ export function chatCompletionsEndpoint(modelId: string): Endpoint {
 }
 
 /**
- * Fetch a chat completion with automatic fallback to the other provider on
- * 429 (rate limit) or 5xx from the primary. If GEMINI_API_KEY is set, we try
- * Gemini first, then Lovable AI Gateway when Gemini rate-limits or errors.
- * This keeps chats working when the free Gemini quota is exhausted.
- *
- * `payload` is the OpenAI-style body minus `model` (we inject the right one
- * per provider). Returns the raw Response; caller handles streaming or JSON.
+ * Google-only text completions. Never return raw provider error bodies, which
+ * may contain sensitive request details. Successful SSE bodies pass through.
  */
 export async function fetchChatCompletion(
+  modelId: string,
+  payload: Record<string, unknown>,
+  init?: { signal?: AbortSignal },
+): Promise<Response> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return new Response("Google Gemini is not configured. Please contact the app owner.", { status: 503 });
+  let response: Response;
+  try {
+    response = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      signal: init?.signal,
+      body: JSON.stringify({ ...payload, model: modelId.replace(/^google\//, "") }),
+    });
+  } catch {
+    if (init?.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
+    return new Response("Google Gemini could not be reached. Please try again.", { status: 502 });
+  }
+  if (response.ok) return response;
+  await response.body?.cancel().catch(() => {});
+  const message = response.status === 401 || response.status === 403
+    ? "Google Gemini rejected API access. Please ask the app owner to check the API key and permissions."
+    : response.status === 429
+      ? "Google Gemini quota or rate limit reached. Please check Google billing or try again later."
+      : response.status === 400 || response.status === 404
+        ? "Google Gemini could not accept this request or model. Please contact the app owner."
+        : "Google Gemini is temporarily unavailable. Please try again later.";
+  return new Response(message, { status: response.status, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+}
+
+/** Preserve the existing voice chat provider and fallback behavior. */
+export async function fetchLegacyChatCompletion(
   modelId: string,
   payload: Record<string, unknown>,
   init?: { signal?: AbortSignal },

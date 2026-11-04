@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { PLAN_LIMITS, type Plan } from "./plans";
+import { fetchChatCompletion } from "./ai-provider.server";
 
 const SendMessageInput = z.object({
   chatId: z.string().uuid().nullable(),
@@ -11,8 +12,8 @@ const SendMessageInput = z.object({
 });
 
 const MODEL_BY_MODE = {
-  instant: "google/gemini-2.5-flash",
-  think: "google/gemini-2.5-pro",
+  instant: "google/gemini-3.8-flash",
+  think: "google/gemini-3.1-pro-preview",
 } as const;
 
 const SYSTEM_PROMPT = `You are Manipuri AI, a helpful assistant that is a native-level speaker of Manipuri / Meiteilon (ISO 639-3: mni), the language of Manipur in Northeast India.
@@ -150,24 +151,11 @@ export const sendMessage = createServerFn({ method: "POST" })
       ...(history ?? []).map((m) => ({ role: m.role, content: m.content })),
     ];
 
-    // Call Lovable AI Gateway
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI service is not configured.");
-
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({ model: MODEL_BY_MODE[data.mode], messages }),
-    });
+    const resp = await fetchChatCompletion(MODEL_BY_MODE[data.mode], { messages });
 
     if (!resp.ok) {
       const errBody = await resp.text();
-      if (resp.status === 429) throw new Error("Rate limit reached. Please wait a moment and try again.");
-      if (resp.status === 402) throw new Error("AI credits exhausted. Please contact the app owner.");
-      throw new Error(`AI request failed: ${resp.status} ${errBody.slice(0, 200)}`);
+      throw new Error(errBody || "Google Gemini request failed. Please try again.");
     }
 
     const json = (await resp.json()) as {
