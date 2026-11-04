@@ -92,7 +92,6 @@ export async function fetchChatCompletion(
     });
   } catch (err) {
     clearTimeout(timeout);
-    if (init?.signal) init.signal.removeEventListener("abort", onCallerAbort);
     if (init?.signal?.aborted) throw new DOMException("Request cancelled", "AbortError");
     if (timeoutCtrl.signal.aborted) {
       return new Response("Google Gemini took too long to respond. Please try again.", { status: 504 });
@@ -100,8 +99,9 @@ export async function fetchChatCompletion(
     void err;
     return new Response("Google Gemini could not be reached. Please try again.", { status: 502 });
   }
+  // Headers are in: the connect timeout has done its job. The caller-abort
+  // listener stays attached so a client disconnect still cancels the stream.
   clearTimeout(timeout);
-  if (init?.signal) init.signal.removeEventListener("abort", onCallerAbort);
   if (response.ok) return response;
   await response.body?.cancel().catch(() => {});
   const message = response.status === 401 || response.status === 403
