@@ -14,6 +14,9 @@ const BodySchema = z.object({
     .default("none"),
 });
 
+// Temporary maintenance switch: flip to false to re-enable image generation.
+const MAINTENANCE_MODE: boolean = true;
+
 const STYLE_SUFFIX: Record<string, string> = {
   realistic: ", photorealistic, hyper-detailed, professional photography, sharp focus, natural lighting",
   anime: ", anime style, cel-shaded, vibrant colors, studio-quality anime illustration",
@@ -36,6 +39,17 @@ export const Route = createFileRoute("/api/generate-image")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          // Temporary maintenance: image generation is disabled server-side
+          // until MAINTENANCE_MODE is switched off.
+          if (MAINTENANCE_MODE) {
+            return new Response(
+              JSON.stringify({
+                error: "Image generation is temporarily down for maintenance. Please try again later.",
+              }),
+              { status: 503, headers: { "Content-Type": "application/json" } },
+            );
+          }
+
           const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
           if (!token) return new Response("Unauthorized", { status: 401 });
 

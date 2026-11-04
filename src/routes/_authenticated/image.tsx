@@ -69,8 +69,15 @@ function ImagePage() {
     inputRef.current?.focus();
   }, []);
 
+  // Temporary maintenance switch: set to false to re-enable image generation.
+  const IMAGE_MAINTENANCE = true;
+
   const submit = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    if (IMAGE_MAINTENANCE) {
+      toast.error("Image generation is temporarily down for maintenance. Please try again later.");
+      return;
+    }
     const text = prompt.trim();
     if (!text || busy) return;
     setBusy(true);
@@ -95,6 +102,10 @@ function ImagePage() {
   };
 
   const regenerate = async () => {
+    if (IMAGE_MAINTENANCE) {
+      toast.error("Image generation is temporarily down for maintenance. Please try again later.");
+      return;
+    }
     if (!result || busy) return;
     setBusy(true);
     try {
