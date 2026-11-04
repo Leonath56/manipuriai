@@ -171,6 +171,7 @@ export function Composer({
   onRequestDictation,
   placeholder,
   footerText,
+  thinkLocked,
 }: {
   input: string;
   setInput: (v: string) => void;
@@ -193,6 +194,8 @@ export function Composer({
   onRequestDictation?: () => void;
   placeholder?: string;
   footerText?: React.ReactNode;
+  /** Deep Think is Max-only; when locked, choosing it sends the user to /plans. */
+  thinkLocked?: boolean;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -555,7 +558,19 @@ export function Composer({
 
               <span aria-hidden="true" className="mx-0.5 h-5 w-px shrink-0 bg-border" />
 
-              <Select value={mode} onValueChange={(v) => setMode(v as "instant" | "think")}>
+              <Select
+                value={mode}
+                onValueChange={(v) => {
+                  if (v === "think" && thinkLocked) {
+                    toast.error(
+                      "Deep Think is exclusively available with the Max plan. Upgrade to Max to unlock advanced reasoning.",
+                    );
+                    navigate({ to: "/plans" });
+                    return;
+                  }
+                  setMode(v as "instant" | "think");
+                }}
+              >
                 <SelectTrigger aria-label="Reply speed" title="Reply speed" className={pillTrigger}>
                   {mode === "instant" ? (
                     <Zap className="h-3.5 w-3.5" />
@@ -584,9 +599,18 @@ export function Composer({
                     <div className="flex items-start gap-2.5">
                       <Brain className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
                       <div className="flex flex-col">
-                        <span className="font-medium">Deep thinking</span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          Deep thinking
+                          {thinkLocked && (
+                            <span className="rounded-full border border-gold/40 px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-gold">
+                              Max
+                            </span>
+                          )}
+                        </span>
                         <span className="text-[11px] text-muted-foreground">
-                          Slower, searches the web, better reasoning
+                          {thinkLocked
+                            ? "Exclusive to the Max plan — tap to upgrade"
+                            : "Slower, searches the web, better reasoning"}
                         </span>
                       </div>
                     </div>
