@@ -876,6 +876,15 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
               const onAbort = () => { void reader.cancel().catch(() => {}); };
               request.signal.addEventListener("abort", onAbort);
               let clientGone = false;
+              // Token counts arrive on the final SSE chunk (include_usage).
+              let streamUsage: UsageMetadata | null = null;
+              let hitLengthLimit = false;
+              const logCtx: HelperLogCtx = {
+                userId,
+                mode: body.mode,
+                source: body.source === "voice" ? "voice" : "chat",
+              };
+              const mainModel = modelId.replace(/^google\//, "");
               try {
                 while (true) {
                   const { done, value } = await reader.read();
@@ -891,6 +900,10 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                     try {
                       const j = JSON.parse(payload);
                       const choice = j.choices?.[0];
+
+                      const u = extractStreamUsage(j);
+                      if (u) streamUsage = u;
+                      if (choice?.finish_reason === "length") hitLengthLimit = true;
 
                       // Handle tool calls in streaming
                       if (choice?.delta?.tool_calls) {
