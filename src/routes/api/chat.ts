@@ -1008,7 +1008,8 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                     
                     const finalUpstream = await complete(modelId, {
                       messages: finalMessages,
-                      stream: true
+                      stream: true,
+                      max_tokens: MAX_OUTPUT_TOKENS_BY_MODE[body.mode],
                     }, { signal: request.signal });
 
                     if (!finalUpstream.ok || !finalUpstream.body) {
@@ -1041,6 +1042,9 @@ Reply in fluent natural English. Do not add Manipuri greetings or fillers unless
                           if (payload === "[DONE]") continue;
                           try {
                             const j = JSON.parse(payload);
+                            const u2 = extractStreamUsage(j);
+                            if (u2) streamUsage = u2;
+                            if (j.choices?.[0]?.finish_reason === "length") hitLengthLimit = true;
                             const delta = j.choices?.[0]?.delta?.content;
                             if (delta) {
                               full += delta;
