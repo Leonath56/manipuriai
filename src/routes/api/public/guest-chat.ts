@@ -341,6 +341,8 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                 reader.cancel().catch(() => {});
               };
               request.signal.addEventListener("abort", onAbort);
+              let streamUsage: UsageMetadata | null = null;
+              let hitLengthLimit = false;
               try {
                 while (true) {
                   const { done, value } = await reader.read();
@@ -355,6 +357,9 @@ export const Route = createFileRoute("/api/public/guest-chat")({
                     if (payload === "[DONE]") continue;
                     try {
                       const j = JSON.parse(payload);
+                      const u = extractStreamUsage(j);
+                      if (u) streamUsage = u;
+                      if (j.choices?.[0]?.finish_reason === "length") hitLengthLimit = true;
                       const delta: string | undefined =
                         j.choices?.[0]?.delta?.content ?? j.choices?.[0]?.message?.content;
                       if (delta) {
@@ -387,6 +392,24 @@ export const Route = createFileRoute("/api/public/guest-chat")({
               } finally {
                 request.signal.removeEventListener("abort", onAbort);
               }
+
+              if (hitLengthLimit && assistantAcc) {
+                const hint = "\n\n*(Reply reached the length limit — ask me to continue.)*";
+                assistantAcc += hint;
+                safeEnqueue(encoder.encode(hint));
+              }
+
+              // Aggregate usage only — no message content, no keys.
+              void logGeminiUsage({
+                userId: null,
+                isGuest: true,
+                model: guestModel,
+                mode: body.mode,
+                source: "guest",
+                purpose: "main",
+                usage: streamUsage,
+                success: !!assistantAcc,
+              });
 
               if (assistantAcc) {
                 // Await so the Worker doesn't terminate the persist promise
