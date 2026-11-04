@@ -205,7 +205,7 @@ export const sendMessage = createServerFn({ method: "POST" })
     // no write grant on daily_usage (a user must not be able to reset the counter
     // that meters them), and a read-then-upsert of `count + 1` also lost writes
     // whenever two requests overlapped.
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // supabaseAdmin was imported above for the effective-plan check.
     await supabaseAdmin.rpc("increment_daily_usage", { _user_id: userId, _usage_date: today });
 
     return { chatId, reply, remaining: Math.max(0, limit.dailyMessages - count - 1) };
