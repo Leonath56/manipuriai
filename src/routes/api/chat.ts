@@ -7,6 +7,13 @@ import { validateImageInputs } from "@/lib/image-input";
 import { fetchChatCompletion, fetchLegacyChatCompletion, lovableOnlyEndpoint } from "@/lib/ai-provider.server";
 import { getActiveMcpServers, listMcpTools, callMcpTool } from "@/lib/mcp-client.server";
 import { resolveReplyLanguage } from "@/lib/reply-language";
+import {
+  extractUsage,
+  extractStreamUsage,
+  logGeminiUsage,
+  shouldRefreshSummary,
+  type UsageMetadata,
+} from "@/lib/gemini-usage.server";
 
 const BodySchema = z.object({
   chatId: z.string().uuid().nullable(),
@@ -27,6 +34,14 @@ const BodySchema = z.object({
 // (4 messages / 400 chars) made the assistant forget the last question.
 const HISTORY_MESSAGE_LIMIT = 8;
 const HISTORY_CHAR_LIMIT = 900;
+
+// Output-token ceilings. These are ceilings, not targets: normal replies end
+// long before them. A reply that hits the ceiling ends with a continuation
+// hint instead of being silently cut (see finishReason === "length" below).
+const MAX_OUTPUT_TOKENS_BY_MODE = { instant: 2048, think: 4096 } as const;
+
+// Bare model ids as Google sees them — used for usage logging and pricing.
+const GEMINI_MODEL_BY_MODE = { instant: "gemini-3.8-flash", think: "gemini-3.1-pro-preview" } as const;
 
 // Agent tools are powerful but discovering and serializing them on every ordinary
 // chat turn delays time-to-first-token. Only attach them when the user is
