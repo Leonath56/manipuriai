@@ -71,3 +71,7 @@ test("Free allows 8 messages per day, Pro allows 100", () => {
   assert.equal(PLAN_LIMITS.free.dailyMessages, 8);
   assert.equal(PLAN_LIMITS.pro.dailyMessages, 100);
 });
+
+test("Max allows 200 messages per IST day", () => {
+  assert.equal(PLAN_LIMITS.max.dailyMessages, 200);
+});
