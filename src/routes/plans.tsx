@@ -9,6 +9,7 @@ import { createRazorpayOrder, verifyRazorpayPayment } from "@/lib/razorpay.funct
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { PlansPageSkeleton } from "@/components/skeletons";
+import { PLANS_URL, plansApplicationSchema } from "@/lib/plans-seo";
 
 export const Route = createFileRoute("/plans")({
   head: () => ({
@@ -23,22 +24,11 @@ export const Route = createFileRoute("/plans")({
       { property: "og:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
       { name: "twitter:image", content: "https://manipuriai.online/og-image.jpg?v=6" },
     ],
-    links: [{ rel: "canonical", href: "https://manipuriai.online/plans" }],
+    links: [{ rel: "canonical", href: PLANS_URL }],
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: "Manipuri AI",
-          description: "Bilingual AI chatbot for Manipuri (Meiteilon) and English with voice mode and AI image generation.",
-          brand: { "@type": "Brand", name: "Manipuri AI" },
-          offers: [
-            { "@type": "Offer", name: "Free", price: "0", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "8 messages every day in Meiteilon and English." },
-            { "@type": "Offer", name: "Pro", price: "99", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "100 messages a day, voice mode and faster replies." },
-            { "@type": "Offer", name: "Max", price: "399", priceCurrency: "INR", url: "https://manipuriai.online/plans", availability: "https://schema.org/InStock", description: "200 messages a day, Deep Think and priority access. Resets at midnight IST." },
-          ],
-        }),
+        children: JSON.stringify(plansApplicationSchema),
       },
     ],
   }),

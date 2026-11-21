@@ -87,7 +87,7 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       // `interactive-widget=resizes-content` makes the on-screen keyboard shrink
@@ -196,7 +196,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
                 { "@type": "Question", name: "Can Manipuri AI translate between Manipuri and English?", acceptedAnswer: { "@type": "Answer", text: "Yes, it works as a Manipuri–English translator both ways and preserves Meitei Mayek script when requested." } },
               ],
             },
-          ],
+          // Plans owns its application/offers data. Do not inherit the legacy
+          // app rating or FAQ subscription claims into that page's JSON-LD.
+          ].filter((node) => !matches.some((match) => match.pathname.replace(/\/$/, "") === "/plans") ||
+            (node["@type"] !== "SoftwareApplication" && node["@type"] !== "FAQPage")),
         }),
       },
     ],
